@@ -68,7 +68,9 @@ class Command(BaseCommand):
         group_list = list(admin_groups.keys())
         for i, group_name in enumerate(group_list, 1):
             count = len(admin_groups[group_name])
-            self.stdout.write(f"{i}. {group_name} ({count} URLs)")
+            # Display "wagtail-admin" instead of "admin" for better clarity
+            display_name = "wagtail-admin" if group_name == "admin" else group_name
+            self.stdout.write(f"{i}. {display_name} ({count} URLs)")
         
         self.stdout.write(f"{len(group_list) + 1}. All groups")
         
@@ -98,10 +100,31 @@ class Command(BaseCommand):
         
         # Print the selected URLs
         for group_name, urls in selected_groups:
-            self.stdout.write(self.style.SUCCESS(f"\n=== {group_name.upper()} URLs ==="))
+            # Display "wagtail-admin" instead of "admin" for better clarity
+            display_name = "wagtail-admin" if group_name == "admin" else group_name
+            self.stdout.write(self.style.SUCCESS(f"\n=== {display_name.upper()} URLs ==="))
             self.stdout.write(f"Found {len(urls)} URLs in this group\n")
             
+            # Track path prefixes to add markers
+            current_prefix = None
+            
             for url in urls:
+                # Extract first 2 parts of the path for grouping
+                path_parts = url['path'].strip('^').split('/')
+                # Filter out empty parts
+                meaningful_parts = [part for part in path_parts if part]
+                
+                # Only add markers for URLs with more than one meaningful part
+                if len(meaningful_parts) >= 2:
+                    prefix = '/'.join(meaningful_parts[:2])
+                    
+                    # Add marker if this is a new prefix group
+                    if prefix != current_prefix:
+                        if current_prefix is not None:
+                            self.stdout.write('')  # Extra line between prefix groups
+                        self.stdout.write(self.style.HTTP_INFO(f"▶ {prefix}/..."))
+                        current_prefix = prefix
+                
                 self.stdout.write(f"Path: {url['path']}")
                 self.stdout.write(f"Name: {url['name']}")
                 self.stdout.write(f"View: {url['callback']}")
