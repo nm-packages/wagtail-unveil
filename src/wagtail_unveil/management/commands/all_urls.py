@@ -3,7 +3,12 @@ from django.urls import URLPattern, URLResolver, get_resolver
 
 
 class Command(BaseCommand):
-    help = "Lists all admin URLs in the project"
+    help = """
+    Lists all admin URLs in the project
+    
+    Used to identify and display all admin-related URLs in a Django project so 
+    that developers can easily identify them.
+    """
 
     # Constants
     ADMIN_FILTER = "admin"
@@ -16,11 +21,24 @@ class Command(BaseCommand):
     SECTION_MARKER = "▶"
     SEPARATOR_DOT = "•"
 
+    def add_arguments(self, parser):
+        """Add command line arguments."""
+        parser.add_argument(
+            '--static',
+            action='store_true',
+            help="Display only URLs with static parts",
+        )
+        parser.add_argument(
+            '--dynamic',
+            action='store_true',
+            help="Display only URLs with dynamic parts",
+        )
+
     def handle(self, *args, **options):
         """Main entry point for the command."""
         resolver = get_resolver()
         all_urls = self._collect_urls(resolver.url_patterns)
-        admin_groups = self._filter_and_group_admin_urls(all_urls)
+        admin_groups = self._filter_and_group_admin_urls(all_urls, options)
         
         if not admin_groups:
             self.stdout.write(self.style.WARNING("No admin URLs found in the project."))
@@ -45,13 +63,17 @@ class Command(BaseCommand):
                 urls.extend(self._collect_urls(pattern.url_patterns, resolver_path))
         return urls
 
-    def _filter_and_group_admin_urls(self, all_urls):
+    def _filter_and_group_admin_urls(self, all_urls, options):
         """Filter URLs containing 'admin' and group them by prefix."""
         admin_groups = {}
         
         for url in all_urls:
             path = url['path']
             if self.ADMIN_FILTER in path.lower():
+                # Apply static/dynamic filtering if specified
+                if not self._should_include_url(path, options):
+                    continue
+                    
                 group_key = self._get_group_key(path)
                 
                 if group_key not in admin_groups:
@@ -59,6 +81,29 @@ class Command(BaseCommand):
                 admin_groups[group_key].append(url)
         
         return admin_groups
+
+    def _should_include_url(self, path, options):
+        """Check if URL should be included based on static/dynamic filters."""
+        static_filter = options.get('static', False)
+        dynamic_filter = options.get('dynamic', False)
+        
+        # If neither filter is specified, include all URLs
+        if not static_filter and not dynamic_filter:
+            return True
+        
+        has_dynamic = self._has_dynamic_parts(path)
+        
+        # If both filters are specified, include all URLs (contradictory filters)
+        if static_filter and dynamic_filter:
+            return True
+        
+        # Apply specific filter
+        if static_filter:
+            return not has_dynamic  # Include only static URLs
+        elif dynamic_filter:
+            return has_dynamic      # Include only dynamic URLs
+        
+        return True
 
     def _get_group_key(self, path):
         """Determine the group key for a given URL path."""
