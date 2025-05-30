@@ -105,10 +105,13 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"\n=== {display_name.upper()} URLs ==="))
             self.stdout.write(f"Found {len(urls)} URLs in this group\n")
             
+            # Sort URLs by path for consistent ordering
+            sorted_urls = sorted(urls, key=lambda x: x['path'])
+            
             # Track path prefixes to add markers
             current_prefix = None
             
-            for url in urls:
+            for url in sorted_urls:
                 # Extract first 2 parts of the path for grouping
                 path_parts = url['path'].strip('^').split('/')
                 # Filter out empty parts
@@ -125,8 +128,19 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.HTTP_INFO(f"▶ {prefix}/..."))
                         current_prefix = prefix
                 
-                self.stdout.write(f"Path: {url['path']}")
-                self.stdout.write(f"Name: {url['name']}")
-                self.stdout.write(f"View: {url['callback']}")
-                self.stdout.write('---')
+                # Check if URL has dynamic parts and apply appropriate styling
+                path_text = url['path']
+                if '<' in path_text and '>' in path_text:
+                    # URL has dynamic parts (angle bracket syntax like <int:id>)
+                    styled_path = self.style.WARNING(path_text)
+                elif '(' in path_text and ')' in path_text:
+                    # URL has regex capture groups
+                    styled_path = self.style.WARNING(path_text)
+                else:
+                    # Static URL
+                    styled_path = self.style.SUCCESS(path_text)
+                
+                # Output all URL info on a single line
+                faded_dot = self.style.HTTP_NOT_MODIFIED("•")
+                self.stdout.write(f"Path: {styled_path} {faded_dot} Name: {url['name']} {faded_dot} View: {url['callback']}")
             self.stdout.write('')  # Extra line between groups
