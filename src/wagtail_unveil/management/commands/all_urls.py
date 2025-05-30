@@ -21,6 +21,9 @@ class Command(BaseCommand):
     SECTION_MARKER = "▶"
     SEPARATOR_DOT = "•"
 
+    # File output name
+    OUTPUT_FILE_NAME = "all_urls.txt" # Add this ito .gitignore to avoid committing the output file
+
     def add_arguments(self, parser):
         """Add command line arguments."""
         parser.add_argument(
@@ -32,6 +35,11 @@ class Command(BaseCommand):
             '--dynamic',
             action='store_true',
             help="Display only URLs with dynamic parts",
+        )
+        parser.add_argument(
+            '--tofile',
+            action='store_true',
+            help="Write the output to a file instead of printing to console",
         )
 
     def handle(self, *args, **options):
@@ -45,7 +53,7 @@ class Command(BaseCommand):
             return
         
         selected_groups = self._get_user_selection(admin_groups)
-        self._display_urls(selected_groups)
+        self._display_urls(selected_groups, options)
 
     def _collect_urls(self, patterns, parent_path=''):
         """Recursively collect all URL patterns."""
@@ -164,30 +172,50 @@ class Command(BaseCommand):
         
         self.stdout.write(f"{len(group_list) + 1}. {self.ALL_GROUPS_OPTION}")
 
-    def _display_urls(self, selected_groups):
+    def _display_urls(self, selected_groups, options):
         """Display the selected URL groups with formatting."""
         if not selected_groups:
             return
-            
+        
+        # Capture output for file writing if needed
+        file_output = []
+        write_to_file = options.get('tofile', False)
+        
         for group_name, urls in selected_groups:
-            self._display_group_section(group_name, urls)
+            self._display_group_section(group_name, urls, file_output if write_to_file else None)
+        
+        # Write to file if requested
+        if write_to_file:
+            self._write_to_file(file_output)
 
-    def _display_group_section(self, group_name, urls):
+    def _display_group_section(self, group_name, urls, file_output=None):
         """Display a single group section with its URLs."""
         display_name = self._get_display_name(group_name)
-        self.stdout.write(self.style.SUCCESS(f"\n=== {display_name.upper()} URLs ==="))
-        self.stdout.write(f"Found {len(urls)} URLs in this group\n")
+        header = f"\n=== {display_name.upper()} URLs ==="
+        subheader = f"Found {len(urls)} URLs in this group\n"
+        
+        # Display to console
+        self.stdout.write(self.style.SUCCESS(header))
+        self.stdout.write(subheader)
         self.stdout.write("")  # Extra line for spacing
+        
+        # Add to file output if capturing
+        if file_output is not None:
+            file_output.append(header)
+            file_output.append(subheader)
+            file_output.append("")
         
         sorted_urls = sorted(urls, key=lambda x: x['path'])
         current_prefix = None
         
         for url in sorted_urls:
-            current_prefix = self._display_url_with_grouping(url, current_prefix)
+            current_prefix = self._display_url_with_grouping(url, current_prefix, file_output)
         
         self.stdout.write('')  # Extra line between groups
+        if file_output is not None:
+            file_output.append('')
 
-    def _display_url_with_grouping(self, url, current_prefix):
+    def _display_url_with_grouping(self, url, current_prefix, file_output=None):
         """Display a single URL with grouping markers if needed."""
         path_parts = url['path'].strip('^').split('/')
         meaningful_parts = [part for part in path_parts if part]
@@ -199,16 +227,26 @@ class Command(BaseCommand):
             if prefix != current_prefix:
                 if current_prefix is not None:
                     self.stdout.write('')  # Extra line between prefix groups
-                self.stdout.write(self.style.HTTP_INFO(f"{self.SECTION_MARKER} {prefix}/..."))
+                    if file_output is not None:
+                        file_output.append('')
+                
+                marker_line = f"{self.SECTION_MARKER} {prefix}/..."
+                self.stdout.write(self.style.HTTP_INFO(marker_line))
+                if file_output is not None:
+                    file_output.append(marker_line)
                 current_prefix = prefix
         
         # Style and display the URL
         styled_path = self._get_styled_path(url['path'])
         faded_dot = self.style.HTTP_NOT_MODIFIED(self.SEPARATOR_DOT)
         
-        self.stdout.write(
-            f"Path: {styled_path} {faded_dot} Name: {url['name']} {faded_dot} View: {url['callback']}"
-        )
+        console_line = f"Path: {styled_path} {faded_dot} Name: {url['name']} {faded_dot} View: {url['callback']}"
+        self.stdout.write(console_line)
+        
+        # Add plain text version to file output
+        if file_output is not None:
+            file_line = f"Path: {url['path']} {self.SEPARATOR_DOT} Name: {url['name']} {self.SEPARATOR_DOT} View: {url['callback']}"
+            file_output.append(file_line)
         
         return current_prefix
 
@@ -222,3 +260,18 @@ class Command(BaseCommand):
     def _has_dynamic_parts(self, path):
         """Check if URL path contains dynamic parts."""
         return ('<' in path and '>' in path) or ('(' in path and ')' in path)
+
+    def _write_to_file(self, file_output):
+        """Write the captured output to a file."""
+        try:
+            with open(self.OUTPUT_FILE_NAME, 'w', encoding='utf-8') as f:
+                for line in file_output:
+                    f.write(line + '\n')
+            
+            self.stdout.write(
+                self.style.SUCCESS(f"\nOutput successfully written to {self.OUTPUT_FILE_NAME}")
+            )
+        except IOError as e:
+            self.stdout.write(
+                self.style.ERROR(f"Error writing to file {self.OUTPUT_FILE_NAME}: {e}")
+            )
