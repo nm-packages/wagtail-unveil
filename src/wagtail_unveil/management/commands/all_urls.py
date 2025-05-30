@@ -61,8 +61,9 @@ class Command(BaseCommand):
         for pattern in patterns:
             if isinstance(pattern, URLPattern):
                 pattern_path = parent_path + str(pattern.pattern)
+                clean_path = self._clean_url_path(pattern_path)
                 urls.append({
-                    'path': pattern_path,
+                    'path': clean_path,
                     'name': pattern.name,
                     'callback': f"{pattern.callback.__module__}.{pattern.callback.__name__}"
                 })
@@ -70,6 +71,29 @@ class Command(BaseCommand):
                 resolver_path = parent_path + str(pattern.pattern)
                 urls.extend(self._collect_urls(pattern.url_patterns, resolver_path))
         return urls
+
+    def _clean_url_path(self, path):
+        """Clean regex characters from URL path for better readability."""
+        # Remove common regex anchors and characters that don't represent actual URL parts
+        cleaned = path
+        
+        # Remove regex anchors
+        cleaned = cleaned.replace('^', '')
+        cleaned = cleaned.replace('$', '')
+        
+        # Clean up multiple slashes
+        while '//' in cleaned:
+            cleaned = cleaned.replace('//', '/')
+        
+        # Ensure path starts with / if it's not empty
+        if cleaned and not cleaned.startswith('/'):
+            cleaned = '/' + cleaned
+            
+        # Remove trailing slash for consistency (except for root)
+        if cleaned.endswith('/') and len(cleaned) > 1:
+            cleaned = cleaned[:-1]
+            
+        return cleaned or '/'
 
     def _filter_and_group_admin_urls(self, all_urls, options):
         """Filter URLs containing 'admin' and group them by prefix."""
