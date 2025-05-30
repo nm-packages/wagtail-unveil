@@ -1,4 +1,3 @@
-from typing import Dict, List, Tuple, Any, Optional
 from django.core.management.base import BaseCommand
 from django.urls import URLPattern, URLResolver, get_resolver
 
@@ -17,7 +16,7 @@ class Command(BaseCommand):
     SECTION_MARKER = "▶"
     SEPARATOR_DOT = "•"
 
-    def handle(self, *args: Any, **options: Any) -> None:
+    def handle(self, *args, **options):
         """Main entry point for the command."""
         resolver = get_resolver()
         all_urls = self._collect_urls(resolver.url_patterns)
@@ -30,7 +29,7 @@ class Command(BaseCommand):
         selected_groups = self._get_user_selection(admin_groups)
         self._display_urls(selected_groups)
 
-    def _collect_urls(self, patterns: List[Any], parent_path: str = '') -> List[Dict[str, str]]:
+    def _collect_urls(self, patterns, parent_path=''):
         """Recursively collect all URL patterns."""
         urls = []
         for pattern in patterns:
@@ -46,7 +45,7 @@ class Command(BaseCommand):
                 urls.extend(self._collect_urls(pattern.url_patterns, resolver_path))
         return urls
 
-    def _filter_and_group_admin_urls(self, all_urls: List[Dict[str, str]]) -> Dict[str, List[Dict[str, str]]]:
+    def _filter_and_group_admin_urls(self, all_urls):
         """Filter URLs containing 'admin' and group them by prefix."""
         admin_groups = {}
         
@@ -61,7 +60,7 @@ class Command(BaseCommand):
         
         return admin_groups
 
-    def _get_group_key(self, path: str) -> str:
+    def _get_group_key(self, path):
         """Determine the group key for a given URL path."""
         path_parts = path.strip('^').split('/')
         if not path_parts:
@@ -78,11 +77,11 @@ class Command(BaseCommand):
         
         return self.OTHER_ADMIN_KEY
 
-    def _get_display_name(self, group_name: str) -> str:
+    def _get_display_name(self, group_name):
         """Get the display name for a group."""
         return self.WAGTAIL_ADMIN_DISPLAY if group_name == self.WAGTAIL_ADMIN_KEY else group_name
 
-    def _get_user_selection(self, admin_groups: Dict[str, List[Dict[str, str]]]) -> List[Tuple[str, List[Dict[str, str]]]]:
+    def _get_user_selection(self, admin_groups):
         """Display menu and get user's group selection."""
         self._display_group_menu(admin_groups)
         
@@ -108,7 +107,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR("\nOperation cancelled."))
                 return []
 
-    def _display_group_menu(self, admin_groups: Dict[str, List[Dict[str, str]]]) -> None:
+    def _display_group_menu(self, admin_groups):
         """Display the available admin URL groups menu."""
         self.stdout.write(self.style.SUCCESS("\nAvailable admin URL groups:"))
         
@@ -120,7 +119,7 @@ class Command(BaseCommand):
         
         self.stdout.write(f"{len(group_list) + 1}. {self.ALL_GROUPS_OPTION}")
 
-    def _display_urls(self, selected_groups: List[Tuple[str, List[Dict[str, str]]]]) -> None:
+    def _display_urls(self, selected_groups):
         """Display the selected URL groups with formatting."""
         if not selected_groups:
             return
@@ -128,7 +127,7 @@ class Command(BaseCommand):
         for group_name, urls in selected_groups:
             self._display_group_section(group_name, urls)
 
-    def _display_group_section(self, group_name: str, urls: List[Dict[str, str]]) -> None:
+    def _display_group_section(self, group_name, urls):
         """Display a single group section with its URLs."""
         display_name = self._get_display_name(group_name)
         self.stdout.write(self.style.SUCCESS(f"\n=== {display_name.upper()} URLs ==="))
@@ -143,7 +142,7 @@ class Command(BaseCommand):
         
         self.stdout.write('')  # Extra line between groups
 
-    def _display_url_with_grouping(self, url: Dict[str, str], current_prefix: Optional[str]) -> Optional[str]:
+    def _display_url_with_grouping(self, url, current_prefix):
         """Display a single URL with grouping markers if needed."""
         path_parts = url['path'].strip('^').split('/')
         meaningful_parts = [part for part in path_parts if part]
@@ -168,13 +167,13 @@ class Command(BaseCommand):
         
         return current_prefix
 
-    def _get_styled_path(self, path: str) -> str:
+    def _get_styled_path(self, path):
         """Apply appropriate styling to URL path based on whether it has dynamic parts."""
         if self._has_dynamic_parts(path):
             return self.style.WARNING(path)
         else:
             return self.style.SUCCESS(path)
 
-    def _has_dynamic_parts(self, path: str) -> bool:
+    def _has_dynamic_parts(self, path):
         """Check if URL path contains dynamic parts."""
         return ('<' in path and '>' in path) or ('(' in path and ')' in path)
