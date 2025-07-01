@@ -18,6 +18,12 @@ If you are unfamiliar with the project as a whole, Wagtail Unveil lets you quick
 
 Semi-automatically discovers and lists all available Wagtail admin and frontend URLs in your project.
 
+### Report View
+
+View your project's URLs in a user-friendly Wagtail admin interface with interactive URL validation: Check if URLs are accessible with visual success/error indicators.
+
+![Report View Screenshot](./docs/assets/report-interface.png)
+
 ### JSON API Endpoints
 
 - Access all your project URLs via a JSON API endpoint.
@@ -55,12 +61,6 @@ python manage.py unveil_urls --api-root=http://localhost:8000/unveil/api/ --toke
 ```
 
 - The command requires a valid token and will output a dictionary of endpoint results.
-
-### Report View
-
-View your project's URLs in a user-friendly Wagtail admin interface with interactive URL validation: Check if URLs are accessible with visual success/error indicators.
-
-![Report View Screenshot](./docs/assets/report-interface.png)
 
 ## Install the package into your Wagtail project
 
