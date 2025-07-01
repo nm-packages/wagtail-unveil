@@ -2,34 +2,69 @@
 
 A Wagtail package that helps map and expose admin and frontend URLs in your Wagtail project.
 
+## Why Use This Package?
+
+If you are unfamiliar with the project as a whole, Wagtail Unveil lets you quickly discover all admin and frontend URLs in your Wagtail project. This is especially useful after upgrading Wagtail or other dependencies, or when you have added new functionality and want to verify or document the available admin endpoints.
+
+- **Instant URL Discovery:** See all admin and frontend URLs, including custom ModelAdmin and settings URLs.
+- **Automated API Reports:** Get a machine-readable JSON index of all endpoints for integration, testing, or documentation.
+- **Admin Reporting:** Visualize and validate endpoint accessibility directly in the Wagtail admin.
+- **Automated Testing:** Use the included management command to programmatically check endpoint responses and automate health checks. URL testing currently covers the full CRUD view functionality plus frontend views. Some views, such as inspect-type views and similar, are not yet covered. (testing saving changes isn't supported but may be in the future.)
+- **Easy Integration:** Simple setup and configuration, with a single token for secure API access.
+
 ## Features
 
 ### URL Discovery
 
-Automatically discovers and lists all available Wagtail admin and frontend URLs in your project.
-
-### JSON API Endpoint
-
-Access all your project URLs via a JSON API endpoint, therefore your can use external tools to consume the data.
-
-  - Configurable parameters: `max_instances`, `base_url`, `group_by`
-  - Grouping options: Group URLs by interface (backend/frontend) or by URL type
-  - Comprehensive coverage: Pages, snippets, ModelAdmin, ModelViewSet, settings, images, and documents
-  - Detailed metadata with counts for different URL types and categories
-
-### Command Line Interface
-
-Use the management command to quickly list and export URLs iwth configurable output to  control the level of detail and output format.
+Semi-automatically discovers and lists all available Wagtail admin and frontend URLs in your project.
 
 ### Report View
 
-View your project's URLs in a user-friendly Wagtail admin interface with interactive URL validation: Check if URLs are accessible with visual success/error indicators
-  
+View your project's URLs in a user-friendly Wagtail admin interface with interactive URL validation: Check if URLs are accessible with visual success/error indicators.
+
 ![Report View Screenshot](./docs/assets/report-interface.png)
+
+### JSON API Endpoints
+
+- Access all your project URLs via a JSON API endpoint.
+- Includes a root API index endpoint (`/unveil/api/`) that lists all available API endpoints for easy discovery.
+- Endpoints return detailed metadata for pages, snippets, ModelAdmin, ModelViewSet, settings, images, and documents.
+
+#### Example API Index Response
+
+```json
+{
+  "endpoints": {
+    "collection": "http://localhost:8000/unveil/api/collection/",
+    "document": "http://localhost:8000/unveil/api/document/",
+    ...
+  }
+}
+```
+
+### API Authentication
+
+- The API uses the standard `Authorization: Bearer <token>` header for authentication.
+
+**Example usage with curl:**
+
+```sh
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:8000/unveil/api/collection/
+```
+
+### Command Line Interface
+
+- Use the management command to quickly fetch and print the results of all API endpoints:
+
+```sh
+python manage.py unveil_urls --api-root=http://localhost:8000/unveil/api/ --token=YOUR_TOKEN
+```
+
+- The command requires a valid token and will output a dictionary of endpoint results.
 
 ## Install the package into your Wagtail project
 
-Suggested install method is via pip but you should use the method that best fits your project setup:
+Install via pip (or your preferred method):
 
 ```bash
 pip install wagtail-unveil
@@ -37,7 +72,7 @@ pip install wagtail-unveil
 
 **Note**: The package is not yet available on PyPI, so you may need to install it directly from this GitHub repository.
 
-Update your wagtail settings to include `wagtail_unveil`:
+Add `wagtail_unveil` to your `INSTALLED_APPS`:
 
 ```python
 INSTALLED_APPS = [
@@ -55,11 +90,14 @@ You can configure the package using the following settings in your settings file
 # Maximum number of instances to show per model (default: 1)
 # Set to 0 to show all instances
 WAGTAIL_UNVEIL_MAX_INSTANCES = 1
+
+# Token for API authentication
+WAGTAIL_UNVEIL_JSON_TOKEN = "your-secret-token"
 ```
 
 ## Enabling the API
 
-To enable the JSON API endpoint, add the following to your project's main urls.py file:
+Add the following to your project's main `urls.py` file:
 
 ```python
 from django.urls import include, path
@@ -71,41 +109,29 @@ urlpatterns = [
 ]
 ```
 
-Once configured, you can access the API at:
-```
-http://your-domain.com/unveil/urls/
-```
+Once configured, you can access the API index at:
 
-The API accepts the following optional query parameters:
-- `max_instances`: Maximum number of instances to show per model (default: 1)
-- `base_url`: The base URL to use for generated URLs (default: http://localhost:8000)
-- `group_by`: How to group the URLs. Options are `interface` (backend/frontend) or `type`
-
-Example API request:
 ```
-http://your-domain.com/unveil/urls/?max_instances=2&group_by=interface
+http://your-domain.com/unveil/api/
 ```
 
 ## Usage
 
 ### Command Line
 
-Wagtail Unveil provides a management command to list all admin URLs:
+Fetch all API endpoint results:
 
 ```bash
-python manage.py list_admin_urls
+python manage.py unveil_urls --api-root=http://localhost:8000/unveil/api/ --token=YOUR_TOKEN
 ```
 
-The command has a few flags that can be used to adjust the output. The flags are all optional:
+### Admin Views
 
-- `--base_url`: The base URL to use for the output. Auto generated from the Wagtail site settings.
-- `--output`: Output the urls to the console or to a file. Default is console.
-- `--file`: The file name to output the urls to. This is only used if the output option is set to file the file type is a simple text file.
-- `--max-instances`: The maximum number of instances to show for each URL. This is used to adjust the number of instances shown in the output. The default is 1 a value of 0 will show all instances.
+The admin views provide reports on available endpoints and allow you to test the response code for each URL directly from the Wagtail admin.
 
 ## Upcoming Features
 
-I'm maintaining a list of features that I plan to add in the future or i'm currently working on [here](https://github.com/wagtail-packages/wagtail-unveil/issues). If you have any suggestions or requests, please feel free to open an issue.
+See [issues](https://github.com/wagtail-packages/wagtail-unveil/issues) for planned features and suggestions.
 
 ## Contributing
 
