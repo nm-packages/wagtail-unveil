@@ -9,7 +9,7 @@ If you are unfamiliar with the project as a whole, Wagtail Unveil lets you quick
 - **Instant URL Discovery:** See all admin and frontend URLs, including custom ModelAdmin and settings URLs.
 - **Automated API Reports:** Get a machine-readable JSON index of all endpoints for integration, testing, or documentation.
 - **Admin Reporting:** Visualize and validate endpoint accessibility directly in the Wagtail admin.
-- **Automated Testing:** Use the included management command to programmatically check endpoint responses and automate health checks. URL testing currently covers the full CRUD functionality plus frontend views. Some views, such as inspect-type views and similar, are not yet covered.
+- **Automated Testing:** Use the included management command to programmatically check endpoint responses and automate health checks. URL testing currently covers the full CRUD view functionality plus frontend views. Some views, such as inspect-type views and similar, are not yet covered. (testing saving changes isn't supported but may be in the future.)
 - **Easy Integration:** Simple setup and configuration, with a single token for secure API access.
 
 ## Features
