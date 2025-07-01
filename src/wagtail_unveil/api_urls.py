@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.urls import path
 
 from wagtail_unveil.viewsets.admin_report import UnveilAdminReportViewSet
@@ -38,7 +39,30 @@ admin_api_viewset = UnveilAdminReportViewSet()
 workflow_api_viewset = UnveilWorkflowReportViewSet()
 workflow_task_api_viewset = UnveilWorkflowTaskReportViewSet()
 
+
+def api_index_view(request):
+    endpoints = {
+        'collection': request.build_absolute_uri('collection/'),
+        'document': request.build_absolute_uri('document/'),
+        'form': request.build_absolute_uri('form/'),
+        'generic': request.build_absolute_uri('generic/'),
+        'image': request.build_absolute_uri('image/'),
+        'locale': request.build_absolute_uri('locale/'),
+        'page': request.build_absolute_uri('page/'),
+        'redirect': request.build_absolute_uri('redirect/'),
+        'search-promotion': request.build_absolute_uri('search-promotion/'),
+        'settings': request.build_absolute_uri('settings/'),
+        'site': request.build_absolute_uri('site/'),
+        'snippet': request.build_absolute_uri('snippet/'),
+        'user': request.build_absolute_uri('user/'),
+        'admin': request.build_absolute_uri('admin/'),
+        'workflow': request.build_absolute_uri('workflow/'),
+        'workflow-task': request.build_absolute_uri('workflow-task/'),
+    }
+    return JsonResponse({'endpoints': endpoints})
+
 urlpatterns = [
+    path('', api_index_view),
     path('collection/', collection_api_viewset.as_json_view),
     path('document/', document_api_viewset.as_json_view),
     path('form/', form_api_viewset.as_json_view),

@@ -34,7 +34,14 @@ class UnveilReportViewSet(ViewSet):
     def as_json_view(self, request):
         """Return the report data as JSON with token authentication, unless user is superuser."""
         required_token = getattr(settings, 'WAGTAIL_UNVEIL_JSON_TOKEN', None)
-        token = request.GET.get('token') or request.headers.get('X-API-TOKEN')
+        # Best practice: check Authorization header for Bearer token
+        auth_header = request.headers.get('Authorization')
+        token = None
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.split(' ', 1)[1]
+        # Fallbacks for compatibility
+        if not token:
+            token = request.GET.get('token') or request.headers.get('X-API-TOKEN')
         # Bypass token check if user is authenticated and is superuser
         if not (hasattr(request, 'user') and request.user.is_authenticated and request.user.is_superuser):
             if not required_token or token != required_token:
