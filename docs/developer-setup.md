@@ -1,6 +1,6 @@
 # Setting up for development
 
-There is a very basic wagtail app in `./startexample` that can be used to test the package output locally.
+There is a very basic wagtail app in `./example_project` that can be used to test the package output locally.
 
 Clone the package to your computer from GitHub [wagtail-unveil](https://github.com/wagtail-packages/wagtail-unveil#) and chnage into the directory your cloned the package to.
 
@@ -117,6 +117,6 @@ Available environments can be listed with:
 tox list
 ```
 
-You should see the console output for the startexample app urls. The urls are grouped by frontend urls and backend urls. The backend urls are grouped by listing and edit urls. 
+You should see the console output for the example_project app urls. The urls are grouped by frontend urls and backend urls. The backend urls are grouped by listing and edit urls.
 
 You will see some urls that indicate (NO INSANCES) which means there are no records avaiable for that url. This is expected as the app is not fully populated with data.
