@@ -8,7 +8,7 @@ on:
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
-  python-matrix-tests:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -35,7 +35,7 @@ jobs:
 
   dev-branch-test:
     runs-on: ubuntu-latest
-    needs: python-matrix-tests
+    needs: test
     
     steps:
     - uses: actions/checkout@v4
