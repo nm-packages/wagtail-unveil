@@ -29,11 +29,10 @@ jobs:
         uv pip install tox tox-uv tox-gh-actions
     
     - name: Run tox
-      # tox-gh-actions will automatically select the correct environment based on the Python version
       run: |
         tox
 
-  dev-branch-test:
+  wt-dj-main-py313:
     runs-on: ubuntu-latest
     needs: test
     
@@ -43,7 +42,7 @@ jobs:
     - name: Install uv
       uses: astral-sh/setup-uv@v5
       with:
-        python-version: '3.13'  # Use Python 3.13 for development/main branch testing
+        python-version: '3.13'  # Use Python 3.13 for this job
         enable-cache: true
         cache-dependency-glob: "uv.lock"
     
@@ -51,7 +50,7 @@ jobs:
       run: |
         uv pip install tox tox-uv
     
-    - name: Run development/main branch tests
+    - name: Run wgatail-django main branch tests
       run: |
         tox -e wtmain-djmain-py313
       continue-on-error: true  # Allow failure as per tox configuration
