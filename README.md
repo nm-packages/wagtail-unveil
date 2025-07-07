@@ -129,6 +129,22 @@ python manage.py unveil_urls --api-root=http://localhost:8000/unveil/api/ --toke
 
 The admin views provide reports on available endpoints and allow you to test the response code for each URL directly from the Wagtail admin.
 
+## Development
+
+For testing information, see the [Testing Guide](./docs/testing.md).
+
+### Quick Test Setup
+
+```bash
+# Clone and setup
+uv sync
+source .venv/bin/activate
+python manage.py migrate
+
+# Run tests with the convenient script
+python runtests.py --verbose
+```
+
 ## Upcoming Features
 
 See [issues](https://github.com/wagtail-packages/wagtail-unveil/issues) for planned features and suggestions.
@@ -136,6 +152,12 @@ See [issues](https://github.com/wagtail-packages/wagtail-unveil/issues) for plan
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+Before contributing, please:
+
+1. Run the test suite with `python runtests.py`
+2. Ensure all tests pass across supported environments with `tox`
+3. Check the [Testing Guide](./docs/testing.md) for detailed testing information
 
 ## License
 
