@@ -17,8 +17,8 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    "pre-commit>=4.2.0",
-    "ruff>=0.11.6",
-    "wagtail-modeladmin>=2.1.0",
-    "tox>=4.11.3",
+    "pre-commit",
+    "ruff",
+    "wagtail-modeladmin",
+    "tox",
 ]

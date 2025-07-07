@@ -45,6 +45,16 @@ INSTALLED_APPS += ["wagtail.contrib.search_promotions"]
 WAGTAIL_UNVEIL_CHECK_USERNAME = "test" # Default is None
 WAGTAIL_UNVEIL_CHECK_PASSWORD = "test" # Default is None
 
+# Override staticfiles storage for development/testing to avoid manifest issues
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
 try:
     from .local import * # noqa: F403
 except ImportError:

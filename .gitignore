@@ -64,3 +64,6 @@ site/
 
 # Generated files
 admin_urls.txt
+
+Environment-specific files
+uv.lock
