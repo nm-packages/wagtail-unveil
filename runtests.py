@@ -23,7 +23,7 @@ import argparse
 
 def setup_django():
     """Configure Django settings for testing."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "example_project.settings.dev")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "example_project.settings.base")
     
     import django
     from django.conf import settings
