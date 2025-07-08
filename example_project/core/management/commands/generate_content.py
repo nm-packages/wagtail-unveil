@@ -58,11 +58,11 @@ class Command(BaseCommand):
         # Create example images
         # create or update 5 example images
         colors = [
-            (255, 0, 0),    # Red
-            (0, 255, 0),    # Green  
-            (0, 0, 255),    # Blue
-            (255, 255, 0),  # Yellow
-            (255, 0, 255),  # Magenta
+            (255, 182, 193),    # Light Pink
+            (144, 238, 144),    # Light Green
+            (173, 216, 230),    # Light Blue
+            (255, 255, 224),    # Light Yellow
+            (221, 160, 221),    # Plum
         ]
         
         for i, color in enumerate(colors):
