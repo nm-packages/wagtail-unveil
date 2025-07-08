@@ -60,41 +60,6 @@ INSTALLED_APPS = [
     # Optional apps are listed below
 ]
 
-# The unveil package
-INSTALLED_APPS += ["wagtail_unveil"]
-
-# Wagtail Model Admin
-INSTALLED_APPS += ["wagtail_modeladmin"]
-
-# Wagtail Locales
-INSTALLED_APPS += ["wagtail.locales"]
-WAGTAIL_I18N_ENABLED = True
-WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
-    ('en', "English"),
-    ('fr', "French"),
-    ('es', "Spanish"),
-]
-
-# Wagtail Search Promotions
-INSTALLED_APPS += ["wagtail.contrib.search_promotions"]
-
-# Wagtail Unveil Settings
-# List of models to include in the Generic Models report
-# These should be models managed by ModelViewSet or other generic views
-# that aren't covered by the standard snippet/page/document reports
-WAGTAIL_UNVEIL_GENERIC_MODELS = [
-    'breads.Country',
-]
-
-# Maximum number of instances to include per model in unveil reports
-WAGTAIL_UNVEIL_MAX_INSTANCES = 1
-
-# Base URL for generating URLs in reports
-# This should be the base URL of your Wagtail site, e.g. "http://localhost:8000" or could be the same as WAGTAIL_ADMIN_BASE_URL
-WAGTAIL_UNVEIL_BASE_URL = "http://localhost:8000"
-
-WAGTAIL_UNVEIL_JSON_TOKEN = "1234"
-
 
 MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -237,3 +202,45 @@ WAGTAILDOCS_EXTENSIONS = [
     "xlsx",
     "zip",
 ]
+
+# START - Optional apps ###
+
+# The unveil package
+INSTALLED_APPS += ["wagtail_unveil"]
+
+# Wagtail Model Admin
+INSTALLED_APPS += ["wagtail_modeladmin"]
+
+# Wagtail Locales
+INSTALLED_APPS += ["wagtail.locales"]
+WAGTAIL_I18N_ENABLED = True
+WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
+    ('en', "English"),
+    ('fr', "French"),
+    ('es', "Spanish"),
+]
+
+# Wagtail Search Promotions
+INSTALLED_APPS += ["wagtail.contrib.search_promotions"]
+
+# END - Optional apps ###
+
+# START - package settings ###
+
+# List of models to include in the Generic Models report
+# These should be models managed by ModelViewSet or other generic views
+# that aren't covered by the standard snippet/page/document reports
+WAGTAIL_UNVEIL_GENERIC_MODELS = [
+    'breads.Country',
+]
+
+# Maximum number of instances to include per model in unveil reports
+WAGTAIL_UNVEIL_MAX_INSTANCES = 1
+
+# Base URL for generating URLs in reports
+# This should be the base URL of your Wagtail site, e.g. "http://localhost:8000" or could be the same as WAGTAIL_ADMIN_BASE_URL
+WAGTAIL_UNVEIL_BASE_URL = "http://localhost:8000"
+
+WAGTAIL_UNVEIL_JSON_TOKEN = "1234"
+
+# END - package settings ###
