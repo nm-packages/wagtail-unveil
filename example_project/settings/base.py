@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     # Start example apps installed by the default wagtail start command
     "example_project.home",
     "example_project.search",
+    "example_project.for_snippets",
+    "example_project.core",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.embeds",
@@ -202,6 +204,8 @@ WAGTAILDOCS_EXTENSIONS = [
     "xlsx",
     "zip",
 ]
+
+WAGTAILSNIPPETS_MENU_SHOW_ALL = True
 
 # START - Optional apps ###
 
