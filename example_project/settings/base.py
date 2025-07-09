@@ -42,8 +42,6 @@ INSTALLED_APPS = [
     "example_project.for_snippets",
     "example_project.for_forms",
     "example_project.core",
-    "wagtail.contrib.forms",
-    "wagtail.contrib.redirects",
     "wagtail.embeds",
     "wagtail.sites",
     "wagtail.users",
@@ -174,7 +172,6 @@ STORAGES = {
 # can exceed this limit within Wagtail's page editor.
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000
 
-
 # Wagtail settings
 
 WAGTAIL_SITE_NAME = "example_project"
@@ -210,10 +207,10 @@ WAGTAILDOCS_EXTENSIONS = [
 
 WAGTAILSNIPPETS_MENU_SHOW_ALL = True
 
-# START - Optional apps ###
-
 # The unveil package
 INSTALLED_APPS += ["wagtail_unveil"]
+
+# START - Optional apps ###
 
 # Wagtail Model Admin
 INSTALLED_APPS += ["wagtail_modeladmin"]
@@ -227,8 +224,12 @@ WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
     ('es', "Spanish"),
 ]
 
-# Wagtail Search Promotions
+# Wagtail Contrib Search Promotions
 INSTALLED_APPS += ["wagtail.contrib.search_promotions"]
+# Wagtail Contrib Form
+INSTALLED_APPS += ["wagtail.contrib.forms"]
+# Wagtail Contrib Redirects
+INSTALLED_APPS += ["wagtail.contrib.redirects"]
 
 # END - Optional apps ###
 
@@ -236,13 +237,13 @@ INSTALLED_APPS += ["wagtail.contrib.search_promotions"]
 
 # List of models to include in the Generic Models report
 # These should be models managed by ModelViewSet or other generic views
-# that aren't covered by the standard snippet/page/document reports
+
 WAGTAIL_UNVEIL_GENERIC_MODELS = [
-    'breads.Country',
+    'core.ExampleModelViewSetModel',
 ]
 
 # Maximum number of instances to include per model in unveil reports
-WAGTAIL_UNVEIL_MAX_INSTANCES = 1
+WAGTAIL_UNVEIL_MAX_INSTANCES = 10
 
 # Base URL for generating URLs in reports
 # This should be the base URL of your Wagtail site, e.g. "http://localhost:8000" or could be the same as WAGTAIL_ADMIN_BASE_URL
