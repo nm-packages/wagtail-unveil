@@ -37,13 +37,17 @@
 
         <header>
             <div class="container">
-                {% block header %}{% endblock %}
+                {% block header %}
+                    <h1>{{ page.title }}</h1>
+                {% endblock %}
             </div>
         </header>
 
         {% block banner_image %}
             {% if page.banner_image %}
-                {% image page.banner_image 800x600 %}
+                <div class="container">
+                    {% image page.banner_image fill-1920x720 %}
+                </div>
             {% endif %}
         {% endblock banner_image %}
 
@@ -56,9 +60,12 @@
         <footer>
             <div class="container">
                 {% block footer %}
-                    <p>&copy; {{ current_year }} Example Project |
+                    <p>
+                        &copy; {{ current_year }} Example Project |
                         <a href="https://github.com/nm-packages/wagtail-unveil">Wagtail-Unveil</a> |
-                        Template: {{ request.resolver_match.view_name }}</p>
+                        Template: {{ request.resolver_match.view_name }} |
+                        Styling: <a href="https://picocss.com/">Pico CSS</a>
+                    </p>
                 {% endblock %}
             </div>
         </footer>
