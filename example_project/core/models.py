@@ -27,6 +27,7 @@ class BasePage(Page):
 
 
 class ExamplePageModelBasic(BasePage):
+    """A basic example page model"""
     body = RichTextField(blank=True)
 
     content_panels = BasePage.content_panels + [
@@ -35,6 +36,7 @@ class ExamplePageModelBasic(BasePage):
 
 
 class ExamplePageModelStandard(BasePage):
+    """A standard example page model"""
     intro = models.TextField(blank=True)
     body = RichTextField(blank=True)
 
@@ -43,3 +45,11 @@ class ExamplePageModelStandard(BasePage):
         FieldPanel('intro'),
         FieldPanel('body'),
     ]
+
+
+class ExampleModelViewSetModel(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.title
