@@ -21,7 +21,7 @@ Requirements:
 
 from django.core.management.base import BaseCommand
 from example_project.for_snippets.models import ExampleSnippetModel, ExampleSnippetViewSetModel
-from example_project.core.models import ExamplePageModelBasic, ExamplePageModelStandard
+from example_project.core.models import ExamplePageModelBasic, ExamplePageModelStandard, ExampleModelViewSetModel, ExampleWagtailModeladminModel
 from example_project.for_forms.models import ExampleFormPage
 from wagtail.contrib.forms.models import FormSubmission
 from wagtail.contrib.search_promotions.models import SearchPromotion, Query
@@ -80,6 +80,14 @@ class Command(BaseCommand):
         # Create redirects
         self.generate_example_redirects()
         self.stdout.write("Example redirects created successfully!")
+
+        # Create example models for the ModelViewSet
+        self.generate_example_model_viewset_models()
+        self.stdout.write("Example Model ViewSet models created successfully!")
+
+        # Create example models for the Wagtail ModelAdmin
+        self.generate_example_wagtail_modeladmin_models()
+        self.stdout.write("Example Wagtail ModelAdmin models created successfully!")
 
         self.stdout.write("Example content generated successfully!")
 
@@ -377,3 +385,29 @@ class Command(BaseCommand):
 
                 redirect_type = "permanent" if config['is_permanent'] else "temporary"
                 self.stdout.write(f"Created {redirect_type} redirect: {old_path} → {target_description}")
+
+    def generate_example_model_viewset_models(self):
+        """
+        Creates example models for the Wagtail ModelViewSet.
+        """
+        for i in range(5):
+            ExampleModelViewSetModel.objects.update_or_create(
+                title=f"Example Model ViewSet {i + 1}",
+                defaults={
+                    "description": f"This is an example model viewset description for model {i + 1}."
+                }
+            )
+            self.stdout.write(f"Created Example Model ViewSet {i + 1}")
+
+    def generate_example_wagtail_modeladmin_models(self):
+        """
+        Creates example models for the Wagtail ModelAdmin.
+        """
+        for i in range(5):
+            ExampleWagtailModeladminModel.objects.update_or_create(
+                title=f"Example Wagtail ModelAdmin {i + 1}",
+                defaults={
+                    "description": f"This is an example wagtail modeladmin description for model {i + 1}."
+                }
+            )
+            self.stdout.write(f"Created Example Wagtail ModelAdmin {i + 1}")
