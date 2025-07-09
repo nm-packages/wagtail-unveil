@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "example_project.home",
     "example_project.search",
     "example_project.for_snippets",
+    "example_project.for_forms",
     "example_project.core",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
