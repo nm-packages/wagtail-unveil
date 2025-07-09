@@ -3,6 +3,7 @@ from example_project.for_snippets.models import ExampleSnippetModel, ExampleSnip
 from example_project.core.models import ExamplePageModelBasic, ExamplePageModelStandard
 from example_project.for_forms.models import ExampleFormPage
 from wagtail.contrib.forms.models import FormSubmission
+from wagtail.contrib.search_promotions.models import SearchPromotion, Query
 from wagtail.models import Page
 from wagtail.images.models import Image
 from wagtail.documents.models import Document
@@ -176,6 +177,33 @@ class Command(BaseCommand):
                         form_data={'name': f'Example User {j + 1}'}
                     )
         self.stdout.write("Example form pages created successfully!")
+
+        # Create 5 example search_promotions
+        # create or update 5 example search promotions
+        for i in range(5):
+            query, created = Query.objects.get_or_create(
+                query_string=f"example query {i + 1}",
+            )
+            
+            # Only create search promotion if it doesn't already exist for this query
+            if not SearchPromotion.objects.filter(query=query).exists():
+                # Get a random page to promote
+                promoted_page = ExamplePageModelBasic.objects.order_by('?').first()
+                if promoted_page:
+                    SearchPromotion.objects.create(
+                        query=query,
+                        page=promoted_page,
+                        description=f"This is an example search promotion description for promotion {i + 1}.",
+                    )
+                external_link_url = f"https://example.com/promotion-{i + 1}"
+                SearchPromotion.objects.create(
+                    query=query,
+                    external_link_url=external_link_url,
+                    external_link_text=f"Example External Link {i + 1}",
+                    description=f"This is an example search promotion with an external link for promotion {i + 1}.",
+                )
+        
+        self.stdout.write("Example search promotions created successfully!")
 
         # Here you would implement the logic to create example content
         # For demonstration purposes, we will just print a message
