@@ -15,47 +15,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("Generating example content...")
 
-        # Create example snippets
-        # create or update 5 example snippets
-        for i in range(5):
-            ExampleSnippetModel.objects.update_or_create(
-                title=f"Example Snippet {i + 1}",
-                defaults={
-                    "description": f"This is an example snippet description for snippet {i + 1}."
-                }
-            )
-            ExampleSnippetViewSetModel.objects.update_or_create(
-                title=f"Example ViewSet Snippet {i + 1}",
-                defaults={
-                    "description": f"This is an example ViewSet snippet description for snippet {i + 1}."
-                }
-            )
-        self.stdout.write("Example snippets created successfully!")
-
-        # Create example pages
-        # create or update 5 example pages
-        root_page = Page.objects.get(id=3)  # Assuming the root page ID is 3
-        for i in range(5):
-            if not ExamplePageModelBasic.objects.filter(title=f"Example Basic Page {i + 1}").exists():
-                root_page.add_child(
-                    instance=ExamplePageModelBasic(
-                        title=f"Example Basic Page {i + 1}",
-                        slug=f"example-basic-page-{i + 1}",
-                        body=f"This is the body content for example basic page {i + 1}."
-                    )
-                )
-            if not ExamplePageModelStandard.objects.filter(title=f"Example Standard Page {i + 1}").exists():
-                root_page.add_child(
-                    instance=ExamplePageModelStandard(
-                        title=f"Example Standard Page {i + 1}",
-                        slug=f"example-standard-page-{i + 1}",
-                        intro=f"This is the intro for example standard page {i + 1}.",
-                        body=f"This is the body content for example standard page {i + 1}."
-                    )
-                )
-        self.stdout.write("Example pages created successfully!")
-
-        # Create example images
+                # Create example images
         # create or update 5 example images
         colors = [
             (255, 182, 193),    # Light Pink
@@ -135,6 +95,55 @@ class Command(BaseCommand):
                 self.stdout.write(f"Created document: {document_title} (.{ext})")
         
         self.stdout.write("Example documents created successfully!")
+
+        # Create example snippets
+        # create or update 5 example snippets
+        for i in range(5):
+            ExampleSnippetModel.objects.update_or_create(
+                title=f"Example Snippet {i + 1}",
+                defaults={
+                    "description": f"This is an example snippet description for snippet {i + 1}."
+                }
+            )
+            ExampleSnippetViewSetModel.objects.update_or_create(
+                title=f"Example ViewSet Snippet {i + 1}",
+                defaults={
+                    "description": f"This is an example ViewSet snippet description for snippet {i + 1}."
+                }
+            )
+        self.stdout.write("Example snippets created successfully!")
+
+        # Create example pages
+        # create or update 5 example pages
+
+        # First we need a random selection of 5 images
+        example_images = Image.objects.all().order_by('?')[:5]
+        if not example_images.exists():
+            self.stdout.write("No images found to associate with example pages. Please create some images first.")
+            return
+        
+        root_page = Page.objects.get(id=3)  # Assuming the root page ID is 3, which it should be in a starter project
+        for i in range(5):
+            if not ExamplePageModelBasic.objects.filter(title=f"Example Basic Page {i + 1}").exists():
+                root_page.add_child(
+                    instance=ExamplePageModelBasic(
+                        title=f"Example Basic Page {i + 1}",
+                        slug=f"example-basic-page-{i + 1}",
+                        body=f"This is the body content for example basic page {i + 1}.",
+                        banner_image=example_images[i % 5]  # Assign an image to the page
+                    )
+                )
+            if not ExamplePageModelStandard.objects.filter(title=f"Example Standard Page {i + 1}").exists():
+                root_page.add_child(
+                    instance=ExamplePageModelStandard(
+                        title=f"Example Standard Page {i + 1}",
+                        slug=f"example-standard-page-{i + 1}",
+                        intro=f"This is the intro for example standard page {i + 1}.",
+                        body=f"This is the body content for example standard page {i + 1}.",
+                        banner_image=example_images[i % 5]  # Assign an image to the page
+                    )
+                )
+        self.stdout.write("Example pages created successfully!")
 
         # Here you would implement the logic to create example content
         # For demonstration purposes, we will just print a message
