@@ -243,7 +243,7 @@ WAGTAIL_UNVEIL_GENERIC_MODELS = [
 ]
 
 # Maximum number of instances to include per model in unveil reports
-WAGTAIL_UNVEIL_MAX_INSTANCES = 10
+WAGTAIL_UNVEIL_MAX_INSTANCES = 1
 
 # Base URL for generating URLs in reports
 # This should be the base URL of your Wagtail site, e.g. "http://localhost:8000" or could be the same as WAGTAIL_ADMIN_BASE_URL

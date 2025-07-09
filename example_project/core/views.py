@@ -6,6 +6,7 @@ class ExampleModelViewSet(ModelViewSet):
     form_fields = ('title', 'description')
     add_to_admin_menu = True
     icon = 'doc-full-inverse'
+    menu_label = 'Ex. Model ViewSet'
 
 
 example_model_viewset = ExampleModelViewSet()
