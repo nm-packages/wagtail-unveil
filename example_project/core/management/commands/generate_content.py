@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand
 from example_project.for_snippets.models import ExampleSnippetModel, ExampleSnippetViewSetModel
 from example_project.core.models import ExamplePageModelBasic, ExamplePageModelStandard
+from example_project.for_forms.models import ExampleFormPage
+from wagtail.contrib.forms.models import FormSubmission
 from wagtail.models import Page
 from wagtail.images.models import Image
 from wagtail.documents.models import Document
@@ -15,7 +17,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("Generating example content...")
 
-                # Create example images
+        # Create example images
         # create or update 5 example images
         colors = [
             (255, 182, 193),    # Light Pink
@@ -118,11 +120,13 @@ class Command(BaseCommand):
 
         # First we need a random selection of 5 images
         example_images = Image.objects.all().order_by('?')[:5]
+
         if not example_images.exists():
             self.stdout.write("No images found to associate with example pages. Please create some images first.")
             return
         
         root_page = Page.objects.get(id=3)  # Assuming the root page ID is 3, which it should be in a starter project
+
         for i in range(5):
             if not ExamplePageModelBasic.objects.filter(title=f"Example Basic Page {i + 1}").exists():
                 root_page.add_child(
@@ -144,6 +148,34 @@ class Command(BaseCommand):
                     )
                 )
         self.stdout.write("Example pages created successfully!")
+
+        # Create example form pages
+        # create or update 5 example form pages with a single name field and add submissions
+        for i in range(5):
+            if not ExampleFormPage.objects.filter(title=f"Example Form Page {i + 1}").exists():
+                form_page = ExampleFormPage(
+                    title=f"Example Form Page {i + 1}",
+                    slug=f"example-form-page-{i + 1}",
+                    intro=f"This is the intro for example form page {i + 1}.",
+                    thank_you_text=f"Thank you for submitting the form on example form page {i + 1}."
+                )
+                # Add a form field for the name
+                form_page.form_fields.create(
+                    field_type='singleline',  # Single line text field for name
+                    label='Name',
+                    required=True
+                )
+
+                root_page.add_child(instance=form_page)
+                form_page.save_revision().publish()
+
+                # Create 5 sample submissions for each form page
+                for j in range(5):
+                    FormSubmission.objects.create(
+                        page=form_page,
+                        form_data={'name': f'Example User {j + 1}'}
+                    )
+        self.stdout.write("Example form pages created successfully!")
 
         # Here you would implement the logic to create example content
         # For demonstration purposes, we will just print a message
