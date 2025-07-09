@@ -13,6 +13,7 @@ Generated content includes:
 - Form pages (5 form pages with sample submissions)
 - Search promotions (5 search queries with page/external link promotions)
 - Collections (5 collections)
+- Redirects (5 redirects demonstrating page and external redirects)
 
 Requirements:
 - PIL (Pillow) for image generation
@@ -24,7 +25,8 @@ from example_project.core.models import ExamplePageModelBasic, ExamplePageModelS
 from example_project.for_forms.models import ExampleFormPage
 from wagtail.contrib.forms.models import FormSubmission
 from wagtail.contrib.search_promotions.models import SearchPromotion, Query
-from wagtail.models import Page, Collection
+from wagtail.contrib.redirects.models import Redirect
+from wagtail.models import Page, Collection, Site
 from wagtail.images.models import Image
 from wagtail.documents.models import Document
 from PIL import Image as PILImage, ImageDraw, ImageFont
@@ -38,6 +40,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         Orchestrates the creation of all example content types in a logical order:
+        1. Media content first (images, documents) - needed by pages
+        2. Snippets - reusable content components  
+        3. Pages - content that may reference media and snippets
+        4. Form pages - specialized pages with form functionality
+        5. Search promotions - query-based content promotion
+        6. Collections - organizational structure for media
+        7. Redirects - URL redirections for old/moved content
         """
         self.stdout.write("Generating example content...")
 
@@ -67,6 +76,10 @@ class Command(BaseCommand):
         # Create collections
         self.generate_example_collections()
         self.stdout.write("Example collections created successfully!")
+
+        # Create redirects
+        self.generate_example_redirects()
+        self.stdout.write("Example redirects created successfully!")
 
         self.stdout.write("Example content generated successfully!")
 
@@ -287,3 +300,80 @@ class Command(BaseCommand):
                 new_collection = Collection(name=collection_name)
                 root_collection.add_child(instance=new_collection)
                 self.stdout.write(f"Created collection: {collection_name}")
+            else:
+                self.stdout.write(f"Collection already exists: {collection_name}")
+
+    def generate_example_redirects(self):
+        """
+        Creates example redirects.
+        """
+        
+        # Get the default site for redirect creation (always available in Wagtail projects)
+        default_site = Site.objects.get(is_default_site=True)
+        
+        # Get some existing pages to redirect to
+        example_pages = ExamplePageModelBasic.objects.all()[:3]
+        
+        # Define redirect configurations
+        redirect_configs = [
+            # Page redirects (internal redirects to existing pages)
+            {
+                'old_path': '/old-page-1/',
+                'redirect_type': 'page',
+                'is_permanent': True,
+                'description': 'Permanent redirect from old page URL to new page'
+            },
+            {
+                'old_path': '/old-page-2/',
+                'redirect_type': 'page', 
+                'is_permanent': False,
+                'description': 'Temporary redirect from old page URL to new page'
+            },
+            {
+                'old_path': '/legacy/old-section/',
+                'redirect_type': 'page',
+                'is_permanent': True,
+                'description': 'Permanent redirect from legacy section URL'
+            },
+            
+            # External redirects (redirects to external URLs)
+            {
+                'old_path': '/external-link-1/',
+                'redirect_type': 'external',
+                'redirect_link': 'https://wagtail.org/',
+                'is_permanent': True,
+                'description': 'Permanent redirect to Wagtail website'
+            },
+            {
+                'old_path': '/external-link-2/',
+                'redirect_type': 'external', 
+                'redirect_link': 'https://docs.wagtail.org/',
+                'is_permanent': False,
+                'description': 'Temporary redirect to Wagtail documentation'
+            },
+        ]
+        
+        for i, config in enumerate(redirect_configs):
+            old_path = config['old_path']
+
+            if not Redirect.objects.filter(old_path=old_path).exists():
+                redirect_kwargs = {
+                    'old_path': old_path,
+                    'is_permanent': config['is_permanent'],
+                    'automatically_created': False,  # These are manually created examples
+                    'site': default_site,
+                }
+                
+                # Set redirect target based on type
+                if config['redirect_type'] == 'page':
+                    redirect_kwargs['redirect_page'] = example_pages[i % len(example_pages)]
+                    target_description = f"page '{redirect_kwargs['redirect_page'].title}'"
+                else:
+                    # Redirect to external URL
+                    redirect_kwargs['redirect_link'] = config['redirect_link']
+                    target_description = f"external URL '{config['redirect_link']}'"
+
+                Redirect.objects.create(**redirect_kwargs)
+
+                redirect_type = "permanent" if config['is_permanent'] else "temporary"
+                self.stdout.write(f"Created {redirect_type} redirect: {old_path} → {target_description}")
