@@ -1,4 +1,4 @@
-{% load static wagtailcore_tags wagtailuserbar %}
+{% load static wagtailcore_tags wagtailuserbar wagtailimages_tags %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -24,6 +24,7 @@
         {% endif %}
 
         {# Global stylesheets #}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
         <link rel="stylesheet" type="text/css" href="{% static 'css/example_project.css' %}">
 
         {% block extra_css %}
@@ -34,7 +35,40 @@
     <body class="{% block body_class %}{% endblock %}">
         {% wagtailuserbar %}
 
-        {% block content %}{% endblock %}
+        <header>
+            <div class="container">
+                {% block header %}
+                    <h1>{{ page.title }}</h1>
+                {% endblock %}
+            </div>
+        </header>
+
+        {% block banner_image %}
+            {% if page.banner_image %}
+                <div class="container">
+                    {% image page.banner_image fill-1920x720 %}
+                </div>
+            {% endif %}
+        {% endblock banner_image %}
+
+        <main>
+            <div class="container">
+                {% block content %}This page has no content{% endblock %}
+            </div>
+        </main>
+
+        <footer>
+            <div class="container">
+                {% block footer %}
+                    <p>
+                        &copy; {{ current_year }} Example Project |
+                        <a href="https://github.com/nm-packages/wagtail-unveil">Wagtail-Unveil</a> |
+                        Template: {{ request.resolver_match.view_name }} |
+                        Styling: <a href="https://picocss.com/">Pico CSS</a>
+                    </p>
+                {% endblock %}
+            </div>
+        </footer>
 
         {# Global javascript #}
         <script type="text/javascript" src="{% static 'js/example_project.js' %}"></script>

@@ -16,6 +16,18 @@ import os
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = "django-insecure-8yw(eft92qp%nyy%9l%f93k7^ah4)dt=pm-%w5jhw#xrjc2=vi"
+
+# SECURITY WARNING: define the correct hosts in production!
+ALLOWED_HOSTS = ["*"]
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField" # Hides the warning about using AutoField as the default primary key type
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -27,6 +39,9 @@ INSTALLED_APPS = [
     # Start example apps installed by the default wagtail start command
     "example_project.home",
     "example_project.search",
+    "example_project.for_snippets",
+    "example_project.for_forms",
+    "example_project.core",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.embeds",
@@ -47,8 +62,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # End example apps installed by the default wagtail start command
-    # Optional apps are listed in the dev.py file
+    # Optional apps are listed below
 ]
+
 
 MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -81,7 +97,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "example_project.wsgi.application"
+# WSGI_APPLICATION = "example_project.wsgi.application"
 
 
 # Database
@@ -144,18 +160,13 @@ STATIC_URL = "/static/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
-# Default storage settings, with the staticfiles storage updated.
-# See https://docs.djangoproject.com/en/5.1/ref/settings/#std-setting-STORAGES
+# Override staticfiles storage for development/testing to avoid manifest issues
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
-    # ManifestStaticFilesStorage is recommended in production, to prevent
-    # outdated JavaScript / CSS assets being served from cache
-    # (e.g. after a Wagtail upgrade).
-    # See https://docs.djangoproject.com/en/5.1/ref/contrib/staticfiles/#manifeststaticfilesstorage
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
@@ -197,7 +208,32 @@ WAGTAILDOCS_EXTENSIONS = [
     "zip",
 ]
 
-# Wagtail Unveil Settings
+WAGTAILSNIPPETS_MENU_SHOW_ALL = True
+
+# START - Optional apps ###
+
+# The unveil package
+INSTALLED_APPS += ["wagtail_unveil"]
+
+# Wagtail Model Admin
+INSTALLED_APPS += ["wagtail_modeladmin"]
+
+# Wagtail Locales
+INSTALLED_APPS += ["wagtail.locales"]
+WAGTAIL_I18N_ENABLED = True
+WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
+    ('en', "English"),
+    ('fr', "French"),
+    ('es', "Spanish"),
+]
+
+# Wagtail Search Promotions
+INSTALLED_APPS += ["wagtail.contrib.search_promotions"]
+
+# END - Optional apps ###
+
+# START - package settings ###
+
 # List of models to include in the Generic Models report
 # These should be models managed by ModelViewSet or other generic views
 # that aren't covered by the standard snippet/page/document reports
@@ -213,3 +249,5 @@ WAGTAIL_UNVEIL_MAX_INSTANCES = 1
 WAGTAIL_UNVEIL_BASE_URL = "http://localhost:8000"
 
 WAGTAIL_UNVEIL_JSON_TOKEN = "1234"
+
+# END - package settings ###

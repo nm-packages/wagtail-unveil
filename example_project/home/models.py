@@ -1,10 +1,10 @@
 from django.db import models
 
-from wagtail.models import Page
 from wagtail.admin.panels import FieldPanel
+from example_project.core.models import BasePage
 
 
-class HomePage(Page):
+class HomePage(BasePage):
     pass
 
 
