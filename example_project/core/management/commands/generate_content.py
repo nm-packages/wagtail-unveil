@@ -4,7 +4,7 @@ from example_project.core.models import ExamplePageModelBasic, ExamplePageModelS
 from example_project.for_forms.models import ExampleFormPage
 from wagtail.contrib.forms.models import FormSubmission
 from wagtail.contrib.search_promotions.models import SearchPromotion, Query
-from wagtail.models import Page
+from wagtail.models import Page, Collection
 from wagtail.images.models import Image
 from wagtail.documents.models import Document
 from PIL import Image as PILImage, ImageDraw, ImageFont
@@ -205,6 +205,21 @@ class Command(BaseCommand):
         
         self.stdout.write("Example search promotions created successfully!")
 
-        # Here you would implement the logic to create example content
-        # For demonstration purposes, we will just print a message
+        # Generate example collections
+        # create or update 5 example collections as children of the root collection
+        
+        root_collection = Collection.get_first_root_node()
+        # if root_collection:
+        for i in range(5):
+            collection_name = f"Example Collection {i + 1}"
+            
+            # Check if collection already exists as a child of root
+            existing_collection = root_collection.get_children().filter(name=collection_name).first()
+            if not existing_collection:
+                new_collection = Collection(name=collection_name)
+                root_collection.add_child(instance=new_collection)
+                self.stdout.write(f"Created collection: {collection_name}")
+            
+            self.stdout.write("Example collections created successfully!")
+    
         self.stdout.write("Example content generated successfully!")
