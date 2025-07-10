@@ -1,3 +1,4 @@
+from django.conf import settings
 from wagtail import hooks
 from wagtail.admin.viewsets.base import ViewSetGroup
 
@@ -30,7 +31,7 @@ class UnveilReportsViewSetGroup(ViewSetGroup):
 
     menu_label = "Unveil Reports"
     menu_icon = "tasks"
-    menu_order = 1  # Position in the menu
+    menu_order = getattr(settings, "WAGTAIL_UNVEIL_MENU_ORDER", 1)
     items = (
         unveil_page_viewset,
         unveil_image_viewset,

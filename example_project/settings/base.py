@@ -96,6 +96,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "wagtail.contrib.settings.context_processors.settings",
             ],
         },
     },
@@ -236,6 +237,10 @@ INSTALLED_APPS += ["wagtail.contrib.search_promotions"]
 INSTALLED_APPS += ["wagtail.contrib.forms"]
 # Wagtail Contrib Redirects
 INSTALLED_APPS += ["wagtail.contrib.redirects"]
+# Wagtail Contrib Settings
+INSTALLED_APPS += [
+    "wagtail.contrib.settings"
+]  # The context processor is already included above
 
 # END - Optional apps ###
 
@@ -254,6 +259,9 @@ WAGTAIL_UNVEIL_WAGTAIL_MODELADMIN_MODELS = [
 
 # Maximum number of instances to include per model in unveil reports
 WAGTAIL_UNVEIL_MAX_INSTANCES = 1
+
+# Position the Unveil reports menu item in the Wagtail admin menu
+WAGTAIL_UNVEIL_MENU_ORDER = 1
 
 # Base URL for generating URLs in reports
 # This should be the base URL of your Wagtail site, e.g. "http://localhost:8000" or could be the same as WAGTAIL_ADMIN_BASE_URL

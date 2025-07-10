@@ -53,13 +53,20 @@
 
     <main>
       <div class="container">
-        {% block content %}This page has no content{% endblock %}
+        {% block content %}
+          {% if settings.core.ExampleMessageSiteSettings.empty_content_message %}
+            <p>{{ settings.core.ExampleMessageSiteSettings.empty_content_message|safe }}</p>
+          {% else %}
+            <p>Run the command <code>python manage.py generate_content</code> to populate the database with example content.</p>
+          {% endif %}
+        {% endblock %}
       </div>
     </main>
 
     <footer>
       <div class="container">
         {% block footer %}
+          <p>{{ settings.core.ExampleFooterGenericSettings.footer|safe }}</p>
           <p>
             &copy; {{ current_year }} Example Project |
             <a href="https://github.com/nm-packages/wagtail-unveil">Wagtail-Unveil</a> |

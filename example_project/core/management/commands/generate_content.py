@@ -29,6 +29,8 @@ from example_project.core.models import (
     ExamplePageModelStandard,
     ExampleModelViewSetModel,
     ExampleWagtailModeladminModel,
+    ExampleMessageSiteSettings,
+    ExampleFooterGenericSettings,
 )
 from example_project.for_forms.models import ExampleFormPage
 from wagtail.contrib.forms.models import FormSubmission
@@ -48,13 +50,15 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         Orchestrates the creation of all example content types in a logical order:
-        1. Media content first (images, documents) - needed by pages
-        2. Snippets - reusable content components
-        3. Pages - content that may reference media and snippets
-        4. Form pages - specialized pages with form functionality
-        5. Search promotions - query-based content promotion
-        6. Collections - organizational structure for media
-        7. Redirects - URL redirections for old/moved content
+        1. Media (images, documents) - needed by pages
+        2. Snippets
+        3. Pages
+        4. Form pages
+        5. Search promotions
+        6. Collections
+        7. Redirects
+        8. ModelViewSet and Wagtail ModelAdmin models
+        9. Settings
         """
         self.stdout.write("Generating example content...")
 
@@ -96,6 +100,13 @@ class Command(BaseCommand):
         # Create example models for the Wagtail ModelAdmin
         self.generate_example_wagtail_modeladmin_models()
         self.stdout.write("Example Wagtail ModelAdmin models created successfully!")
+
+        # Create example settings
+        self.generate_example_footer_settings()
+        self.stdout.write("Example footer settings created successfully!")
+
+        self.generate_example_message_settings()
+        self.stdout.write("Example message settings created successfully!")
 
         self.stdout.write("Example content generated successfully!")
 
@@ -463,3 +474,45 @@ class Command(BaseCommand):
                 },
             )
             self.stdout.write(f"Created Example Wagtail ModelAdmin {i + 1}")
+
+    def generate_example_footer_settings(self):
+        """
+        Creates example footer settings for the generic and site settings.
+        """
+        # Create or update generic footer setting
+        footer_setting, created = ExampleFooterGenericSettings.objects.get_or_create(
+            defaults={
+                "footer": "Generic footer text that will be displayed on all pages."
+            }
+        )
+        if not created:
+            footer_setting.footer = (
+                "Generic footer text that will be displayed on all pages."
+            )
+            footer_setting.save()
+
+        self.stdout.write("Created Example Footer Generic Setting")
+
+    def generate_example_message_settings(self):
+        """
+        Creates example message settings for the site settings.
+        """
+        # Get the default site
+        from wagtail.models import Site
+
+        default_site = Site.objects.get(is_default_site=True)
+
+        # Create or update site-specific message setting
+        message_setting, created = ExampleMessageSiteSettings.objects.get_or_create(
+            site=default_site,
+            defaults={
+                "empty_content_message": "This message will be displayed when there is no content available."
+            },
+        )
+        if not created:
+            message_setting.empty_content_message = (
+                "This message will be displayed when there is no content available."
+            )
+            message_setting.save()
+
+        self.stdout.write("Created Example Message Site Setting")
