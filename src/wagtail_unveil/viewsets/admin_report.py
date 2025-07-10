@@ -22,11 +22,11 @@ def get_admin_urls(base_url, max_instances):
     ]
 
     # Add custom admin URLs from settings
-    custom_admin_urls = getattr(settings, 'WAGTAIL_UNVEIL_ADMIN_URLS', [])
+    custom_admin_urls = getattr(settings, "WAGTAIL_UNVEIL_ADMIN_URLS", [])
     for url in custom_admin_urls:
         try:
-            url_name = url.get('name', '')
-            url_type = url.get('type', 'custom')
+            url_name = url.get("name", "")
+            url_type = url.get("type", "custom")
             full_url = f"{base_url}admin/{url_name}/"
             urls.append((f"wagtail.Admin ({url_name})", url_type, full_url))
         except KeyError:
@@ -45,7 +45,7 @@ class UnveilAdminReportIndexView(UnveilReportView):
     def get_queryset(self):
         all_urls = []
         counter = 1
-        max_instances = getattr(settings, 'WAGTAIL_UNVEIL_MAX_INSTANCES', 1)
+        max_instances = getattr(settings, "WAGTAIL_UNVEIL_MAX_INSTANCES", 1)
         base_url = getattr(settings, "WAGTAIL_UNVEIL_BASE_URL", "http://localhost:8000")
         admin_urls = get_admin_urls(base_url, max_instances)
         for model_name, url_type, url in admin_urls:
@@ -65,4 +65,3 @@ class UnveilAdminReportViewSet(UnveilReportViewSet):
 
 # Create an instance of the ViewSet to be registered
 unveil_admin_viewset = UnveilAdminReportViewSet("unveil_admin_report")
-

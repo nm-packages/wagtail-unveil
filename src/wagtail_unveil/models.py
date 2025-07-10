@@ -12,6 +12,7 @@ class UrlEntry:
         url_type: The type of URL.
         url: The URL.
     """
+
     id: int = field(default_factory=lambda: 0)
     model_name: str = field(default_factory=lambda: "")
     url_type: str = field(default_factory=lambda: "")

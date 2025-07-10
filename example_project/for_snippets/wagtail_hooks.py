@@ -13,6 +13,7 @@ class ExampleSnippetViewSetModelViewSet(SnippetViewSet):
         FieldPanel("description"),
     ]
 
+
 # Instead of using @register_snippet as a decorator on the model class,
 # register the snippet using register_snippet as a function and pass in
 # the custom SnippetViewSet subclass.

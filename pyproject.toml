@@ -22,3 +22,24 @@ dev = [
     "wagtail-modeladmin",
     "tox",
 ]
+
+[tool.ruff]
+# Optional: Configure line length and other formatting options
+line-length = 88
+target-version = "py39"
+
+# Exclude migration files and other auto-generated files
+exclude = [
+    "*/migrations/*",
+    "migrations/",
+    "__pycache__",
+    ".git",
+    ".venv",
+    "venv/",
+    "build/",
+    "dist/",
+]
+
+[tool.ruff.format]
+# Enforce double quotes for strings
+quote-style = "double"

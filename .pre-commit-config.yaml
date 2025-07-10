@@ -1,12 +1,31 @@
 default_language_version:
   python: python3
+
 repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: mixed-line-ending
+
+  # Python formatting and linting
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.2
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # Django template formatting
   - repo: https://github.com/rtts/djhtml
     rev: 3.0.8
     hooks:
       - id: djhtml
+        args: [--tabwidth, "2"]

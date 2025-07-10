@@ -9,42 +9,48 @@ from wagtail_unveil.viewsets.base import UnveilReportView, UnveilReportViewSet
 def get_workflow_urls(base_url, max_instances):
     # Return a list of tuples (model_name, url_type, full_url) for workflows
     urls = []
-    
+
     # Add index and add URLs
     try:
-        index_url = reverse('wagtailadmin_workflows:index')
-        urls.append(('wagtail.Workflow', 'index', f"{base_url}{index_url}"))
+        index_url = reverse("wagtailadmin_workflows:index")
+        urls.append(("wagtail.Workflow", "index", f"{base_url}{index_url}"))
     except NoReverseMatch:
         pass
     try:
-        add_url = reverse('wagtailadmin_workflows:add')
-        urls.append(('wagtail.Workflow', 'add', f"{base_url}{add_url}"))
+        add_url = reverse("wagtailadmin_workflows:add")
+        urls.append(("wagtail.Workflow", "add", f"{base_url}{add_url}"))
     except NoReverseMatch:
         pass
-    
+
     try:
-        workflows = Workflow.objects.all()[:max_instances] if max_instances else Workflow.objects.all()
+        workflows = (
+            Workflow.objects.all()[:max_instances]
+            if max_instances
+            else Workflow.objects.all()
+        )
         for workflow in workflows:
             workflow_model_name = f"wagtail.Workflow ({workflow.name})"
             # Admin URLs
             try:
-                edit_url = reverse('wagtailadmin_workflows:edit', args=[workflow.id])
-                urls.append((workflow_model_name, 'edit', f"{base_url}{edit_url}"))
+                edit_url = reverse("wagtailadmin_workflows:edit", args=[workflow.id])
+                urls.append((workflow_model_name, "edit", f"{base_url}{edit_url}"))
             except NoReverseMatch:
                 pass
             try:
-                delete_url = reverse('wagtailadmin_workflows:delete', args=[workflow.id])
-                urls.append((workflow_model_name, 'delete', f"{base_url}{delete_url}"))
+                delete_url = reverse(
+                    "wagtailadmin_workflows:delete", args=[workflow.id]
+                )
+                urls.append((workflow_model_name, "delete", f"{base_url}{delete_url}"))
             except NoReverseMatch:
                 pass
             try:
-                copy_url = reverse('wagtailadmin_workflows:copy', args=[workflow.id])
-                urls.append((workflow_model_name, 'copy', f"{base_url}{copy_url}"))
+                copy_url = reverse("wagtailadmin_workflows:copy", args=[workflow.id])
+                urls.append((workflow_model_name, "copy", f"{base_url}{copy_url}"))
             except NoReverseMatch:
                 pass
             try:
-                usage_url = reverse('wagtailadmin_workflows:usage', args=[workflow.id])
-                urls.append((workflow_model_name, 'usage', f"{base_url}{usage_url}"))
+                usage_url = reverse("wagtailadmin_workflows:usage", args=[workflow.id])
+                urls.append((workflow_model_name, "usage", f"{base_url}{usage_url}"))
             except NoReverseMatch:
                 pass
     except Workflow.DoesNotExist:
@@ -73,7 +79,7 @@ class UnveilWorkflowReportIndexView(UnveilReportView):
         for model_name, url_type, url in workflow_urls:
             all_urls.append(UrlEntry(counter, model_name, url_type, url))
             counter += 1
-            
+
         return all_urls
 
 
@@ -85,9 +91,7 @@ class UnveilWorkflowReportViewSet(UnveilReportViewSet):
     url_namespace = "unveil_workflow_report"
     url_prefix = "unveil/workflow-report"
     index_view_class = UnveilWorkflowReportIndexView
-    
-
 
 
 # Create an instance of the ViewSet to be registered
-unveil_workflow_viewset = UnveilWorkflowReportViewSet("unveil_workflow_report") 
+unveil_workflow_viewset = UnveilWorkflowReportViewSet("unveil_workflow_report")
