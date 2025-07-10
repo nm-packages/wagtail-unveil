@@ -50,14 +50,15 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         Orchestrates the creation of all example content types in a logical order:
-        1. Media content first (images, documents) - needed by pages
-        2. Snippets - reusable content components
-        3. Pages - content that may reference media and snippets
-        4. Form pages - specialized pages with form functionality
-        5. Search promotions - query-based content promotion
-        6. Collections - organizational structure for media
-        7. Redirects - URL redirections for old/moved content
-        8. Settings - generic and site-specific configuration
+        1. Media (images, documents) - needed by pages
+        2. Snippets
+        3. Pages
+        4. Form pages
+        5. Search promotions
+        6. Collections
+        7. Redirects
+        8. ModelViewSet and Wagtail ModelAdmin models
+        9. Settings
         """
         self.stdout.write("Generating example content...")
 
