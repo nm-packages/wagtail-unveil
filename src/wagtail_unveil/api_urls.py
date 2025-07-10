@@ -8,6 +8,7 @@ from wagtail_unveil.viewsets.form_report import UnveilFormReportViewSet
 from wagtail_unveil.viewsets.generic_report import UnveilGenericReportViewSet
 from wagtail_unveil.viewsets.image_report import UnveilImageReportViewSet
 from wagtail_unveil.viewsets.locale_report import UnveilLocaleReportViewSet
+from wagtail_unveil.viewsets.modeladmin_report import UnveilModelAdminReportViewSet
 from wagtail_unveil.viewsets.page_report import UnveilPageReportViewSet
 from wagtail_unveil.viewsets.redirect_report import UnveilRedirectReportViewSet
 from wagtail_unveil.viewsets.search_promotion_report import (
@@ -38,6 +39,7 @@ user_api_viewset = UnveilUserReportViewSet()
 admin_api_viewset = UnveilAdminReportViewSet()
 workflow_api_viewset = UnveilWorkflowReportViewSet()
 workflow_task_api_viewset = UnveilWorkflowTaskReportViewSet()
+modeladmin_api_viewset = UnveilModelAdminReportViewSet()
 
 
 def api_index_view(request):
@@ -48,6 +50,7 @@ def api_index_view(request):
         'generic': request.build_absolute_uri('generic/'),
         'image': request.build_absolute_uri('image/'),
         'locale': request.build_absolute_uri('locale/'),
+        'modeladmin': request.build_absolute_uri('modeladmin/'),
         'page': request.build_absolute_uri('page/'),
         'redirect': request.build_absolute_uri('redirect/'),
         'search-promotion': request.build_absolute_uri('search-promotion/'),
@@ -69,6 +72,7 @@ urlpatterns = [
     path('generic/', generic_api_viewset.as_json_view),
     path('image/', image_api_viewset.as_json_view),
     path('locale/', locale_api_viewset.as_json_view),
+    path('modeladmin/', modeladmin_api_viewset.as_json_view),
     path('page/', page_api_viewset.as_json_view),
     path('redirect/', redirect_api_viewset.as_json_view),
     path('search-promotion/', search_promotion_api_viewset.as_json_view),

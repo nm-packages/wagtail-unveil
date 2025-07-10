@@ -8,6 +8,7 @@ from .viewsets.form_report import unveil_form_viewset
 from .viewsets.generic_report import unveil_generic_viewset
 from .viewsets.image_report import unveil_image_viewset
 from .viewsets.locale_report import unveil_locale_viewset
+from .viewsets.modeladmin_report import unveil_modeladmin_viewset
 from .viewsets.page_report import unveil_page_viewset
 from .viewsets.redirect_report import unveil_redirect_viewset
 from .viewsets.search_promotion_report import unveil_search_promotion_viewset
@@ -37,6 +38,7 @@ class UnveilReportsViewSetGroup(ViewSetGroup):
         unveil_form_viewset,
         unveil_snippet_viewset,
         unveil_generic_viewset,
+        unveil_modeladmin_viewset,
         unveil_search_promotion_viewset,
         unveil_collection_viewset,
         unveil_redirect_viewset,
