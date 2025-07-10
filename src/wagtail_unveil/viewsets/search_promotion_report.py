@@ -11,30 +11,34 @@ def get_search_promotion_urls(base_url, max_instances):
     urls = []
     # Get the index URL for search promotions
     try:
-        index_url = reverse('wagtailsearchpromotions:index')
-        urls.append(('wagtail.SearchPromotion', 'index', f"{base_url}{index_url}"))
+        index_url = reverse("wagtailsearchpromotions:index")
+        urls.append(("wagtail.SearchPromotion", "index", f"{base_url}{index_url}"))
     except NoReverseMatch:
         pass
     # Get the add URL for search promotions
     try:
-        add_url = reverse('wagtailsearchpromotions:add')
-        urls.append(('wagtail.SearchPromotion', 'add', f"{base_url}{add_url}"))
+        add_url = reverse("wagtailsearchpromotions:add")
+        urls.append(("wagtail.SearchPromotion", "add", f"{base_url}{add_url}"))
     except NoReverseMatch:
         pass
     try:
         promotions = SearchPromotion.objects.all()[:max_instances]
         for promotion in promotions:
-            promotion_model_name = f"wagtail.SearchPromotion ({getattr(promotion, 'query', '')})"
+            promotion_model_name = (
+                f"wagtail.SearchPromotion ({getattr(promotion, 'query', '')})"
+            )
             # Get the edit URL for a search promotion
             try:
-                edit_url = reverse('wagtailsearchpromotions:edit', args=[promotion.id])
-                urls.append((promotion_model_name, 'edit', f"{base_url}{edit_url}"))
+                edit_url = reverse("wagtailsearchpromotions:edit", args=[promotion.id])
+                urls.append((promotion_model_name, "edit", f"{base_url}{edit_url}"))
             except NoReverseMatch:
                 pass
             # Get the delete URL for a search promotion
             try:
-                delete_url = reverse('wagtailsearchpromotions:delete', args=[promotion.id])
-                urls.append((promotion_model_name, 'delete', f"{base_url}{delete_url}"))
+                delete_url = reverse(
+                    "wagtailsearchpromotions:delete", args=[promotion.id]
+                )
+                urls.append((promotion_model_name, "delete", f"{base_url}{delete_url}"))
             except NoReverseMatch:
                 pass
     except SearchPromotion.DoesNotExist:
@@ -74,8 +78,6 @@ class UnveilSearchPromotionReportViewSet(UnveilReportViewSet):
     url_namespace = "unveil_search_promotion_report"
     url_prefix = "unveil/search-promotion-report"
     index_view_class = UnveilSearchPromotionReportIndexView
-
-
 
 
 # Create an instance of the ViewSet to be registered

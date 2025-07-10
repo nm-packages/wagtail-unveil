@@ -11,30 +11,32 @@ def get_redirect_urls(base_url, max_instances):
     urls = []
     # Get the index URL for redirects
     try:
-        index_url = reverse('wagtailredirects:index')
-        urls.append(('wagtail.Redirect', 'index', f"{base_url}{index_url}"))
+        index_url = reverse("wagtailredirects:index")
+        urls.append(("wagtail.Redirect", "index", f"{base_url}{index_url}"))
     except NoReverseMatch:
         pass
     # Get the add URL for redirects
     try:
-        add_url = reverse('wagtailredirects:add')
-        urls.append(('wagtail.Redirect', 'add', f"{base_url}{add_url}"))
+        add_url = reverse("wagtailredirects:add")
+        urls.append(("wagtail.Redirect", "add", f"{base_url}{add_url}"))
     except NoReverseMatch:
         pass
     try:
         redirects = Redirect.objects.all()[:max_instances]
         for redirect in redirects:
-            redirect_model_name = f"wagtail.Redirect ({getattr(redirect, 'old_path', '')})"
+            redirect_model_name = (
+                f"wagtail.Redirect ({getattr(redirect, 'old_path', '')})"
+            )
             # Get the edit URL for a redirect
             try:
-                edit_url = reverse('wagtailredirects:edit', args=[redirect.id])
-                urls.append((redirect_model_name, 'edit', f"{base_url}{edit_url}"))
+                edit_url = reverse("wagtailredirects:edit", args=[redirect.id])
+                urls.append((redirect_model_name, "edit", f"{base_url}{edit_url}"))
             except NoReverseMatch:
                 pass
             # Get the delete URL for a redirect
             try:
-                delete_url = reverse('wagtailredirects:delete', args=[redirect.id])
-                urls.append((redirect_model_name, 'delete', f"{base_url}{delete_url}"))
+                delete_url = reverse("wagtailredirects:delete", args=[redirect.id])
+                urls.append((redirect_model_name, "delete", f"{base_url}{delete_url}"))
             except NoReverseMatch:
                 pass
     except Redirect.DoesNotExist:

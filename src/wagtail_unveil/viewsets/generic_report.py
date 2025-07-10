@@ -9,17 +9,17 @@ from wagtail_unveil.viewsets.base import UnveilReportView, UnveilReportViewSet
 def get_generic_models():
     # Get all models for the generic report
     # Get the list of models from settings
-    generic_models_list = getattr(settings, 'WAGTAIL_UNVEIL_GENERIC_MODELS', [])
-    
+    generic_models_list = getattr(settings, "WAGTAIL_UNVEIL_GENERIC_MODELS", [])
+
     models = []
     for model_path in generic_models_list:
         try:
-            app_label, model_name = model_path.rsplit('.', 1)
+            app_label, model_name = model_path.rsplit(".", 1)
             model = apps.get_model(app_label, model_name)
             models.append(model)
         except (LookupError, ValueError):
             continue
-    
+
     return models
 
 
@@ -57,7 +57,9 @@ def get_generic_urls(base_url, max_instances):
                 pass
             # Delete URL
             try:
-                delete_url = reverse(f"{model._meta.model_name}:delete", args=[instance.pk])
+                delete_url = reverse(
+                    f"{model._meta.model_name}:delete", args=[instance.pk]
+                )
                 urls.append((model_name, "delete", f"{base_url}{delete_url}"))
             except NoReverseMatch:
                 pass
@@ -69,13 +71,17 @@ def get_generic_urls(base_url, max_instances):
                 pass
             # History URL
             try:
-                history_url = reverse(f"{model._meta.model_name}:history", args=[instance.pk])
+                history_url = reverse(
+                    f"{model._meta.model_name}:history", args=[instance.pk]
+                )
                 urls.append((model_name, "history", f"{base_url}{history_url}"))
             except NoReverseMatch:
                 pass
             # Usage URL
             try:
-                usage_url = reverse(f"{model._meta.model_name}:usage", args=[instance.pk])
+                usage_url = reverse(
+                    f"{model._meta.model_name}:usage", args=[instance.pk]
+                )
                 urls.append((model_name, "usage", f"{base_url}{usage_url}"))
             except NoReverseMatch:
                 pass
@@ -102,6 +108,7 @@ class UnveilGenericReportIndexView(UnveilReportView):
             counter += 1
         return all_urls
 
+
 class UnveilGenericReportViewSet(UnveilReportViewSet):
     # ViewSet for Unveil Generic Model reports
     model = None
@@ -111,7 +118,6 @@ class UnveilGenericReportViewSet(UnveilReportViewSet):
     url_namespace = "unveil_generic_report"
     url_prefix = "unveil/generic-report"
     index_view_class = UnveilGenericReportIndexView
-
 
 
 unveil_generic_viewset = UnveilGenericReportViewSet("unveil_generic_report")

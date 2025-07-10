@@ -13,21 +13,21 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install uv
       uses: astral-sh/setup-uv@v5
       with:
         python-version: ${{ matrix.python-version }}
         enable-cache: true
         cache-dependency-glob: "uv.lock"
-    
+
     - name: Install tox and tox-gh-actions
       run: |
         uv pip install tox tox-uv tox-gh-actions
-    
+
     - name: Run tox
       run: |
         tox
@@ -35,21 +35,21 @@ jobs:
   wt-dj-main-py313:
     runs-on: ubuntu-latest
     needs: test
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install uv
       uses: astral-sh/setup-uv@v5
       with:
         python-version: '3.13'  # Use Python 3.13 for this job
         enable-cache: true
         cache-dependency-glob: "uv.lock"
-    
+
     - name: Install tox
       run: |
         uv pip install tox tox-uv
-    
+
     - name: Run wgatail-django main branch tests
       run: |
         tox -e wtmain-djmain-py313

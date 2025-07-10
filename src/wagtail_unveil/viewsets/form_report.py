@@ -10,43 +10,51 @@ from wagtail_unveil.viewsets.base import UnveilReportView, UnveilReportViewSet
 def get_form_pages_with_submissions():
     # Get all pages that have form submissions
     form_pages = []
-    
+
     # Get unique page IDs that have form submissions
     try:
-        page_ids_with_submissions = FormSubmission.objects.values_list('page_id', flat=True).distinct()
+        page_ids_with_submissions = FormSubmission.objects.values_list(
+            "page_id", flat=True
+        ).distinct()
     except (FormSubmission.DoesNotExist, AttributeError, ValueError, TypeError):
         return form_pages
-    
+
     for page_id in page_ids_with_submissions:
         try:
             page = Page.objects.get(id=page_id)
             specific_page = page.specific
             submission_count = FormSubmission.objects.filter(page_id=page_id).count()
-            form_pages.append((
-                page_id,
-                page.title,
-                specific_page.__class__.__name__,
-                submission_count
-            ))
+            form_pages.append(
+                (
+                    page_id,
+                    page.title,
+                    specific_page.__class__.__name__,
+                    submission_count,
+                )
+            )
         except Page.DoesNotExist:
             continue
         except (AttributeError, ValueError, TypeError):
             continue
-    
+
     return form_pages
 
 
 def get_forms_urls(base_url, max_instances):
     # Return a list of tuples (model_name, url_type, url) for forms
     urls = []
-    
+
     # Get the FormSubmission model name
-    form_submission_model_name = f"{FormSubmission._meta.app_label}.{FormSubmission.__name__}"
+    form_submission_model_name = (
+        f"{FormSubmission._meta.app_label}.{FormSubmission.__name__}"
+    )
 
     # Get forms index URL
     try:
-        forms_index_url = reverse('wagtailforms:index')
-        urls.append((form_submission_model_name, "forms_index", f"{base_url}{forms_index_url}"))
+        forms_index_url = reverse("wagtailforms:index")
+        urls.append(
+            (form_submission_model_name, "forms_index", f"{base_url}{forms_index_url}")
+        )
     except NoReverseMatch:
         pass
 
@@ -65,15 +73,19 @@ def get_forms_urls(base_url, max_instances):
 
         # Get submissions list URL
         try:
-            list_url = reverse('wagtailforms:list_submissions', args=[page_id])
-            urls.append((form_page_model_name, "list_submissions", f"{base_url}{list_url}"))
+            list_url = reverse("wagtailforms:list_submissions", args=[page_id])
+            urls.append(
+                (form_page_model_name, "list_submissions", f"{base_url}{list_url}")
+            )
         except NoReverseMatch:
             pass
 
         # Get submissions delete URL
         try:
-            delete_url = reverse('wagtailforms:delete_submissions', args=[page_id])
-            urls.append((form_page_model_name, "delete_submissions", f"{base_url}{delete_url}"))
+            delete_url = reverse("wagtailforms:delete_submissions", args=[page_id])
+            urls.append(
+                (form_page_model_name, "delete_submissions", f"{base_url}{delete_url}")
+            )
         except NoReverseMatch:
             pass
 
@@ -82,7 +94,13 @@ def get_forms_urls(base_url, max_instances):
             page = Page.objects.get(id=page_id)
             frontend_url = page.url
             if frontend_url:
-                urls.append((form_page_model_name, "frontend_form", f"{base_url.rstrip('/')}" + frontend_url))
+                urls.append(
+                    (
+                        form_page_model_name,
+                        "frontend_form",
+                        f"{base_url.rstrip('/')}" + frontend_url,
+                    )
+                )
         except (Page.DoesNotExist, AttributeError, ValueError, TypeError):
             pass
 
@@ -109,6 +127,7 @@ class UnveilFormReportIndexView(UnveilReportView):
             counter += 1
         return all_urls
 
+
 class UnveilFormReportViewSet(UnveilReportViewSet):
     # ViewSet for Unveil Form reports
     model = None
@@ -118,7 +137,6 @@ class UnveilFormReportViewSet(UnveilReportViewSet):
     url_namespace = "unveil_form_report"
     url_prefix = "unveil/form-report"
     index_view_class = UnveilFormReportIndexView
-
 
 
 unveil_form_viewset = UnveilFormReportViewSet("unveil_form_report")

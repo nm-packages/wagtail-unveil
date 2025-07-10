@@ -14,55 +14,67 @@ def get_snippet_urls(base_url, max_instances):
         model_name = f"{model._meta.app_label}.{model.__name__}"
         # Add URL
         try:
-            url_pattern = f"wagtailsnippets_{model._meta.app_label}_{model._meta.model_name}:add"
+            url_pattern = (
+                f"wagtailsnippets_{model._meta.app_label}_{model._meta.model_name}:add"
+            )
             add_url = reverse(url_pattern)
-            urls.append((model_name, 'add', f"{base_url}{add_url}"))
+            urls.append((model_name, "add", f"{base_url}{add_url}"))
         except NoReverseMatch:
             pass
         # List URL
         try:
-            url_pattern = f"wagtailsnippets_{model._meta.app_label}_{model._meta.model_name}:list"
+            url_pattern = (
+                f"wagtailsnippets_{model._meta.app_label}_{model._meta.model_name}:list"
+            )
             list_url = reverse(url_pattern)
-            urls.append((model_name, 'list', f"{base_url}{list_url}"))
+            urls.append((model_name, "list", f"{base_url}{list_url}"))
         except NoReverseMatch:
             pass
         try:
-            instances = model.objects.all()[:max_instances] if max_instances else model.objects.all()
+            instances = (
+                model.objects.all()[:max_instances]
+                if max_instances
+                else model.objects.all()
+            )
             for instance in instances:
                 snippet_model_name = f"{model._meta.app_label}.{model.__name__} ({getattr(instance, 'title', getattr(instance, 'name', str(instance)))})"
                 # Edit URL
                 try:
                     url_pattern = f"wagtailsnippets_{model._meta.app_label}_{model._meta.model_name}:edit"
                     edit_url = reverse(url_pattern, args=[instance.pk])
-                    urls.append((snippet_model_name, 'edit', f"{base_url}{edit_url}"))
+                    urls.append((snippet_model_name, "edit", f"{base_url}{edit_url}"))
                 except NoReverseMatch:
                     pass
                 # Delete URL
                 try:
                     url_pattern = f"wagtailsnippets_{model._meta.app_label}_{model._meta.model_name}:delete"
                     delete_url = reverse(url_pattern, args=[instance.pk])
-                    urls.append((snippet_model_name, 'delete', f"{base_url}{delete_url}"))
+                    urls.append(
+                        (snippet_model_name, "delete", f"{base_url}{delete_url}")
+                    )
                 except NoReverseMatch:
                     pass
                 # Copy URL
                 try:
                     url_pattern = f"wagtailsnippets_{model._meta.app_label}_{model._meta.model_name}:copy"
                     copy_url = reverse(url_pattern, args=[instance.pk])
-                    urls.append((snippet_model_name, 'copy', f"{base_url}{copy_url}"))
+                    urls.append((snippet_model_name, "copy", f"{base_url}{copy_url}"))
                 except NoReverseMatch:
                     pass
                 # History URL
                 try:
                     url_pattern = f"wagtailsnippets_{model._meta.app_label}_{model._meta.model_name}:history"
                     history_url = reverse(url_pattern, args=[instance.pk])
-                    urls.append((snippet_model_name, 'history', f"{base_url}{history_url}"))
+                    urls.append(
+                        (snippet_model_name, "history", f"{base_url}{history_url}")
+                    )
                 except NoReverseMatch:
                     pass
                 # Usage URL
                 try:
                     url_pattern = f"wagtailsnippets_{model._meta.app_label}_{model._meta.model_name}:usage"
                     usage_url = reverse(url_pattern, args=[instance.pk])
-                    urls.append((snippet_model_name, 'usage', f"{base_url}{usage_url}"))
+                    urls.append((snippet_model_name, "usage", f"{base_url}{usage_url}"))
                 except NoReverseMatch:
                     pass
         except (model.DoesNotExist, AttributeError, ValueError, TypeError):
@@ -89,7 +101,7 @@ class UnveilSnippetReportIndexView(UnveilReportView):
         for model_name, url_type, url in snippet_urls:
             all_urls.append(UrlEntry(counter, model_name, url_type, url))
             counter += 1
-            
+
         return all_urls
 
 
@@ -101,8 +113,6 @@ class UnveilSnippetReportViewSet(UnveilReportViewSet):
     url_namespace = "unveil_snippet_report"
     url_prefix = "unveil/snippet-report"
     index_view_class = UnveilSnippetReportIndexView
-    
-
 
 
 # Create an instance of the ViewSet to be registered

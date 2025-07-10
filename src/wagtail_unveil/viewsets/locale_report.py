@@ -11,8 +11,8 @@ def get_locale_urls(base_url, max_instances):
     urls = []
     # Get the index URL for locales
     try:
-        index_url = reverse('wagtaillocales:index')
-        urls.append(('wagtail.Locale', 'index', f"{base_url}{index_url}"))
+        index_url = reverse("wagtaillocales:index")
+        urls.append(("wagtail.Locale", "index", f"{base_url}{index_url}"))
     except NoReverseMatch:
         pass
     # add_url = get_locale_add_url()  # This path doesn't exist for this model
@@ -24,14 +24,14 @@ def get_locale_urls(base_url, max_instances):
             locale_model_name = f"wagtail.Locale ({getattr(locale, 'language_code', getattr(locale, 'code', ''))})"
             # Get the edit URL for a locale
             try:
-                edit_url = reverse('wagtaillocales:edit', args=[locale.id])
-                urls.append((locale_model_name, 'edit', f"{base_url}{edit_url}"))
+                edit_url = reverse("wagtaillocales:edit", args=[locale.id])
+                urls.append((locale_model_name, "edit", f"{base_url}{edit_url}"))
             except NoReverseMatch:
                 pass
             # Get the delete URL for a locale
             try:
-                delete_url = reverse('wagtaillocales:delete', args=[locale.id])
-                urls.append((locale_model_name, 'delete', f"{base_url}{delete_url}"))
+                delete_url = reverse("wagtaillocales:delete", args=[locale.id])
+                urls.append((locale_model_name, "delete", f"{base_url}{delete_url}"))
             except NoReverseMatch:
                 pass
     except Locale.DoesNotExist:

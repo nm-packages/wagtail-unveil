@@ -27,7 +27,7 @@ ALLOWED_HOSTS = ["*"]
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField" # Hides the warning about using AutoField as the default primary key type
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"  # Hides the warning about using AutoField as the default primary key type
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -225,9 +225,9 @@ INSTALLED_APPS += ["wagtail_modeladmin"]
 INSTALLED_APPS += ["wagtail.locales"]
 WAGTAIL_I18N_ENABLED = True
 WAGTAIL_CONTENT_LANGUAGES = LANGUAGES = [
-    ('en', "English"),
-    ('fr', "French"),
-    ('es', "Spanish"),
+    ("en", "English"),
+    ("fr", "French"),
+    ("es", "Spanish"),
 ]
 
 # Wagtail Contrib Search Promotions
@@ -245,11 +245,11 @@ INSTALLED_APPS += ["wagtail.contrib.redirects"]
 # These should be models managed by ModelViewSet or other generic views
 
 WAGTAIL_UNVEIL_GENERIC_MODELS = [
-    'core.ExampleModelViewSetModel',
+    "core.ExampleModelViewSetModel",
 ]
 
 WAGTAIL_UNVEIL_WAGTAIL_MODELADMIN_MODELS = [
-    'core.ExampleWagtailModeladminModel',
+    "core.ExampleWagtailModeladminModel",
 ]
 
 # Maximum number of instances to include per model in unveil reports
