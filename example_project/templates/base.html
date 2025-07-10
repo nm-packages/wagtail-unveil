@@ -66,13 +66,13 @@
     <footer>
       <div class="container">
         {% block footer %}
-          <p>{{ settings.core.ExampleFooterGenericSettings.footer|safe }}<p>
-            <p>
-              &copy; {{ current_year }} Example Project |
-              <a href="https://github.com/nm-packages/wagtail-unveil">Wagtail-Unveil</a> |
-              Template: {{ request.resolver_match.view_name }} |
-              Styling: <a href="https://picocss.com/">Pico CSS</a>
-            </p>
+          <p>{{ settings.core.ExampleFooterGenericSettings.footer|safe }}</p>
+          <p>
+            &copy; {{ current_year }} Example Project |
+            <a href="https://github.com/nm-packages/wagtail-unveil">Wagtail-Unveil</a> |
+            Template: {{ request.resolver_match.view_name }} |
+            Styling: <a href="https://picocss.com/">Pico CSS</a>
+          </p>
         {% endblock %}
       </div>
     </footer>
