@@ -2,6 +2,11 @@ from django.db import models
 from wagtail.models import Page
 from wagtail.fields import RichTextField
 from wagtail.admin.panels import FieldPanel
+from wagtail.contrib.settings.models import (
+    BaseGenericSetting,
+    BaseSiteSetting,
+    register_setting,
+)
 
 
 class BasePage(Page):
@@ -68,3 +73,20 @@ class ExampleWagtailModeladminModel(models.Model):
 
     def __str__(self):
         return self.title
+
+
+@register_setting
+class ExampleFooterGenericSettings(BaseGenericSetting):
+    footer = models.TextField(
+        blank=True,
+        help_text="This is the footer text that will be displayed on all pages.",
+    )
+
+
+@register_setting
+class ExampleMessageSiteSettings(BaseSiteSetting):
+    empty_content_message = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="This message will be displayed when there is no content available.",
+    )

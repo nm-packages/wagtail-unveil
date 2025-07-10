@@ -53,19 +53,22 @@
 
     <main>
       <div class="container">
-        {% block content %}This page has no content{% endblock %}
+        {% block content %}
+          <p>{{ settings.core.ExampleMessageSiteSettings.empty_content_message|safe }}<p>
+        {% endblock %}
       </div>
     </main>
 
     <footer>
       <div class="container">
         {% block footer %}
-          <p>
-            &copy; {{ current_year }} Example Project |
-            <a href="https://github.com/nm-packages/wagtail-unveil">Wagtail-Unveil</a> |
-            Template: {{ request.resolver_match.view_name }} |
-            Styling: <a href="https://picocss.com/">Pico CSS</a>
-          </p>
+          <p>{{ settings.core.ExampleFooterGenericSettings.footer|safe }}<p>
+            <p>
+              &copy; {{ current_year }} Example Project |
+              <a href="https://github.com/nm-packages/wagtail-unveil">Wagtail-Unveil</a> |
+              Template: {{ request.resolver_match.view_name }} |
+              Styling: <a href="https://picocss.com/">Pico CSS</a>
+            </p>
         {% endblock %}
       </div>
     </footer>

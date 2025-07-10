@@ -96,6 +96,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "wagtail.contrib.settings.context_processors.settings",
             ],
         },
     },
@@ -236,6 +237,10 @@ INSTALLED_APPS += ["wagtail.contrib.search_promotions"]
 INSTALLED_APPS += ["wagtail.contrib.forms"]
 # Wagtail Contrib Redirects
 INSTALLED_APPS += ["wagtail.contrib.redirects"]
+# Wagtail Contrib Settings
+INSTALLED_APPS += [
+    "wagtail.contrib.settings"
+]  # The context processor is already included above
 
 # END - Optional apps ###
 
