@@ -13,7 +13,7 @@ Imagine you have a Wagtail project with multiple models, each having various URL
 
 ### Report View
 
-View a project's admin and frontend URLs in the Wagtail admin interface with interactive URL validation: Check's if URLs return a valid response are accessible with visual success/error indicators.
+View a project's admin and frontend URLs in the Wagtail admin interface with interactive URL validation: Checks if URLs return a valid response and shows visual success/error indicators.
 
 ![Report View Screenshot](./docs/assets/report-view.jpg)
 
