@@ -1,6 +1,6 @@
 # Wagtail Unveil
 
-This Wagtail package helps you discover and expose admin and frontend URLs in your Wagtail project by way of a admin report interface and a JSON endpoint/s.
+This Wagtail package helps you discover and expose admin and frontend URLs in your Wagtail project by way of an admin report interface and a JSON endpoints.
 
 ## Features
 
