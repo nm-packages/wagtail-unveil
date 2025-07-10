@@ -128,13 +128,13 @@ Contributions are welcome! Please feel free to submit a Pull Request.
    ```
 
 2. **Install dependencies** (choose one method):
-   
+
    **Using uv (recommended)**:
 
    ```bash
    uv sync --dev
    ```
-   
+
    **Using pip**:
 
    ```bash
