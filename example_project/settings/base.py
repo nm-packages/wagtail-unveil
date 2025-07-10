@@ -63,6 +63,12 @@ INSTALLED_APPS = [
     # Optional apps are listed below
 ]
 
+# Wagtail styleguide
+# Only for convenience in development
+INSTALLED_APPS += [
+    "wagtail.contrib.styleguide",
+]
+
 
 MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -240,6 +246,10 @@ INSTALLED_APPS += ["wagtail.contrib.redirects"]
 
 WAGTAIL_UNVEIL_GENERIC_MODELS = [
     'core.ExampleModelViewSetModel',
+]
+
+WAGTAIL_UNVEIL_WAGTAIL_MODELADMIN_MODELS = [
+    'core.ExampleWagtailModeladminModel',
 ]
 
 # Maximum number of instances to include per model in unveil reports

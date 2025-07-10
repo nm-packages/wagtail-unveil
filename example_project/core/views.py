@@ -7,6 +7,8 @@ class ExampleModelViewSet(ModelViewSet):
     add_to_admin_menu = True
     icon = 'doc-full-inverse'
     menu_label = 'Ex. Model ViewSet'
+    menu_icon = 'view'
+    menu_order = 900
 
 
 example_model_viewset = ExampleModelViewSet()
