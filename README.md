@@ -1,56 +1,50 @@
 # Wagtail Unveil
 
-A Wagtail package that helps map and expose admin and frontend URLs in your Wagtail project.
-
-Wagtail Unveil lets you quickly discover all admin and frontend URLs in your Wagtail project. You can easily access and validate these URLs through a admin interface or a JSON API.
+This Wagtail package helps you discover and expose admin and frontend URLs in your Wagtail project by way of a admin report interface and a JSON endpoint/s.
 
 ## Features
 
-### URL Discovery
+Imagine you have a Wagtail project with multiple models, each having various URLs for admin and frontend views. Wagtail Unveil helps you:
 
-Semi-automatically discovers and lists all available Wagtail admin and frontend URLs in your project.
+- Discover available URLs for your models.
+- View these URLs in the Wagtail admin interface.
+- View URLs to ensure they return a valid response.
+- View URLs in a JSON format.
 
 ### Report View
 
-View a project's URLs in a Wagtail admin interface with interactive URL validation: Check if URLs are accessible with visual success/error indicators.
+View a project's admin and frontend URLs in the Wagtail admin interface with interactive URL validation: Check's if URLs return a valid response are accessible with visual success/error indicators.
 
-![Report View Screenshot](./docs/assets/report-interface.png)
+![Report View Screenshot](./docs/assets/report-view.jpg)
 
-### JSON API Endpoints
+### JSON View
 
-- Access all your project URLs via a JSON endpoint.
+- Access project URLs via a JSON endpoint, the subset of URLs can be used to view urls of specific models.
 
 #### Example API Index Response
 
-```json
-{
-  "endpoints": {
-    "collection": "http://localhost:8000/unveil/api/collection/",
-    "document": "http://localhost:8000/unveil/api/document/",
-    ...
-  }
+```text
+endpoints: {
+  collection: "http://localhost:8000/unveil/api/collection/",
+  document: "http://localhost:8000/unveil/api/document/",
+  form: "http://localhost:8000/unveil/api/form/",
+  generic: "http://localhost:8000/unveil/api/generic/",
+  image: "http://localhost:8000/unveil/api/image/",
+  locale: "http://localhost:8000/unveil/api/locale/",
+  modeladmin: "http://localhost:8000/unveil/api/modeladmin/",
+  page: "http://localhost:8000/unveil/api/page/",
+  redirect: "http://localhost:8000/unveil/api/redirect/",
+  search-promotion: "http://localhost:8000/unveil/api/search-promotion/",
+  settings: "http://localhost:8000/unveil/api/settings/",
+  site: "http://localhost:8000/unveil/api/site/",
+  snippet: "http://localhost:8000/unveil/api/snippet/",
+  user: "http://localhost:8000/unveil/api/user/",
+  admin: "http://localhost:8000/unveil/api/admin/",
+  workflow: "http://localhost:8000/unveil/api/workflow/",
+  workflow-task: "http://localhost:8000/unveil/api/workflow-task/"
 }
+
 ```
-
-### API Authentication
-
-- The API uses the standard `Authorization: Bearer <token>` header for authentication.
-
-**Example usage with curl:**
-
-```sh
-curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:8000/unveil/api/collection/
-```
-
-### Command Line Interface
-
-- Use the management command to quickly fetch and print the results of all API endpoints:
-
-```sh
-python manage.py unveil_urls --api-root=http://localhost:8000/unveil/api/ --token=YOUR_TOKEN
-```
-
-- The command requires a valid token and will output a dictionary of endpoint results.
 
 ## Install the package into your Wagtail project
 
@@ -60,7 +54,7 @@ Install via pip (or your preferred method):
 pip install wagtail-unveil
 ```
 
-**Note**: The package is not yet available on PyPI, so you will need to install it directly from this GitHub repository.
+**Note**: The package is not yet available on PyPI, so you will need to install it directly from <https://github.com/nm-packages/wagtail-unveil>
 
 Add `wagtail_unveil` to your `INSTALLED_APPS`:
 
@@ -77,12 +71,25 @@ INSTALLED_APPS = [
 You can configure the package using the following settings in your settings file:
 
 ```python
-# Maximum number of instances to show per model (default: 1)
-# Set to 0 to show all instances
-WAGTAIL_UNVEIL_MAX_INSTANCES = 1
+# List of models to include in the Generic Models report
+# These should be models managed by ModelViewSet or other generic views
+WAGTAIL_UNVEIL_GENERIC_MODELS = ['core.ExampleModelViewSetModel']
 
-# Token for API authentication
-WAGTAIL_UNVEIL_JSON_TOKEN = "your-secret-token"
+# List of Wagtail ModelAdmin models to include in the Wagtail ModelAdmin report
+# These should be models registered with Wagtail's ModelAdmin
+WAGTAIL_UNVEIL_WAGTAIL_MODELADMIN_MODELS = ['core.ExampleWagtailModeladminModel']
+
+# Maximum number of instances to include per model in unveil reports
+WAGTAIL_UNVEIL_MAX_INSTANCES = 1 # optional, the default is 1
+
+# Base URL for generating URLs in reports
+# This should be the base URL of your Wagtail site, e.g. "http://localhost:8000"
+WAGTAIL_UNVEIL_BASE_URL = "http://localhost:8000"
+
+# Token for accessing the JSON API endpoints
+# This is used for authentication when accessing the API endpoints.
+# Admin users can access the API without a token, but for external access, you should set this.
+WAGTAIL_UNVEIL_JSON_TOKEN = "1234"
 ```
 
 ## Enabling the API
@@ -94,40 +101,79 @@ from django.urls import include, path
 
 urlpatterns = [
     # ... your existing URL patterns
-    path("unveil/", include("wagtail_unveil.urls")),
+    path("unveil/api/", include("wagtail_unveil.api_urls")),
     # ...
 ]
 ```
 
-Once configured, you can access the API index at:
+### Management Commands
 
-```
-http://your-domain.com/unveil/
-```
-
-## Usage
-
-### Command Line
-
-Fetch all API endpoint results:
+**Fetch all API endpoint results:**
 
 ```bash
-python manage.py unveil_urls --api-root=http://localhost:8000/unveil/api/ --token=YOUR_TOKEN
+python manage.py unveil_urls
 ```
-
-### Admin Views
-
-The admin views provide reports on available endpoints and allow you to test the response code for each URL directly from the Wagtail admin.
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-Before contributing, please:
+### Quick Development Setup
 
-1. Run the test suite with `python runtests.py`
-2. Ensure all tests pass across supported environments with `tox`
-3. Check the [Testing Guide](./docs/testing.md) for detailed testing information
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/nm-packages/wagtail-unveil.git
+   cd wagtail-unveil
+   ```
+
+2. **Install dependencies** (choose one method):
+   
+   **Using uv (recommended)**:
+
+   ```bash
+   uv sync --dev
+   ```
+   
+   **Using pip**:
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -e ".[dev]"
+   ```
+
+3. **Run the example project**:
+
+   ```bash
+   python manage.py migrate
+   python manage.py createsuperuser
+   python manage.py runserver
+   ```
+
+4. **Run tests**:
+
+   ```bash
+   python runtests.py
+   ```
+
+**Generate example content for development and testing:**
+
+```bash
+python manage.py generate_content
+```
+
+This command creates sample data including:
+
+- Images (5 programmatically generated colored images)
+- Documents (5 files of different types: txt, csv, json, xml, md)
+- Snippets (registered snippets and ViewSet snippets)
+- Pages (basic and standard pages with banner images)
+- Form pages (with sample form submissions)
+- Search promotions, collections, and redirects
+- Example models for ModelViewSet and ModelAdmin
+
+*Note: The command only creates content if it doesn't already exist, so it's safe to run multiple times.*
 
 ## License
 
