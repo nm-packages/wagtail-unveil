@@ -54,10 +54,11 @@
     <main>
       <div class="container">
         {% block content %}
-          {% if not settings.core.ExampleMessageSiteSettings.empty_content_message %}
+          {% if settings.core.ExampleMessageSiteSettings.empty_content_message %}
+            <p>{{ settings.core.ExampleMessageSiteSettings.empty_content_message|safe }}</p>
+          {% else %}
             <p>Run the command <code>python manage.py generate_content</code> to populate the database with example content.</p>
           {% endif %}
-          <p>{{ settings.core.ExampleMessageSiteSettings.empty_content_message|safe }}<p>
         {% endblock %}
       </div>
     </main>
