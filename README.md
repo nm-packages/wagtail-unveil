@@ -113,6 +113,8 @@ urlpatterns = [
 
 **Fetch all API endpoint results:**
 
+This command fetches all API endpoints and outputs the complete URLs list in the console. *The site will need to be running locally for this command to work*
+
 ```bash
 python manage.py unveil_urls
 ```
