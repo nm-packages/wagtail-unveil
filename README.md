@@ -2,6 +2,8 @@
 
 This Wagtail package helps you discover and expose admin and frontend URLs in your Wagtail project by way of an admin report interface and a JSON endpoints.
 
+**Don't run this package in production!** It is intended for development and testing purposes only.
+
 ## Features
 
 Imagine you have a Wagtail project with multiple models, each having various URLs for admin and frontend views. Wagtail Unveil helps you:
@@ -112,6 +114,8 @@ urlpatterns = [
 ### Management Commands
 
 **Fetch all API endpoint results:**
+
+This command fetches all API endpoints and outputs the complete URLs list in the console. *The site will need to be running locally for this command to work.*
 
 ```bash
 python manage.py unveil_urls
