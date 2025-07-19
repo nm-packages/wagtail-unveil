@@ -47,15 +47,31 @@ API_ENDPOINTS = [
 
 
 def api_index_view(request):
-    """Return a list of all available API endpoints."""
-    if not json_view_auth_required(request):
+    """
+    Return a list of all available API endpoints with their absolute URLs.
+
+    This view provides a discovery endpoint that lists all available API endpoints
+    in the wagtail-unveil API, making it easier for clients to explore the API.
+
+    Args:
+        request: HTTP request object
+
+    Returns:
+        JsonResponse: Dictionary with 'endpoints' key containing URL mappings
+        HttpResponseForbidden: If authentication/authorization fails
+    """
+    # Check if the user is authorized to access the API
+    auth_result = json_view_auth_required(request)
+    if not auth_result:
         return HttpResponseForbidden("Access denied")
 
-    endpoints = {
-        url_path: request.build_absolute_uri(f"{url_path}/")
-        for url_path, _ in API_ENDPOINTS
-    }
-    return JsonResponse({"endpoints": endpoints})
+    # Build absolute URLs for each endpoint
+    endpoint_urls = {}
+    for endpoint_path, _ in API_ENDPOINTS:
+        absolute_url = request.build_absolute_uri(f"{endpoint_path}/")
+        endpoint_urls[endpoint_path] = absolute_url
+
+    return JsonResponse({"endpoints": endpoint_urls})
 
 
 urlpatterns = [
