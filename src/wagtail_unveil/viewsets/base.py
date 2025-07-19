@@ -6,6 +6,37 @@ from wagtail.admin.viewsets.base import ViewSet
 from wagtail.admin.widgets.button import HeaderButton
 
 
+def json_view_auth_required(request):
+    """
+    Check if the request requires authentication for JSON views.
+    This function can be used to enforce token-based authentication
+    for API endpoints in Wagtail Unveil reports.
+    """
+    # Require token authentication for other users
+    required_token = getattr(settings, "WAGTAIL_UNVEIL_JSON_TOKEN", None)
+    if not required_token:
+        return HttpResponseForbidden("Access denied")
+
+    # Check if user is authenticated and is a superuser
+    if request.user.is_authenticated and request.user.is_superuser:
+        # Allow access for authenticated superusers
+        return True
+
+    # Check for token in Authorization header or query parameter
+    auth_header = request.META.get("HTTP_AUTHORIZATION", "")
+    token_from_header = None
+    if auth_header.startswith("Bearer "):
+        token_from_header = auth_header[7:]
+
+    token_from_query = request.GET.get("token")
+    provided_token = token_from_header or token_from_query
+
+    if not provided_token or provided_token != required_token:
+        return False
+
+    return True
+
+
 class UnveilReportView(ReportView):
     """Base view class for Unveil reports"""
 
@@ -32,25 +63,12 @@ class UnveilReportViewSet(ViewSet):
     """Base ViewSet class for Unveil reports with JSON API support"""
 
     def as_json_view(self, request):
-        """Return the report data as JSON with token authentication, unless user is superuser."""
-        required_token = getattr(settings, "WAGTAIL_UNVEIL_JSON_TOKEN", None)
-        # Best practice: check Authorization header for Bearer token
-        auth_header = request.headers.get("Authorization")
-        token = None
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ", 1)[1]
-        # Fallbacks for compatibility
-        if not token:
-            token = request.GET.get("token") or request.headers.get("X-API-TOKEN")
-        # Bypass token check if user is authenticated and is superuser
-        if not (
-            hasattr(request, "user")
-            and request.user.is_authenticated
-            and request.user.is_superuser
-        ):
-            if not required_token or token != required_token:
-                return HttpResponseForbidden("Invalid or missing token.")
-        # Return the report data as JSON
+        """Return the report data as JSON"""
+
+        if not json_view_auth_required(request):
+            return HttpResponseForbidden("Access denied")
+
+        # User is authenticated and has access, proceed with the JSON response
         view = self.index_view_class()
         queryset = view.get_queryset()
         data = [
