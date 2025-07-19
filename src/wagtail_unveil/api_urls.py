@@ -1,7 +1,8 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import path
 
 from wagtail_unveil.viewsets.admin_report import UnveilAdminReportViewSet
+from wagtail_unveil.viewsets.base import json_view_auth_required
 from wagtail_unveil.viewsets.collection_report import UnveilCollectionReportViewSet
 from wagtail_unveil.viewsets.document_report import UnveilDocumentReportViewSet
 from wagtail_unveil.viewsets.form_report import UnveilFormReportViewSet
@@ -21,7 +22,6 @@ from wagtail_unveil.viewsets.user_report import UnveilUserReportViewSet
 from wagtail_unveil.viewsets.workflow_report import UnveilWorkflowReportViewSet
 from wagtail_unveil.viewsets.workflow_task_report import UnveilWorkflowTaskReportViewSet
 
-# You can import and add other report viewsets here as needed
 
 collection_api_viewset = UnveilCollectionReportViewSet()
 document_api_viewset = UnveilDocumentReportViewSet()
@@ -43,6 +43,10 @@ modeladmin_api_viewset = UnveilModelAdminReportViewSet()
 
 
 def api_index_view(request):
+    if not json_view_auth_required(request):
+        return HttpResponseForbidden("Access denied")
+
+    # User is authenticated and has access, proceed with the JSON response
     endpoints = {
         "collection": request.build_absolute_uri("collection/"),
         "document": request.build_absolute_uri("document/"),
