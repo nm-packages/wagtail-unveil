@@ -1,22 +1,16 @@
-from django.contrib.auth import get_user_model
 from django.http import HttpResponseForbidden
-from django.test import TestCase, RequestFactory, override_settings
+from django.test import RequestFactory, override_settings
 
 from wagtail_unveil.viewsets.base import json_view_auth_required
+from wagtail_unveil.tests.base import BaseWagtailUnveilTestCase
 
 
-class JSONViewAuthRequiredTestCase(TestCase):
+class JSONViewAuthRequiredTestCase(BaseWagtailUnveilTestCase):
     """Direct unit tests for the json_view_auth_required function."""
 
     def setUp(self):
         """Set up test data."""
-        User = get_user_model()
-        self.superuser = User.objects.create_superuser(
-            username="admin", email="admin@example.com", password="password123"
-        )
-        self.regular_user = User.objects.create_user(
-            username="user", email="user@example.com", password="password123"
-        )
+        self.create_test_users()
         self.factory = RequestFactory()
 
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")

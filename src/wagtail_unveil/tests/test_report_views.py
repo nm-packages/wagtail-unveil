@@ -1,9 +1,9 @@
-from django.contrib.auth import get_user_model
-from django.test import TestCase
 from django.urls import reverse
 
+from wagtail_unveil.tests.base import BaseWagtailUnveilTestCase
 
-class ReportIndexViewsTestCase(TestCase):
+
+class ReportIndexViewsTestCase(BaseWagtailUnveilTestCase):
     """Test cases for all unveil report index views (HTML pages)."""
 
     # Define all report configurations in one place
@@ -27,10 +27,7 @@ class ReportIndexViewsTestCase(TestCase):
     ]
 
     def setUp(self):
-        User = get_user_model()
-        self.superuser = User.objects.create_superuser(
-            username="admin", email="admin@example.com", password="password123"
-        )
+        self.superuser = self.create_superuser()
         self.client.login(username="admin", password="password123")
 
     def _test_report_index_route(self, report_name, display_name):

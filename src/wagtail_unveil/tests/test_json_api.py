@@ -1,46 +1,14 @@
 import json
 
-from django.contrib.auth import get_user_model
 from django.http import HttpResponseForbidden, JsonResponse
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from wagtail_unveil.api_urls import API_ENDPOINTS, api_index_view
 from wagtail_unveil.viewsets.base import json_view_auth_required
+from wagtail_unveil.tests.base import BaseWagtailUnveilTestCase
 
 
-class BaseJSONAPITestCase(TestCase):
-    """Base test case with common user creation functionality."""
-
-    def create_test_users(self):
-        """Create common test users."""
-        User = get_user_model()
-        self.superuser = User.objects.create_superuser(
-            username="admin", email="admin@example.com", password="password123"
-        )
-        self.regular_user = User.objects.create_user(
-            username="user", email="user@example.com", password="password123"
-        )
-
-    def create_superuser(
-        self, username="admin", email="admin@example.com", password="password123"
-    ):
-        """Create a superuser with default or custom credentials."""
-        User = get_user_model()
-        return User.objects.create_superuser(
-            username=username, email=email, password=password
-        )
-
-    def create_regular_user(
-        self, username="user", email="user@example.com", password="password123"
-    ):
-        """Create a regular user with default or custom credentials."""
-        User = get_user_model()
-        return User.objects.create_user(
-            username=username, email=email, password=password
-        )
-
-
-class JSONAPIConfigurationTestCase(BaseJSONAPITestCase):
+class JSONAPIConfigurationTestCase(BaseWagtailUnveilTestCase):
     """Test case for JSON API URL patterns and configuration."""
 
     def setUp(self):
@@ -132,7 +100,7 @@ class JSONAPIConfigurationTestCase(BaseJSONAPITestCase):
                 self.fail(f"Failed to instantiate {viewset_class.__name__}: {e}")
 
 
-class JSONAPIIndexViewTestCase(BaseJSONAPITestCase):
+class JSONAPIIndexViewTestCase(BaseWagtailUnveilTestCase):
     """Test case for the JSON API index view."""
 
     def setUp(self):
@@ -259,7 +227,7 @@ class JSONAPIIndexViewTestCase(BaseJSONAPITestCase):
         self.assertEqual(set(endpoint_names), set(response_endpoints))
 
 
-class JSONAPIAuthenticationTestCase(BaseJSONAPITestCase):
+class JSONAPIAuthenticationTestCase(BaseWagtailUnveilTestCase):
     """Test case for JSON API authentication and authorization logic."""
 
     def setUp(self):
@@ -377,7 +345,7 @@ class JSONAPIAuthenticationTestCase(BaseJSONAPITestCase):
 
 
 @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test_token_123")
-class JSONAPIEndpointsTestCase(BaseJSONAPITestCase):
+class JSONAPIEndpointsTestCase(BaseWagtailUnveilTestCase):
     """Test all JSON API endpoints for reports via HTTP client requests."""
 
     # API slugs for all reports
