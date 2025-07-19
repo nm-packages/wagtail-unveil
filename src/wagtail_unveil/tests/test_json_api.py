@@ -8,8 +8,8 @@ from wagtail_unveil.api_urls import API_ENDPOINTS, api_index_view
 from wagtail_unveil.viewsets.base import json_view_auth_required
 
 
-class APIUrlsTestCase(TestCase):
-    """Test case for API URL patterns and configuration."""
+class JSONAPIConfigurationTestCase(TestCase):
+    """Test case for JSON API URL patterns and configuration."""
 
     def setUp(self):
         """Set up test data."""
@@ -65,9 +65,49 @@ class APIUrlsTestCase(TestCase):
         url_paths = [endpoint[0] for endpoint in API_ENDPOINTS]
         self.assertEqual(len(url_paths), len(set(url_paths)))
 
+    def test_url_patterns_generated(self):
+        """Test that URL patterns are properly generated from API_ENDPOINTS."""
+        from wagtail_unveil.api_urls import urlpatterns
 
-class APIIndexViewTestCase(TestCase):
-    """Test case for the API index view."""
+        # Should have one pattern for the index view plus one for each endpoint
+        expected_count = 1 + len(API_ENDPOINTS)
+        self.assertEqual(len(urlpatterns), expected_count)
+
+    def test_all_endpoints_have_url_patterns(self):
+        """Test that each endpoint in API_ENDPOINTS has a corresponding URL pattern."""
+        from wagtail_unveil.api_urls import urlpatterns
+
+        # Extract URL patterns (skip the index pattern)
+        api_patterns = urlpatterns[1:]
+
+        # Check that we have the right number of patterns
+        self.assertEqual(len(api_patterns), len(API_ENDPOINTS))
+
+        # Verify each endpoint has a pattern
+        for url_path, viewset_class in API_ENDPOINTS:
+            pattern_found = False
+            for pattern in api_patterns:
+                if hasattr(pattern, "pattern") and f"{url_path}/" in str(
+                    pattern.pattern
+                ):
+                    pattern_found = True
+                    break
+            self.assertTrue(
+                pattern_found, f"No URL pattern found for endpoint: {url_path}"
+            )
+
+    def test_viewset_instantiation(self):
+        """Test that all ViewSet classes can be instantiated."""
+        for url_path, viewset_class in API_ENDPOINTS:
+            try:
+                instance = viewset_class()
+                self.assertTrue(hasattr(instance, "as_json_view"))
+            except Exception as e:
+                self.fail(f"Failed to instantiate {viewset_class.__name__}: {e}")
+
+
+class JSONAPIIndexViewTestCase(TestCase):
+    """Test case for the JSON API index view."""
 
     def setUp(self):
         """Set up test data."""
@@ -181,9 +221,27 @@ class APIIndexViewTestCase(TestCase):
         self.assertIsInstance(response, HttpResponseForbidden)
         self.assertEqual(response.status_code, 403)
 
+    @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
+    def test_api_endpoints_consistency(self):
+        """Test that the API index returns all configured endpoints."""
+        from django.test import RequestFactory
 
-class JSONViewAuthTestCase(TestCase):
-    """Test case for JSON view authentication function."""
+        factory = RequestFactory()
+        request = factory.get("/unveil/api/")
+        request.user = self.superuser
+
+        response = api_index_view(request)
+        data = json.loads(response.content)
+
+        # Verify all endpoints from API_ENDPOINTS are in the response
+        endpoint_names = [endpoint[0] for endpoint in API_ENDPOINTS]
+        response_endpoints = list(data["endpoints"].keys())
+
+        self.assertEqual(set(endpoint_names), set(response_endpoints))
+
+
+class JSONAPIAuthenticationTestCase(TestCase):
+    """Test case for JSON API authentication and authorization logic."""
 
     def setUp(self):
         """Set up test data."""
@@ -305,74 +363,99 @@ class JSONViewAuthTestCase(TestCase):
         self.assertIsInstance(result, HttpResponseForbidden)
 
 
-class URLPatternsTestCase(TestCase):
-    """Test case for URL pattern generation."""
+@override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test_token_123")
+class JSONAPIEndpointsTestCase(TestCase):
+    """Test all JSON API endpoints for reports via HTTP client requests."""
 
-    def test_url_patterns_generated(self):
-        """Test that URL patterns are properly generated from API_ENDPOINTS."""
-        from wagtail_unveil.api_urls import urlpatterns
-
-        # Should have one pattern for the index view plus one for each endpoint
-        expected_count = 1 + len(API_ENDPOINTS)
-        self.assertEqual(len(urlpatterns), expected_count)
-
-    def test_all_endpoints_have_url_patterns(self):
-        """Test that each endpoint in API_ENDPOINTS has a corresponding URL pattern."""
-        from wagtail_unveil.api_urls import urlpatterns
-
-        # Extract URL patterns (skip the index pattern)
-        api_patterns = urlpatterns[1:]
-
-        # Check that we have the right number of patterns
-        self.assertEqual(len(api_patterns), len(API_ENDPOINTS))
-
-        # Verify each endpoint has a pattern
-        for url_path, viewset_class in API_ENDPOINTS:
-            pattern_found = False
-            for pattern in api_patterns:
-                if hasattr(pattern, "pattern") and f"{url_path}/" in str(
-                    pattern.pattern
-                ):
-                    pattern_found = True
-                    break
-            self.assertTrue(
-                pattern_found, f"No URL pattern found for endpoint: {url_path}"
-            )
-
-
-class IntegrationTestCase(TestCase):
-    """Integration tests for the complete API URL system."""
+    # API slugs for all reports
+    API_SLUGS = [
+        "collection",
+        "document",
+        "form",
+        "generic",
+        "image",
+        "locale",
+        "page",
+        "redirect",
+        "search-promotion",
+        "settings",
+        "site",
+        "snippet",
+        "user",
+        "admin",
+        "workflow",
+        "workflow-task",
+    ]
 
     def setUp(self):
-        """Set up test data."""
         User = get_user_model()
         self.superuser = User.objects.create_superuser(
             username="admin", email="admin@example.com", password="password123"
         )
+        self.client.login(username="admin", password="password123")
 
-    @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
-    def test_api_endpoints_consistency(self):
-        """Test that the API index returns all configured endpoints."""
-        from django.test import RequestFactory
+    def _assert_json_response(self, response, expected_status=200):
+        """Helper method to assert common JSON response properties."""
+        if expected_status == 200:
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response["Content-Type"], "application/json")
+            json_data = response.json()
+            self.assertIn("results", json_data)
+            self.assertIsInstance(json_data["results"], list)
+            return json_data
+        else:
+            self.assertIn(response.status_code, [200, 403])
+            if response.status_code == 403:
+                self.assertIn("Invalid or missing token", response.content.decode())
+            else:
+                # If it's 200, still validate the JSON structure
+                self.assertEqual(response["Content-Type"], "application/json")
+                json_data = response.json()
+                self.assertIn("results", json_data)
+                self.assertIsInstance(json_data["results"], list)
 
-        factory = RequestFactory()
-        request = factory.get("/unveil/api/")
-        request.user = self.superuser
+    def test_json_endpoint_without_token(self):
+        """Test that JSON API endpoints require authentication token"""
+        url = "/unveil/api/collection/"
+        response = self.client.get(url)
+        self._assert_json_response(response, expected_status=403)
 
-        response = api_index_view(request)
-        data = json.loads(response.content)
+    def test_json_endpoint_with_invalid_token(self):
+        """Test that JSON API endpoints reject invalid tokens"""
+        url = "/unveil/api/collection/"
+        response = self.client.get(url, {"token": "invalid_token"})
+        self._assert_json_response(response, expected_status=403)
 
-        # Verify all endpoints from API_ENDPOINTS are in the response
-        endpoint_names = [endpoint[0] for endpoint in API_ENDPOINTS]
-        response_endpoints = list(data["endpoints"].keys())
+    def test_json_endpoint_with_query_param_token(self):
+        """Test JSON API endpoint with valid token as query parameter"""
+        url = "/unveil/api/collection/"
+        response = self.client.get(url, {"token": "test_token_123"})
+        self._assert_json_response(response)
 
-        self.assertEqual(set(endpoint_names), set(response_endpoints))
+    def test_json_endpoint_with_header_token(self):
+        """Test JSON API endpoint with valid token in header"""
+        url = "/unveil/api/collection/"
+        response = self.client.get(url, HTTP_X_API_TOKEN="test_token_123")
+        self._assert_json_response(response)
 
-    def test_viewset_instantiation(self):
-        """Test that all ViewSet classes can be instantiated."""
-        for url_path, viewset_class in API_ENDPOINTS:
-            try:
-                instance = viewset_class()
-                self.assertTrue(hasattr(instance, "as_json_view"))
-            except Exception as e:
-                self.fail(f"Failed to instantiate {viewset_class.__name__}: {e}")
+    def test_all_reports_have_json_api_endpoints(self):
+        """Test that all reports have working JSON API endpoints"""
+        for slug in self.API_SLUGS:
+            with self.subTest(report=slug):
+                url = f"/unveil/api/{slug}/"
+                response = self.client.get(url, {"token": "test_token_123"})
+                self._assert_json_response(response)
+
+    def test_json_response_structure(self):
+        """Test that JSON API responses have the correct structure"""
+        url = "/unveil/api/admin/"  # Admin report has predictable data
+        response = self.client.get(url, {"token": "test_token_123"})
+        json_data = self._assert_json_response(response)
+        if json_data["results"]:
+            entry = json_data["results"][0]
+            required_fields = ["id", "model_name", "url_type", "url"]
+            for field in required_fields:
+                self.assertIn(field, entry, f"Missing field '{field}' in JSON response")
+                self.assertIsNotNone(
+                    entry[field], f"Field '{field}' should not be None"
+                )
