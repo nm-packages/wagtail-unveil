@@ -6,11 +6,15 @@ to reduce code duplication across test files.
 """
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 
 
 class BaseWagtailUnveilTestCase(TestCase):
     """Base test case with common user creation functionality for all wagtail-unveil tests."""
+
+    def get_request_factory(self):
+        """Get a Django RequestFactory instance for creating mock requests."""
+        return RequestFactory()
 
     def create_test_users(self):
         """Create common test users (superuser and regular user)."""
