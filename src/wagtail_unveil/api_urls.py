@@ -23,69 +23,46 @@ from wagtail_unveil.viewsets.workflow_report import UnveilWorkflowReportViewSet
 from wagtail_unveil.viewsets.workflow_task_report import UnveilWorkflowTaskReportViewSet
 
 
-collection_api_viewset = UnveilCollectionReportViewSet()
-document_api_viewset = UnveilDocumentReportViewSet()
-form_api_viewset = UnveilFormReportViewSet()
-generic_api_viewset = UnveilGenericReportViewSet()
-image_api_viewset = UnveilImageReportViewSet()
-locale_api_viewset = UnveilLocaleReportViewSet()
-page_api_viewset = UnveilPageReportViewSet()
-redirect_api_viewset = UnveilRedirectReportViewSet()
-search_promotion_api_viewset = UnveilSearchPromotionReportViewSet()
-settings_api_viewset = UnveilSettingsReportViewSet()
-site_api_viewset = UnveilSiteReportViewSet()
-snippet_api_viewset = UnveilSnippetReportViewSet()
-user_api_viewset = UnveilUserReportViewSet()
-admin_api_viewset = UnveilAdminReportViewSet()
-workflow_api_viewset = UnveilWorkflowReportViewSet()
-workflow_task_api_viewset = UnveilWorkflowTaskReportViewSet()
-modeladmin_api_viewset = UnveilModelAdminReportViewSet()
+# Registry of API endpoints
+# Format: (url_path, viewset_class, endpoint_name)
+API_ENDPOINTS = [
+    ("collection", UnveilCollectionReportViewSet, "collection"),
+    ("document", UnveilDocumentReportViewSet, "document"),
+    ("form", UnveilFormReportViewSet, "form"),
+    ("generic", UnveilGenericReportViewSet, "generic"),
+    ("image", UnveilImageReportViewSet, "image"),
+    ("locale", UnveilLocaleReportViewSet, "locale"),
+    ("modeladmin", UnveilModelAdminReportViewSet, "modeladmin"),
+    ("page", UnveilPageReportViewSet, "page"),
+    ("redirect", UnveilRedirectReportViewSet, "redirect"),
+    ("search-promotion", UnveilSearchPromotionReportViewSet, "search-promotion"),
+    ("settings", UnveilSettingsReportViewSet, "settings"),
+    ("site", UnveilSiteReportViewSet, "site"),
+    ("snippet", UnveilSnippetReportViewSet, "snippet"),
+    ("user", UnveilUserReportViewSet, "user"),
+    ("admin", UnveilAdminReportViewSet, "admin"),
+    ("workflow", UnveilWorkflowReportViewSet, "workflow"),
+    ("workflow-task", UnveilWorkflowTaskReportViewSet, "workflow-task"),
+]
 
 
 def api_index_view(request):
+    """Return a list of all available API endpoints."""
     if not json_view_auth_required(request):
         return HttpResponseForbidden("Access denied")
 
-    # User is authenticated and has access, proceed with the JSON response
     endpoints = {
-        "collection": request.build_absolute_uri("collection/"),
-        "document": request.build_absolute_uri("document/"),
-        "form": request.build_absolute_uri("form/"),
-        "generic": request.build_absolute_uri("generic/"),
-        "image": request.build_absolute_uri("image/"),
-        "locale": request.build_absolute_uri("locale/"),
-        "modeladmin": request.build_absolute_uri("modeladmin/"),
-        "page": request.build_absolute_uri("page/"),
-        "redirect": request.build_absolute_uri("redirect/"),
-        "search-promotion": request.build_absolute_uri("search-promotion/"),
-        "settings": request.build_absolute_uri("settings/"),
-        "site": request.build_absolute_uri("site/"),
-        "snippet": request.build_absolute_uri("snippet/"),
-        "user": request.build_absolute_uri("user/"),
-        "admin": request.build_absolute_uri("admin/"),
-        "workflow": request.build_absolute_uri("workflow/"),
-        "workflow-task": request.build_absolute_uri("workflow-task/"),
+        endpoint_name: request.build_absolute_uri(f"{url_path}/")
+        for url_path, _, endpoint_name in API_ENDPOINTS
     }
     return JsonResponse({"endpoints": endpoints})
 
 
 urlpatterns = [
     path("", api_index_view),
-    path("collection/", collection_api_viewset.as_json_view),
-    path("document/", document_api_viewset.as_json_view),
-    path("form/", form_api_viewset.as_json_view),
-    path("generic/", generic_api_viewset.as_json_view),
-    path("image/", image_api_viewset.as_json_view),
-    path("locale/", locale_api_viewset.as_json_view),
-    path("modeladmin/", modeladmin_api_viewset.as_json_view),
-    path("page/", page_api_viewset.as_json_view),
-    path("redirect/", redirect_api_viewset.as_json_view),
-    path("search-promotion/", search_promotion_api_viewset.as_json_view),
-    path("settings/", settings_api_viewset.as_json_view),
-    path("site/", site_api_viewset.as_json_view),
-    path("snippet/", snippet_api_viewset.as_json_view),
-    path("user/", user_api_viewset.as_json_view),
-    path("admin/", admin_api_viewset.as_json_view),
-    path("workflow/", workflow_api_viewset.as_json_view),
-    path("workflow-task/", workflow_task_api_viewset.as_json_view),
 ]
+
+# Generate JSON API endpoint URL
+for url_path, viewset_class, _ in API_ENDPOINTS:
+    viewset_instance = viewset_class()
+    urlpatterns.append(path(f"{url_path}/", viewset_instance.as_json_view))
