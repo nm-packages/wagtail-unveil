@@ -8,11 +8,11 @@ from wagtail_unveil.api_urls import API_ENDPOINTS, api_index_view
 from wagtail_unveil.viewsets.base import json_view_auth_required
 
 
-class JSONAPIConfigurationTestCase(TestCase):
-    """Test case for JSON API URL patterns and configuration."""
+class BaseJSONAPITestCase(TestCase):
+    """Base test case with common user creation functionality."""
 
-    def setUp(self):
-        """Set up test data."""
+    def create_test_users(self):
+        """Create common test users."""
         User = get_user_model()
         self.superuser = User.objects.create_superuser(
             username="admin", email="admin@example.com", password="password123"
@@ -20,6 +20,32 @@ class JSONAPIConfigurationTestCase(TestCase):
         self.regular_user = User.objects.create_user(
             username="user", email="user@example.com", password="password123"
         )
+
+    def create_superuser(
+        self, username="admin", email="admin@example.com", password="password123"
+    ):
+        """Create a superuser with default or custom credentials."""
+        User = get_user_model()
+        return User.objects.create_superuser(
+            username=username, email=email, password=password
+        )
+
+    def create_regular_user(
+        self, username="user", email="user@example.com", password="password123"
+    ):
+        """Create a regular user with default or custom credentials."""
+        User = get_user_model()
+        return User.objects.create_user(
+            username=username, email=email, password=password
+        )
+
+
+class JSONAPIConfigurationTestCase(BaseJSONAPITestCase):
+    """Test case for JSON API URL patterns and configuration."""
+
+    def setUp(self):
+        """Set up test data."""
+        self.create_test_users()
 
     def test_api_endpoints_structure(self):
         """Test that API_ENDPOINTS has the correct structure."""
@@ -106,15 +132,12 @@ class JSONAPIConfigurationTestCase(TestCase):
                 self.fail(f"Failed to instantiate {viewset_class.__name__}: {e}")
 
 
-class JSONAPIIndexViewTestCase(TestCase):
+class JSONAPIIndexViewTestCase(BaseJSONAPITestCase):
     """Test case for the JSON API index view."""
 
     def setUp(self):
         """Set up test data."""
-        User = get_user_model()
-        self.superuser = User.objects.create_superuser(
-            username="admin", email="admin@example.com", password="password123"
-        )
+        self.superuser = self.create_superuser()
 
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_api_index_view_with_superuser(self):
@@ -151,9 +174,8 @@ class JSONAPIIndexViewTestCase(TestCase):
         request = factory.get("/unveil/api/", HTTP_AUTHORIZATION="Bearer test-token")
 
         # Create a regular user (not superuser)
-        User = get_user_model()
-        regular_user = User.objects.create_user(
-            username="regular", email="regular@example.com", password="password123"
+        regular_user = self.create_regular_user(
+            username="regular", email="regular@example.com"
         )
         request.user = regular_user
 
@@ -171,9 +193,8 @@ class JSONAPIIndexViewTestCase(TestCase):
         request = factory.get("/unveil/api/?token=test-token")
 
         # Create a regular user (not superuser)
-        User = get_user_model()
-        regular_user = User.objects.create_user(
-            username="regular2", email="regular2@example.com", password="password123"
+        regular_user = self.create_regular_user(
+            username="regular2", email="regular2@example.com"
         )
         request.user = regular_user
 
@@ -191,9 +212,8 @@ class JSONAPIIndexViewTestCase(TestCase):
         request = factory.get("/unveil/api/", HTTP_AUTHORIZATION="Bearer wrong-token")
 
         # Create a regular user (not superuser)
-        User = get_user_model()
-        regular_user = User.objects.create_user(
-            username="regular3", email="regular3@example.com", password="password123"
+        regular_user = self.create_regular_user(
+            username="regular3", email="regular3@example.com"
         )
         request.user = regular_user
 
@@ -210,9 +230,8 @@ class JSONAPIIndexViewTestCase(TestCase):
         request = factory.get("/unveil/api/")
 
         # Create a regular user (not superuser)
-        User = get_user_model()
-        regular_user = User.objects.create_user(
-            username="regular4", email="regular4@example.com", password="password123"
+        regular_user = self.create_regular_user(
+            username="regular4", email="regular4@example.com"
         )
         request.user = regular_user
 
@@ -240,18 +259,12 @@ class JSONAPIIndexViewTestCase(TestCase):
         self.assertEqual(set(endpoint_names), set(response_endpoints))
 
 
-class JSONAPIAuthenticationTestCase(TestCase):
+class JSONAPIAuthenticationTestCase(BaseJSONAPITestCase):
     """Test case for JSON API authentication and authorization logic."""
 
     def setUp(self):
         """Set up test data."""
-        User = get_user_model()
-        self.superuser = User.objects.create_superuser(
-            username="admin", email="admin@example.com", password="password123"
-        )
-        self.regular_user = User.objects.create_user(
-            username="user", email="user@example.com", password="password123"
-        )
+        self.create_test_users()
 
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_auth_required_superuser_access(self):
@@ -364,7 +377,7 @@ class JSONAPIAuthenticationTestCase(TestCase):
 
 
 @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test_token_123")
-class JSONAPIEndpointsTestCase(TestCase):
+class JSONAPIEndpointsTestCase(BaseJSONAPITestCase):
     """Test all JSON API endpoints for reports via HTTP client requests."""
 
     # API slugs for all reports
@@ -388,10 +401,7 @@ class JSONAPIEndpointsTestCase(TestCase):
     ]
 
     def setUp(self):
-        User = get_user_model()
-        self.superuser = User.objects.create_superuser(
-            username="admin", email="admin@example.com", password="password123"
-        )
+        self.superuser = self.create_superuser()
         self.client.login(username="admin", password="password123")
 
     def _assert_json_response(self, response, expected_status=200):
