@@ -113,8 +113,7 @@ class JSONAPIIndexViewTestCase(BaseWagtailUnveilTestCase):
         self.client.login(username="admin", password="password123")
 
         # Mock request object for the view function
-        factory = self.request_factory
-        request = factory.get("/unveil/api/")
+        request = self.request_factory.get("/unveil/api/")
         request.user = self.superuser
 
         response = api_index_view(request)
@@ -134,8 +133,9 @@ class JSONAPIIndexViewTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_api_index_view_with_valid_token_header(self):
         """Test API index view access with valid token in Authorization header."""
-        factory = self.request_factory
-        request = factory.get("/unveil/api/", HTTP_AUTHORIZATION="Bearer test-token")
+        request = self.request_factory.get(
+            "/unveil/api/", HTTP_AUTHORIZATION="Bearer test-token"
+        )
 
         # Create a regular user (not superuser)
         regular_user = self.create_regular_user(
@@ -151,8 +151,7 @@ class JSONAPIIndexViewTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_api_index_view_with_valid_token_query(self):
         """Test API index view access with valid token in query parameter."""
-        factory = self.request_factory
-        request = factory.get("/unveil/api/?token=test-token")
+        request = self.request_factory.get("/unveil/api/?token=test-token")
 
         # Create a regular user (not superuser)
         regular_user = self.create_regular_user(
@@ -168,8 +167,9 @@ class JSONAPIIndexViewTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_api_index_view_with_invalid_token(self):
         """Test API index view access denied with invalid token."""
-        factory = self.request_factory
-        request = factory.get("/unveil/api/", HTTP_AUTHORIZATION="Bearer wrong-token")
+        request = self.request_factory.get(
+            "/unveil/api/", HTTP_AUTHORIZATION="Bearer wrong-token"
+        )
 
         # Create a regular user (not superuser)
         regular_user = self.create_regular_user(
@@ -184,8 +184,7 @@ class JSONAPIIndexViewTestCase(BaseWagtailUnveilTestCase):
 
     def test_api_index_view_without_token_config(self):
         """Test API index view access denied when no token is configured."""
-        factory = self.request_factory
-        request = factory.get("/unveil/api/")
+        request = self.request_factory.get("/unveil/api/")
 
         # Create a regular user (not superuser)
         regular_user = self.create_regular_user(
@@ -201,8 +200,7 @@ class JSONAPIIndexViewTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_api_endpoints_consistency(self):
         """Test that the API index returns all configured endpoints."""
-        factory = self.request_factory
-        request = factory.get("/unveil/api/")
+        request = self.request_factory.get("/unveil/api/")
         request.user = self.superuser
 
         response = api_index_view(request)
@@ -225,8 +223,7 @@ class JSONAPIAuthenticationTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_auth_required_superuser_access(self):
         """Test that authenticated superusers can access without token."""
-        factory = self.request_factory
-        request = factory.get("/api/")
+        request = self.request_factory.get("/api/")
         request.user = self.superuser
 
         result = json_view_auth_required(request)
@@ -235,8 +232,7 @@ class JSONAPIAuthenticationTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_auth_required_regular_user_no_token(self):
         """Test that regular users cannot access without token."""
-        factory = self.request_factory
-        request = factory.get("/api/")
+        request = self.request_factory.get("/api/")
         request.user = self.regular_user
 
         result = json_view_auth_required(request)
@@ -245,8 +241,9 @@ class JSONAPIAuthenticationTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_auth_required_valid_token_header(self):
         """Test access with valid token in Authorization header."""
-        factory = self.request_factory
-        request = factory.get("/api/", HTTP_AUTHORIZATION="Bearer test-token")
+        request = self.request_factory.get(
+            "/api/", HTTP_AUTHORIZATION="Bearer test-token"
+        )
         request.user = self.regular_user
 
         result = json_view_auth_required(request)
@@ -255,8 +252,7 @@ class JSONAPIAuthenticationTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_auth_required_valid_token_query(self):
         """Test access with valid token in query parameter."""
-        factory = self.request_factory
-        request = factory.get("/api/?token=test-token")
+        request = self.request_factory.get("/api/?token=test-token")
         request.user = self.regular_user
 
         result = json_view_auth_required(request)
@@ -265,8 +261,9 @@ class JSONAPIAuthenticationTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_auth_required_invalid_token_header(self):
         """Test access denied with invalid token in Authorization header."""
-        factory = self.request_factory
-        request = factory.get("/api/", HTTP_AUTHORIZATION="Bearer wrong-token")
+        request = self.request_factory.get(
+            "/api/", HTTP_AUTHORIZATION="Bearer wrong-token"
+        )
         request.user = self.regular_user
 
         result = json_view_auth_required(request)
@@ -275,8 +272,7 @@ class JSONAPIAuthenticationTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_auth_required_invalid_token_query(self):
         """Test access denied with invalid token in query parameter."""
-        factory = self.request_factory
-        request = factory.get("/api/?token=wrong-token")
+        request = self.request_factory.get("/api/?token=wrong-token")
         request.user = self.regular_user
 
         result = json_view_auth_required(request)
@@ -285,8 +281,9 @@ class JSONAPIAuthenticationTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="test-token")
     def test_auth_required_malformed_authorization_header(self):
         """Test access denied with malformed Authorization header."""
-        factory = self.request_factory
-        request = factory.get("/api/", HTTP_AUTHORIZATION="InvalidFormat test-token")
+        request = self.request_factory.get(
+            "/api/", HTTP_AUTHORIZATION="InvalidFormat test-token"
+        )
         request.user = self.regular_user
 
         result = json_view_auth_required(request)
@@ -295,8 +292,7 @@ class JSONAPIAuthenticationTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN=None)
     def test_auth_required_no_token_configured(self):
         """Test that access is denied when no token is configured."""
-        factory = self.request_factory
-        request = factory.get("/api/")
+        request = self.request_factory.get("/api/")
         request.user = self.regular_user
 
         # This should return HttpResponseForbidden, not a boolean
@@ -306,8 +302,7 @@ class JSONAPIAuthenticationTestCase(BaseWagtailUnveilTestCase):
     @override_settings(WAGTAIL_UNVEIL_JSON_TOKEN="")
     def test_auth_required_empty_token_configured(self):
         """Test that access is denied when token is empty string."""
-        factory = self.request_factory
-        request = factory.get("/api/")
+        request = self.request_factory.get("/api/")
         request.user = self.regular_user
 
         result = json_view_auth_required(request)
