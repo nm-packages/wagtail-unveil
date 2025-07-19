@@ -24,25 +24,25 @@ from wagtail_unveil.viewsets.workflow_task_report import UnveilWorkflowTaskRepor
 
 
 # Registry of API endpoints
-# Format: (url_path, viewset_class, endpoint_name)
+# Format: (url_path, viewset_class)
 API_ENDPOINTS = [
-    ("collection", UnveilCollectionReportViewSet, "collection"),
-    ("document", UnveilDocumentReportViewSet, "document"),
-    ("form", UnveilFormReportViewSet, "form"),
-    ("generic", UnveilGenericReportViewSet, "generic"),
-    ("image", UnveilImageReportViewSet, "image"),
-    ("locale", UnveilLocaleReportViewSet, "locale"),
-    ("modeladmin", UnveilModelAdminReportViewSet, "modeladmin"),
-    ("page", UnveilPageReportViewSet, "page"),
-    ("redirect", UnveilRedirectReportViewSet, "redirect"),
-    ("search-promotion", UnveilSearchPromotionReportViewSet, "search-promotion"),
-    ("settings", UnveilSettingsReportViewSet, "settings"),
-    ("site", UnveilSiteReportViewSet, "site"),
-    ("snippet", UnveilSnippetReportViewSet, "snippet"),
-    ("user", UnveilUserReportViewSet, "user"),
-    ("admin", UnveilAdminReportViewSet, "admin"),
-    ("workflow", UnveilWorkflowReportViewSet, "workflow"),
-    ("workflow-task", UnveilWorkflowTaskReportViewSet, "workflow-task"),
+    ("collection", UnveilCollectionReportViewSet),
+    ("document", UnveilDocumentReportViewSet),
+    ("form", UnveilFormReportViewSet),
+    ("generic", UnveilGenericReportViewSet),
+    ("image", UnveilImageReportViewSet),
+    ("locale", UnveilLocaleReportViewSet),
+    ("modeladmin", UnveilModelAdminReportViewSet),
+    ("page", UnveilPageReportViewSet),
+    ("redirect", UnveilRedirectReportViewSet),
+    ("search-promotion", UnveilSearchPromotionReportViewSet),
+    ("settings", UnveilSettingsReportViewSet),
+    ("site", UnveilSiteReportViewSet),
+    ("snippet", UnveilSnippetReportViewSet),
+    ("user", UnveilUserReportViewSet),
+    ("admin", UnveilAdminReportViewSet),
+    ("workflow", UnveilWorkflowReportViewSet),
+    ("workflow-task", UnveilWorkflowTaskReportViewSet),
 ]
 
 
@@ -52,8 +52,8 @@ def api_index_view(request):
         return HttpResponseForbidden("Access denied")
 
     endpoints = {
-        endpoint_name: request.build_absolute_uri(f"{url_path}/")
-        for url_path, _, endpoint_name in API_ENDPOINTS
+        url_path: request.build_absolute_uri(f"{url_path}/")
+        for url_path, _ in API_ENDPOINTS
     }
     return JsonResponse({"endpoints": endpoints})
 
@@ -63,6 +63,6 @@ urlpatterns = [
 ]
 
 # Generate JSON API endpoint URL
-for url_path, viewset_class, _ in API_ENDPOINTS:
+for url_path, viewset_class in API_ENDPOINTS:
     viewset_instance = viewset_class()
     urlpatterns.append(path(f"{url_path}/", viewset_instance.as_json_view))
