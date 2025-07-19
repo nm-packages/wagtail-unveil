@@ -12,7 +12,8 @@ from django.test import RequestFactory, TestCase
 class BaseWagtailUnveilTestCase(TestCase):
     """Base test case with common user creation functionality for all wagtail-unveil tests."""
 
-    def get_request_factory(self):
+    @property
+    def request_factory(self):
         """Get a Django RequestFactory instance for creating mock requests."""
         return RequestFactory()
 
