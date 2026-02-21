@@ -1,6 +1,8 @@
 import os
 
-from django.http import JsonResponse
+from django.conf import settings
+from django.http import HttpResponseNotFound, JsonResponse
+from django.shortcuts import render
 
 from wagtail_unveil.urls import get_admin_urls
 
@@ -40,3 +42,19 @@ def admin_urls_json(request):
         "count": len(urls),
     }
     return JsonResponse(data)
+
+
+def admin_urls_report(request):
+    """Render an HTML report of all admin URLs. Only available when DEBUG=True."""
+    if not settings.DEBUG:
+        return HttpResponseNotFound()
+
+    urls = get_admin_urls()
+    static_count = sum(1 for u in urls if not u.has_parameters)
+    context = {
+        "urls": urls,
+        "url_count": len(urls),
+        "static_count": static_count,
+        "parameterized_count": len(urls) - static_count,
+    }
+    return render(request, "wagtail_unveil/admin_urls_report.html", context)

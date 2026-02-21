@@ -2,7 +2,7 @@ from io import StringIO
 from unittest.mock import patch
 
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from wagtail_unveil.urls import AdminURL, get_admin_urls
 
@@ -117,3 +117,36 @@ class TestAdminUrlsAPIView(TestCase):
         data = response.json()
         for url in data["urls"]:
             self.assertTrue(url["has_parameters"], url["route"])
+
+
+@override_settings(DEBUG=True)
+class TestAdminUrlsReportView(TestCase):
+    def test_report_returns_html(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Admin URLs Report", content)
+        self.assertIn("<table", content)
+
+    def test_report_contains_known_url(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(response, "wagtailadmin_home")
+
+    def test_report_contains_counts(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        content = response.content.decode()
+        self.assertIn("Static:", content)
+        self.assertIn("Parameterized:", content)
+
+    def test_report_has_test_buttons(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(response, "test-btn")
+
+    def test_report_disables_test_for_parameterized(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(response, "disabled")
+
+    def test_report_returns_404_when_not_debug(self):
+        with self.settings(DEBUG=False):
+            response = self.client.get("/unveil-report/admin-urls/")
+            self.assertEqual(response.status_code, 404)
