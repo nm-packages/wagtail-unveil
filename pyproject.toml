@@ -7,3 +7,15 @@ requires-python = ">=3.11"
 dependencies = [
     "wagtail>=7.0,<7.1",
 ]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"sandbox/settings/*.py" = ["F403"]
+
+[tool.ruff.format]
+quote-style = "double"

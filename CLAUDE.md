@@ -40,6 +40,10 @@ uv run ruff check .
 uv run ruff check --fix .
 ```
 
+## Conventions
+
+See [CONVENTIONS.md](CONVENTIONS.md) for all coding conventions. Follow these strictly.
+
 ## Tech Stack
 
 - Python 3.11+, Wagtail 7.0, Django 5.2

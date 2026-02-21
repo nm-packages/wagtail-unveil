@@ -5,6 +5,35 @@ build/
 dist/
 wheels/
 *.egg-info
+*.egg
 
 # Virtual environments
 .venv
+
+# Distribution / packaging
+sdist/
+*.tar.gz
+*.whl
+
+# Testing / coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+
+# Django
+*.sqlite3
+media/
+
+# Environment
+.env
+.env.*
