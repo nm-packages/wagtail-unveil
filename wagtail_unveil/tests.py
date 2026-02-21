@@ -1,4 +1,5 @@
 from io import StringIO
+from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test import TestCase
@@ -64,3 +65,55 @@ class TestShowAdminUrlsCommand(TestCase):
         for line in output.splitlines():
             if line.startswith("admin/"):
                 self.assertTrue("<" in line or "(" in line, line)
+
+
+@patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
+class TestAdminUrlsAPIView(TestCase):
+    def test_returns_json(self):
+        response = self.client.get(
+            "/unveil-api/admin-urls/",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("urls", data)
+        self.assertIn("count", data)
+        self.assertGreater(data["count"], 0)
+        self.assertEqual(len(data["urls"]), data["count"])
+
+    def test_requires_api_key(self):
+        response = self.client.get("/unveil-api/admin-urls/")
+        self.assertEqual(response.status_code, 403)
+
+    def test_rejects_wrong_key(self):
+        response = self.client.get(
+            "/unveil-api/admin-urls/",
+            HTTP_AUTHORIZATION="Bearer wrong-key",
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_returns_500_when_no_env_var(self):
+        with patch.dict("os.environ", {}, clear=True):
+            response = self.client.get(
+                "/unveil-api/admin-urls/",
+                HTTP_AUTHORIZATION="Bearer test-secret",
+            )
+            self.assertEqual(response.status_code, 500)
+
+    def test_filter_static(self):
+        response = self.client.get(
+            "/unveil-api/admin-urls/?filter=static",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        data = response.json()
+        for url in data["urls"]:
+            self.assertFalse(url["has_parameters"], url["route"])
+
+    def test_filter_parameterized(self):
+        response = self.client.get(
+            "/unveil-api/admin-urls/?filter=parameterized",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        data = response.json()
+        for url in data["urls"]:
+            self.assertTrue(url["has_parameters"], url["route"])

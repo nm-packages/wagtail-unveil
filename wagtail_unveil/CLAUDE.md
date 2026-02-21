@@ -14,11 +14,16 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 
 - `apps.py` — Django app config (`WagtailUnveilConfig`)
 - `models.py` — Package models
-- `views.py` — Package views
+- `urls.py` — URL discovery logic (`get_admin_urls()` returns list of `AdminURL` dataclasses)
+- `views.py` — API views (e.g. `admin_urls_json` — JSON endpoint for admin URLs, protected by API key)
+- `api_urls.py` — API URL configuration (`app_name = "wagtail_unveil_api"`)
 - `admin.py` — Wagtail admin integration
 - `tests.py` — Package tests (run with `uv run python manage.py test wagtail_unveil`)
+- `management/commands/show_admin_urls.py` — Management command to list admin URLs
 
 ### Conventions
 
 - This app is registered as `"wagtail_unveil"` in INSTALLED_APPS
 - Migrations live in `migrations/` and are created via `uv run python manage.py makemigrations wagtail_unveil`
+- API endpoints are authenticated via `WAGTAIL_UNVEIL_API_KEY` environment variable (Bearer token)
+- API URL config is in `api_urls.py` — consuming projects include it in their own `urls.py`

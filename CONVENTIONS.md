@@ -27,3 +27,9 @@
 - **Templates:** Package templates go in `wagtail_unveil/templates/wagtail_unveil/`
 - **Static files:** Package statics go in `wagtail_unveil/static/wagtail_unveil/`
 - **Keep files focused:** One concern per module (don't stuff everything into models.py)
+
+## Documentation
+
+- **After each piece of work**, update the relevant CLAUDE.md files and README.md to reflect new features, files, or changes
+- **README.md** is user-facing documentation — document features, usage, and configuration
+- **CLAUDE.md files** are for Claude Code context — document key files, structure, and conventions
