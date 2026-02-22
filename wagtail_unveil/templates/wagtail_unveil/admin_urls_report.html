@@ -21,6 +21,9 @@
             <button class="filter-btn active" data-filter="static">Static</button>
             <button class="filter-btn" data-filter="parameterized">Parameterized</button>
             <button class="test-all-btn" onclick="testAll()">Test All</button>
+            <button class="pause-btn hidden">Pause</button>
+            <button class="cancel-btn hidden" onclick="cancelTests()">Cancel</button>
+            <button class="reset-btn" onclick="location.reload()">Reset</button>
         </div>
         <p class="test-all-summary hidden" id="test-all-summary"></p>
 
@@ -45,10 +48,10 @@
                     <td>{{ url.has_parameters|yesno:"Yes,No" }}</td>
                     <td><small>{{ url.view_name }}</small></td>
                     <td>
-                        {% if url.has_parameters %}
-                        <button class="test-btn" disabled title="Cannot test URLs with parameters — they require specific values">Test</button>
-                        {% else %}
+                        {% if url.is_testable %}
                         <button class="test-btn" onclick="testUrl(this, '/{{ url.route }}')">Test</button>
+                        {% else %}
+                        <button class="test-btn" disabled title="{{ url.skip_reason }}">Test</button>
                         {% endif %}
                     </td>
                     <td class="status-cell">—</td>

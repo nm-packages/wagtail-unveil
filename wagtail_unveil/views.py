@@ -3,6 +3,7 @@ import os
 from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
+from wagtail.admin.auth import user_passes_test
 
 from wagtail_unveil.urls import get_admin_urls
 
@@ -36,6 +37,8 @@ def admin_urls_json(request):
                 "namespace": u.namespace,
                 "has_parameters": u.has_parameters,
                 "view_name": u.view_name,
+                "is_testable": u.is_testable,
+                "skip_reason": u.skip_reason,
             }
             for u in urls
         ],
@@ -44,6 +47,7 @@ def admin_urls_json(request):
     return JsonResponse(data)
 
 
+@user_passes_test(lambda u: u.is_superuser)
 def admin_urls_report(request):
     """Render an HTML report of all admin URLs. Only available when DEBUG=True."""
     if not settings.DEBUG:

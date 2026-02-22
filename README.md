@@ -98,6 +98,7 @@ urlpatterns = [
 - One-click testing of static URLs with colour-coded status codes (green=2xx, yellow=3xx, red=4xx/5xx)
 - **Test All** button — runs all testable (static) URLs sequentially with a progress indicator and pass/fail summary
 - Self-contained — no external CSS or JS dependencies
+- **Superuser-only** — requires Wagtail superuser login; non-superusers are redirected to the login page
 - **DEBUG-only** — returns 404 when `DEBUG=False`
 
 ## Future Features

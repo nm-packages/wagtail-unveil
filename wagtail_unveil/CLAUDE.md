@@ -15,7 +15,7 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 - `apps.py` — Django app config (`WagtailUnveilConfig`)
 - `models.py` — Package models
 - `urls.py` — URL discovery logic (`get_admin_urls()` returns list of `AdminURL` dataclasses)
-- `views.py` — Views (`admin_urls_json` — JSON endpoint; `admin_urls_report` — HTML report page, DEBUG-only)
+- `views.py` — Views (`admin_urls_json` — JSON endpoint; `admin_urls_report` — HTML report page, requires superuser + DEBUG=True)
 - `api_urls.py` — API URL configuration (`app_name = "wagtail_unveil_api"`)
 - `report_urls.py` — Report URL configuration (`app_name = "wagtail_unveil_report"`)
 - `templates/wagtail_unveil/admin_urls_report.html` — HTML report template
@@ -31,4 +31,4 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 - Migrations live in `migrations/` and are created via `uv run python manage.py makemigrations wagtail_unveil`
 - API endpoints are authenticated via `WAGTAIL_UNVEIL_API_KEY` environment variable (Bearer token)
 - API URL config is in `api_urls.py` — consuming projects include it in their own `urls.py`
-- Report URL config is in `report_urls.py` — HTML report only renders when `DEBUG=True`
+- Report URL config is in `report_urls.py` — HTML report requires superuser login and `DEBUG=True`

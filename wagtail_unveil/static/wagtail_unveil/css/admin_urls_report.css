@@ -26,6 +26,12 @@ tr:hover { background: #f9f9f9; }
 .test-all-btn { padding: 6px 14px; border: none; background: #007d7e; color: #fff; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
 .test-all-btn:hover:not(:disabled) { background: #005f60; }
 .test-all-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.pause-btn { padding: 6px 14px; border: none; background: #f57f17; color: #fff; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+.pause-btn:hover { background: #c66900; }
+.cancel-btn { padding: 6px 14px; border: none; background: #c62828; color: #fff; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+.cancel-btn:hover { background: #a31f1f; }
+.reset-btn { padding: 6px 14px; border: none; background: #e0e0e0; color: #333; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; margin-left: auto; }
+.reset-btn:hover { background: #bdbdbd; }
 .test-all-summary { margin-bottom: 16px; font-size: 0.85rem; color: #666; }
 .test-all-summary .pass { color: #2e7d32; font-weight: 600; }
 .test-all-summary .fail { color: #c62828; font-weight: 600; }

@@ -49,6 +49,18 @@ INSTALLED_APPS = [
     "wagtail_unveil",
 ]
 
+# Optional Wagtail contrib apps for exercising more URL discovery
+INSTALLED_APPS += [
+    "wagtail.contrib.frontend_cache",
+    "wagtail.contrib.routable_page",
+    "wagtail.contrib.search_promotions",
+    "wagtail.contrib.settings",
+    "wagtail.contrib.simple_translation",
+    "wagtail.contrib.sitemaps",
+    "wagtail.contrib.styleguide",
+    "wagtail.contrib.table_block",
+]
+
 MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",

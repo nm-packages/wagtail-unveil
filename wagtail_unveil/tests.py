@@ -1,8 +1,10 @@
 from io import StringIO
 from unittest.mock import patch
 
+from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test import TestCase, override_settings
+from wagtail.test.utils import WagtailTestUtils
 
 from wagtail_unveil.urls import AdminURL, get_admin_urls
 
@@ -38,6 +40,40 @@ class TestGetAdminUrls(TestCase):
         self.assertGreater(len(static), 0)
         for url in static:
             self.assertNotIn("<", url.route)
+
+    def test_is_testable_false_for_parameterized(self):
+        for url in self.urls:
+            if url.has_parameters:
+                self.assertFalse(url.is_testable, url.route)
+                self.assertEqual(url.skip_reason, "URL requires parameters")
+
+    def test_is_testable_false_for_regex_routes(self):
+        regex_urls = [
+            url for url in self.urls
+            if "^" in url.route and not url.has_parameters
+        ]
+        self.assertGreater(len(regex_urls), 0)
+        for url in regex_urls:
+            self.assertFalse(url.is_testable, url.route)
+            self.assertEqual(url.skip_reason, "Regex-based route pattern")
+
+    def test_is_testable_false_for_logout(self):
+        logout = [url for url in self.urls if url.name == "wagtailadmin_logout"]
+        self.assertEqual(len(logout), 1)
+        self.assertFalse(logout[0].is_testable)
+        self.assertEqual(logout[0].skip_reason, "POST-only view")
+
+    def test_is_testable_false_for_error_test(self):
+        error = [url for url in self.urls if url.name == "wagtailadmin_error_test"]
+        self.assertEqual(len(error), 1)
+        self.assertFalse(error[0].is_testable)
+        self.assertEqual(error[0].skip_reason, "Intentional error endpoint")
+
+    def test_is_testable_true_for_home(self):
+        home = [url for url in self.urls if url.name == "wagtailadmin_home"]
+        self.assertEqual(len(home), 1)
+        self.assertTrue(home[0].is_testable)
+        self.assertEqual(home[0].skip_reason, "")
 
 
 class TestShowAdminUrlsCommand(TestCase):
@@ -120,7 +156,24 @@ class TestAdminUrlsAPIView(TestCase):
 
 
 @override_settings(DEBUG=True)
-class TestAdminUrlsReportView(TestCase):
+class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
+    def setUp(self):
+        self.login()
+
+    def test_report_requires_login(self):
+        self.client.logout()
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertEqual(response.status_code, 302)
+
+    def test_report_requires_superuser(self):
+        self.client.logout()
+        User.objects.create_user(
+            username="editor", password="password", is_staff=True
+        )
+        self.client.login(username="editor", password="password")
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertEqual(response.status_code, 302)
+
     def test_report_returns_html(self):
         response = self.client.get("/unveil-report/admin-urls/")
         self.assertEqual(response.status_code, 200)
@@ -142,9 +195,17 @@ class TestAdminUrlsReportView(TestCase):
         response = self.client.get("/unveil-report/admin-urls/")
         self.assertContains(response, "test-btn")
 
-    def test_report_disables_test_for_parameterized(self):
+    def test_report_disables_test_for_non_testable(self):
         response = self.client.get("/unveil-report/admin-urls/")
         self.assertContains(response, "disabled")
+        self.assertContains(response, "POST-only view")
+        self.assertContains(response, "Intentional error endpoint")
+        self.assertContains(response, "Regex-based route pattern")
+
+    def test_report_has_reset_button(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(response, "reset-btn")
+        self.assertContains(response, "Reset")
 
     def test_report_has_test_all_button(self):
         response = self.client.get("/unveil-report/admin-urls/")

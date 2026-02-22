@@ -10,6 +10,8 @@ class AdminURL:
     namespace: str
     has_parameters: bool
     view_name: str
+    is_testable: bool = True
+    skip_reason: str = ""
 
 
 def _get_view_name(callback):
@@ -41,18 +43,38 @@ def get_admin_urls():
     Returns a list of AdminURL dataclass instances for every URL pattern
     under the admin/ prefix.
     """
+    # URL names that are known to be non-testable via GET.
+    NON_TESTABLE_NAMES = {
+        "wagtailadmin_logout": "POST-only view",
+        "wagtailadmin_error_test": "Intentional error endpoint",
+    }
+
     resolver = get_resolver()
     results = []
     for route, name, namespace, callback in _walk_patterns(resolver.url_patterns):
         if not route.startswith("admin/"):
             continue
+        has_parameters = "<" in route or "(" in route
+        is_testable = True
+        skip_reason = ""
+        if has_parameters:
+            is_testable = False
+            skip_reason = "URL requires parameters"
+        elif "^" in route:
+            is_testable = False
+            skip_reason = "Regex-based route pattern"
+        elif name in NON_TESTABLE_NAMES:
+            is_testable = False
+            skip_reason = NON_TESTABLE_NAMES[name]
         results.append(
             AdminURL(
                 route=route,
                 name=name,
                 namespace=namespace,
-                has_parameters="<" in route or "(" in route,
+                has_parameters=has_parameters,
                 view_name=_get_view_name(callback),
+                is_testable=is_testable,
+                skip_reason=skip_reason,
             )
         )
     return results
