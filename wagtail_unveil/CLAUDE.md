@@ -21,6 +21,7 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 - `templates/wagtail_unveil/admin_urls_report.html` — HTML report template
 - `static/wagtail_unveil/css/admin_urls_report.css` — Report page styles
 - `static/wagtail_unveil/js/admin_urls_report.js` — Report page JavaScript (filtering, test buttons, move-failed-to-top)
+- `wagtail_hooks.py` — Wagtail hooks (dashboard panel linking to the HTML report, superuser + DEBUG only)
 - `admin.py` — Wagtail admin integration
 - `tests.py` — Package tests (run with `uv run python manage.py test wagtail_unveil`)
 - `management/commands/show_admin_urls.py` — Management command to list admin URLs

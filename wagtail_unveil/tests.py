@@ -3,10 +3,11 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from wagtail.test.utils import WagtailTestUtils
 
 from wagtail_unveil.urls import AdminURL, get_admin_urls
+from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 
 class TestGetAdminUrls(TestCase):
@@ -245,3 +246,36 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
         with self.settings(DEBUG=False):
             response = self.client.get("/unveil-report/admin-urls/")
             self.assertEqual(response.status_code, 404)
+
+
+@override_settings(DEBUG=True)
+class TestDashboardPanel(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.panel = UnveilReportPanel()
+        self.superuser = User.objects.create_superuser(
+            username="admin", password="password"
+        )
+        self.regular_user = User.objects.create_user(
+            username="editor", password="password", is_staff=True
+        )
+
+    def _render(self, user):
+        request = self.factory.get("/admin/")
+        request.user = user
+        return self.panel.render_html({"request": request})
+
+    def test_panel_visible_for_superuser(self):
+        html = self._render(self.superuser)
+        self.assertIn("View Admin URLs Report", html)
+        self.assertIn("/unveil-report/admin-urls/", html)
+        self.assertIn("w-panel w-panel--dashboard", html)
+
+    def test_panel_hidden_for_non_superuser(self):
+        html = self._render(self.regular_user)
+        self.assertEqual(html, "")
+
+    def test_panel_hidden_when_not_debug(self):
+        with self.settings(DEBUG=False):
+            html = self._render(self.superuser)
+            self.assertEqual(html, "")

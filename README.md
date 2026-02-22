@@ -100,6 +100,7 @@ urlpatterns = [
 - Self-contained — no external CSS or JS dependencies
 - **Superuser-only** — requires Wagtail superuser login; non-superusers are redirected to the login page
 - **DEBUG-only** — returns 404 when `DEBUG=False`
+- **Dashboard widget** — a panel on the Wagtail admin home page links directly to the report (superuser + DEBUG only)
 
 ## Future Features
 
