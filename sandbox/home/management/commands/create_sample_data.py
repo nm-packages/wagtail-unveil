@@ -12,6 +12,7 @@ from wagtail.models import Collection, Page
 
 from sandbox.core.models import ListingPage, StandardPage
 from sandbox.home.models import HomePage
+from sandbox.inventory.models import Product, Supplier
 from sandbox.taxonomy.models import Person
 
 # Prefix used to identify sample data created by this command
@@ -50,6 +51,8 @@ class Command(BaseCommand):
         self._create_core_pages()
         self._create_collections()
         self._create_people()
+        self._create_suppliers()
+        self._create_products()
 
     def _clear_sample_data(self):
         """Remove all sample data created by this command."""
@@ -83,6 +86,14 @@ class Command(BaseCommand):
         for collection in sample_collections:
             collection.delete()
         self.stdout.write(f"Deleted {count} collection(s)")
+
+        # Products (before suppliers due to FK)
+        deleted = Product.objects.filter(name__startswith=SAMPLE_PREFIX).delete()
+        self.stdout.write(f"Deleted {deleted[0]} product(s)")
+
+        # Suppliers
+        deleted = Supplier.objects.filter(name__startswith=SAMPLE_PREFIX).delete()
+        self.stdout.write(f"Deleted {deleted[0]} supplier(s)")
 
         # People
         deleted = Person.objects.filter(name__startswith=SAMPLE_PREFIX).delete()
@@ -251,3 +262,44 @@ class Command(BaseCommand):
                 continue
             Person.objects.create(name=full_name, email=email, job_title=job_title)
             self.stdout.write(f"Created person: {full_name}")
+
+    def _create_suppliers(self):
+        """Create sample Supplier instances for ModelViewSet listing."""
+        suppliers = [
+            ("Acme Corp", "sales@acme.example.com", "https://acme.example.com"),
+            ("Widget Co", "info@widgetco.example.com", "https://widgetco.example.com"),
+        ]
+        for name, email, website in suppliers:
+            full_name = f"{SAMPLE_PREFIX} {name}"
+            if Supplier.objects.filter(name=full_name).exists():
+                self.stdout.write(f"Skipped supplier: {full_name} (already exists)")
+                continue
+            Supplier.objects.create(name=full_name, email=email, website=website)
+            self.stdout.write(f"Created supplier: {full_name}")
+
+    def _create_products(self):
+        """Create sample Product instances for ModelViewSet listing."""
+        supplier = Supplier.objects.filter(name__startswith=SAMPLE_PREFIX).first()
+        if not supplier:
+            self.stdout.write("Skipped products: no sample supplier found")
+            return
+
+        products = [
+            ("Gadget Alpha", "GAD-001", "A versatile gadget.", "29.99"),
+            ("Gadget Beta", "GAD-002", "An improved gadget.", "49.99"),
+            ("Widget Standard", "WID-001", "A standard widget.", "9.99"),
+        ]
+        for name, sku, description, price in products:
+            full_name = f"{SAMPLE_PREFIX} {name}"
+            full_sku = f"{SAMPLE_PREFIX}-{sku}"
+            if Product.objects.filter(name=full_name).exists():
+                self.stdout.write(f"Skipped product: {full_name} (already exists)")
+                continue
+            Product.objects.create(
+                name=full_name,
+                sku=full_sku,
+                description=description,
+                price=price,
+                supplier=supplier,
+            )
+            self.stdout.write(f"Created product: {full_name}")
