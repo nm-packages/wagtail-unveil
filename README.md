@@ -140,12 +140,37 @@ Visit `http://localhost:8000/unveil-report/frontend-urls/` while logged into the
 **Features:**
 
 - **Two URL sources:** Wagtail page URLs (from `Page.objects.live().specific()`) and Django resolver URLs (non-admin routes)
+- **Configurable page limit** — limit how many page instances per type are tested (see [Configuration](#configuration))
 - One-click testing with colour-coded status codes
 - **Test All** button with progress indicator and pass/fail summary
 - **Hide Untestable** toggle — hides non-testable rows; preference saved in a cookie
 - Searchable and sortable columns (URL, Source, Page Type, Title, Name)
 - Self-contained — no external CSS or JS dependencies
 - **Superuser-only** and **DEBUG-only**
+
+## Configuration
+
+### `WAGTAIL_UNVEIL_PAGES_PER_TYPE`
+
+Controls how many page instances per page type are included in the frontend URL report. Useful for sites with many pages of the same type (e.g., hundreds of blog posts) where testing every single one is unnecessary.
+
+```python
+# settings.py
+
+# Test only 1 page per type (e.g., 1 HomePage, 1 BlogPage, 1 StandardPage)
+WAGTAIL_UNVEIL_PAGES_PER_TYPE = 1
+
+# Test up to 3 pages per type
+WAGTAIL_UNVEIL_PAGES_PER_TYPE = 3
+
+# Test all pages (default behaviour)
+WAGTAIL_UNVEIL_PAGES_PER_TYPE = 0
+```
+
+- **Default:** `0` (all pages — no limit)
+- **Positive integer:** Limits to that many page instances per page type
+- Only affects page URLs; resolver URLs are unaffected
+- When active, the frontend report summary shows the limit
 
 ## Development
 

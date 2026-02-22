@@ -5,6 +5,7 @@ from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
 from wagtail.admin.auth import user_passes_test
 
+from wagtail_unveil.settings import get_pages_per_type
 from wagtail_unveil.urls import get_admin_urls, get_frontend_urls
 
 
@@ -112,10 +113,12 @@ def frontend_urls_report(request):
 
     urls = get_frontend_urls()
     testable_count = sum(1 for u in urls if u.is_testable)
+    pages_per_type = get_pages_per_type()
     context = {
         "urls": urls,
         "url_count": len(urls),
         "testable_count": testable_count,
         "untestable_count": len(urls) - testable_count,
+        "pages_per_type": pages_per_type,
     }
     return render(request, "wagtail_unveil/frontend_urls_report.html", context)

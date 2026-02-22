@@ -12,6 +12,9 @@
         <h1>Frontend URLs Report</h1>
         <p class="summary">
             Total: <span>{{ url_count }}</span> URLs (<span>{{ testable_count }}</span> testable, <span>{{ untestable_count }}</span> untestable)
+            {% if pages_per_type %}
+            — Showing {{ pages_per_type }} page{{ pages_per_type|pluralize }} per type (<code>WAGTAIL_UNVEIL_PAGES_PER_TYPE</code>)
+            {% endif %}
         </p>
 
         <div class="filters">

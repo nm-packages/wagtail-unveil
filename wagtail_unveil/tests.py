@@ -10,6 +10,7 @@ from wagtail.images.tests.utils import get_test_image_file
 from wagtail.models import Site
 from wagtail.test.utils import WagtailTestUtils
 
+from wagtail_unveil.settings import get_pages_per_type
 from wagtail_unveil.urls import AdminURL, FrontendURL, get_admin_urls, get_frontend_urls
 from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
@@ -706,3 +707,97 @@ class TestDashboardPanelFrontendLink(TestCase):
         html = self.panel.render_html({"request": request})
         self.assertIn("View Frontend URLs Report", html)
         self.assertIn("/unveil-report/frontend-urls/", html)
+
+
+class TestGetPagesPerType(TestCase):
+    def test_default_returns_zero(self):
+        self.assertEqual(get_pages_per_type(), 0)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1)
+    def test_returns_configured_value(self):
+        self.assertEqual(get_pages_per_type(), 1)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=5)
+    def test_returns_higher_value(self):
+        self.assertEqual(get_pages_per_type(), 5)
+
+
+class TestPagesPerTypeLimit(TestCase):
+    """Test that WAGTAIL_UNVEIL_PAGES_PER_TYPE limits page URLs per type."""
+
+    def setUp(self):
+        from wagtail.models import Page
+
+        root = Page.objects.first()
+        home = root.get_children().first()
+
+        # Create multiple pages of different types using sandbox models
+        from sandbox.core.models import StandardPage
+
+        for i in range(3):
+            home.add_child(instance=StandardPage(
+                title=f"Standard {i}",
+                slug=f"standard-{i}",
+            ))
+
+    def test_default_returns_all_pages(self):
+        urls = get_frontend_urls()
+        page_urls = [u for u in urls if u.source == "page"]
+        # Should include all pages (home + 3 standard pages)
+        standard_urls = [u for u in page_urls if "StandardPage" in u.page_type]
+        self.assertEqual(len(standard_urls), 3)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1)
+    def test_limit_one_per_type(self):
+        urls = get_frontend_urls()
+        page_urls = [u for u in urls if u.source == "page"]
+        # Count per page_type — each should have at most 1
+        type_counts = {}
+        for u in page_urls:
+            type_counts[u.page_type] = type_counts.get(u.page_type, 0) + 1
+        for page_type, count in type_counts.items():
+            self.assertLessEqual(count, 1, f"{page_type} has {count} URLs")
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=2)
+    def test_limit_two_per_type(self):
+        urls = get_frontend_urls()
+        page_urls = [u for u in urls if u.source == "page"]
+        type_counts = {}
+        for u in page_urls:
+            type_counts[u.page_type] = type_counts.get(u.page_type, 0) + 1
+        standard_count = type_counts.get("core.StandardPage", 0)
+        self.assertEqual(standard_count, 2)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
+    def test_zero_means_no_limit(self):
+        urls = get_frontend_urls()
+        page_urls = [u for u in urls if u.source == "page"]
+        standard_urls = [u for u in page_urls if "StandardPage" in u.page_type]
+        self.assertEqual(len(standard_urls), 3)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1)
+    def test_resolver_urls_not_affected(self):
+        urls = get_frontend_urls()
+        resolver_urls = [u for u in urls if u.source == "resolver"]
+        self.assertGreater(len(resolver_urls), 0)
+
+
+@override_settings(DEBUG=True)
+class TestFrontendReportPagesPerType(WagtailTestUtils, TestCase):
+    def setUp(self):
+        self.login()
+
+    def test_no_limit_message_by_default(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertNotContains(response, "WAGTAIL_UNVEIL_PAGES_PER_TYPE")
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1)
+    def test_shows_limit_message(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(response, "Showing 1 page per type")
+        self.assertContains(response, "WAGTAIL_UNVEIL_PAGES_PER_TYPE")
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=3)
+    def test_shows_plural_limit_message(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(response, "Showing 3 pages per type")

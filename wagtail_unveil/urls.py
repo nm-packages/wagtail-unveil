@@ -1,10 +1,13 @@
 import logging
+from collections import defaultdict
 from dataclasses import dataclass
 from functools import cached_property
 from urllib.parse import urlparse
 
 from django.urls import URLPattern, URLResolver, get_resolver, reverse
 from django.utils.functional import cached_property as django_cached_property
+
+from wagtail_unveil.settings import get_pages_per_type
 
 logger = logging.getLogger(__name__)
 
@@ -214,6 +217,15 @@ def _get_page_urls():
                 name="",
             )
         )
+    limit = get_pages_per_type()
+    if limit:
+        grouped = defaultdict(list)
+        for frontend_url in results:
+            grouped[frontend_url.page_type].append(frontend_url)
+        results = []
+        for page_type_urls in grouped.values():
+            results.extend(page_type_urls[:limit])
+
     return results
 
 

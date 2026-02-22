@@ -14,9 +14,11 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 
 - `apps.py` — Django app config (`WagtailUnveilConfig`)
 - `models.py` — Package models
+- `settings.py` — Settings helpers; `get_pages_per_type()` reads `WAGTAIL_UNVEIL_PAGES_PER_TYPE` (default 0 = all pages, positive int = limit per page type)
 - `urls.py` — URL discovery logic:
   - `get_admin_urls()` returns list of `AdminURL` dataclasses; `_resolve_parameterised_url()` generically resolves parameterised admin URLs (snippets, redirects, images, documents, users, groups) by extracting the model from view callbacks and using real DB instances, populating `AdminURL.resolved_route`
   - `get_frontend_urls()` returns list of `FrontendURL` dataclasses; combines page URLs (`_get_page_urls()` via `Page.objects.live().specific()`) and resolver URLs (`_get_resolver_frontend_urls()` — non-admin routes from Django's URL resolver)
+  - `_get_page_urls()` respects `WAGTAIL_UNVEIL_PAGES_PER_TYPE` — when set to a positive int, groups page URLs by type and takes up to N per type
 - `views.py` — Views:
   - `admin_urls_json` / `admin_urls_report` — Admin URL endpoints
   - `frontend_urls_json` / `frontend_urls_report` — Frontend URL endpoints
