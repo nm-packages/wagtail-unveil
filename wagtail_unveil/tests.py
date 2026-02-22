@@ -42,9 +42,9 @@ class TestGetAdminUrls(TestCase):
         for url in static:
             self.assertNotIn("<", url.route)
 
-    def test_is_testable_false_for_parameterized(self):
+    def test_is_testable_false_for_non_snippet_parameterized(self):
         for url in self.urls:
-            if url.has_parameters:
+            if url.has_parameters and not url.resolved_route:
                 self.assertFalse(url.is_testable, url.route)
                 self.assertEqual(url.skip_reason, "URL requires parameters")
 
@@ -279,3 +279,52 @@ class TestDashboardPanel(TestCase):
         with self.settings(DEBUG=False):
             html = self._render(self.superuser)
             self.assertEqual(html, "")
+
+
+class TestSnippetURLResolution(TestCase):
+    """Test that parameterized snippet URLs are resolved using real instances."""
+
+    def setUp(self):
+        self.urls = get_admin_urls()
+        self.snippet_urls = [
+            u for u in self.urls
+            if u.namespace.startswith("wagtailsnippets_") and u.has_parameters
+        ]
+
+    def test_snippet_edit_url_is_testable(self):
+        edit_urls = [u for u in self.snippet_urls if u.name == "edit"]
+        self.assertGreater(len(edit_urls), 0)
+        for url in edit_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+
+    def test_snippet_copy_url_is_testable(self):
+        copy_urls = [u for u in self.snippet_urls if u.name == "copy"]
+        self.assertGreater(len(copy_urls), 0)
+        for url in copy_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+
+    def test_snippet_delete_url_is_testable(self):
+        delete_urls = [u for u in self.snippet_urls if u.name == "delete"]
+        self.assertGreater(len(delete_urls), 0)
+        for url in delete_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+
+    def test_resolved_route_contains_pk(self):
+        for url in self.snippet_urls:
+            if url.resolved_route:
+                self.assertNotIn("<", url.resolved_route)
+                self.assertRegex(url.resolved_route, r"/\d+/")
+
+    def test_non_snippet_parameterized_still_untestable(self):
+        non_snippet = [
+            u for u in self.urls
+            if u.has_parameters and not u.namespace.startswith("wagtailsnippets_")
+            and not u.resolved_route
+        ]
+        self.assertGreater(len(non_snippet), 0)
+        for url in non_snippet:
+            self.assertFalse(url.is_testable, url.route)
+            self.assertEqual(url.skip_reason, "URL requires parameters")

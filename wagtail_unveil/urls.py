@@ -1,6 +1,11 @@
+import logging
+import re
 from dataclasses import dataclass
 
-from django.urls import URLPattern, URLResolver, get_resolver
+from django.apps import apps
+from django.urls import URLPattern, URLResolver, get_resolver, reverse
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -12,6 +17,7 @@ class AdminURL:
     view_name: str
     is_testable: bool = True
     skip_reason: str = ""
+    resolved_route: str = ""
 
 
 def _get_view_name(callback):
@@ -37,6 +43,30 @@ def _walk_patterns(patterns, prefix="", namespace=""):
             yield route, pattern.name or "", namespace, pattern.callback
 
 
+def _resolve_snippet_url(namespace, name):
+    """Attempt to resolve a parameterized snippet URL using a real instance.
+
+    Returns the resolved path (without leading '/') or None.
+    """
+    match = re.match(r"^wagtailsnippets_(\w+)_(\w+)$", namespace.split(":")[-1])
+    if not match:
+        return None
+    app_label, model_name = match.groups()
+    try:
+        model = apps.get_model(app_label, model_name)
+    except LookupError:
+        return None
+    instance = model.objects.first()
+    if instance is None:
+        return None
+    try:
+        url = reverse(f"{namespace}:{name}", args=[instance.pk])
+        return url.lstrip("/")
+    except Exception:
+        logger.debug("Failed to reverse %s:%s", namespace, name, exc_info=True)
+        return None
+
+
 def get_admin_urls():
     """Discover all Wagtail admin URLs from the root URL resolver.
 
@@ -59,9 +89,15 @@ def get_admin_urls():
         has_parameters = "<" in route or "(" in route
         is_testable = True
         skip_reason = ""
+        resolved_route = ""
         if has_parameters:
-            is_testable = False
-            skip_reason = "URL requires parameters"
+            resolved = _resolve_snippet_url(namespace, name)
+            if resolved:
+                is_testable = True
+                resolved_route = resolved
+            else:
+                is_testable = False
+                skip_reason = "URL requires parameters"
         elif "^" in route:
             is_testable = False
             skip_reason = "Regex-based route pattern"
@@ -77,6 +113,7 @@ def get_admin_urls():
                 view_name=_get_view_name(callback),
                 is_testable=is_testable,
                 skip_reason=skip_reason,
+                resolved_route=resolved_route,
             )
         )
     return results

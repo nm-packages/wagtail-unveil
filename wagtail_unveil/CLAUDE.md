@@ -14,7 +14,7 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 
 - `apps.py` — Django app config (`WagtailUnveilConfig`)
 - `models.py` — Package models
-- `urls.py` — URL discovery logic (`get_admin_urls()` returns list of `AdminURL` dataclasses)
+- `urls.py` — URL discovery logic (`get_admin_urls()` returns list of `AdminURL` dataclasses); `_resolve_snippet_url()` resolves parameterized snippet URLs using real DB instances, populating `AdminURL.resolved_route`
 - `views.py` — Views (`admin_urls_json` — JSON endpoint; `admin_urls_report` — HTML report page, requires superuser + DEBUG=True)
 - `api_urls.py` — API URL configuration (`app_name = "wagtail_unveil_api"`)
 - `report_urls.py` — Report URL configuration (`app_name = "wagtail_unveil_report"`)

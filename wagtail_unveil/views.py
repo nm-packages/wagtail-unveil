@@ -39,6 +39,7 @@ def admin_urls_json(request):
                 "view_name": u.view_name,
                 "is_testable": u.is_testable,
                 "skip_reason": u.skip_reason,
+                "resolved_route": u.resolved_route,
             }
             for u in urls
         ],

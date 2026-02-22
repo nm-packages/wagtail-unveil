@@ -96,7 +96,8 @@ urlpatterns = [
 - Defaults to showing only static (testable) URLs — parameterized URLs are hidden until you click "All"
 - Filter URLs by All / Static / Parameterized
 - One-click testing of static URLs with colour-coded status codes (green=2xx, yellow=3xx, red=4xx/5xx)
-- **Test All** button — runs all testable (static) URLs sequentially with a progress indicator and pass/fail summary
+- **Snippet URL resolution** — parameterized snippet URLs (edit, delete, copy, etc.) are automatically resolved using real database instances, making them testable via the report
+- **Test All** button — runs all testable (static and resolved) URLs sequentially with a progress indicator and pass/fail summary
 - Self-contained — no external CSS or JS dependencies
 - **Superuser-only** — requires Wagtail superuser login; non-superusers are redirected to the login page
 - **DEBUG-only** — returns 404 when `DEBUG=False`
@@ -104,7 +105,7 @@ urlpatterns = [
 
 ## Future Features
 
-- **Parameterized URL testing** — Interrogate routes to discover valid parameter values (e.g. find an existing page PK for `admin/pages/<int:pk>/edit/`) so that parameterized URLs can be tested too.
+- **Expanded parameterized URL testing** — Resolve more parameterized URL types beyond snippets (e.g. page URLs like `admin/pages/<int:pk>/edit/`).
 
 ## Development
 
