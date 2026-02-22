@@ -47,6 +47,8 @@ def get_admin_urls():
     NON_TESTABLE_NAMES = {
         "wagtailadmin_logout": "POST-only view",
         "wagtailadmin_error_test": "Intentional error endpoint",
+        "process_import": "POST-only view",
+        "wagtailadmin_block_preview": "POST-only view",
     }
 
     resolver = get_resolver()

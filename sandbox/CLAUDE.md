@@ -13,6 +13,7 @@ This is a standard Wagtail project used for developing and testing the `wagtail_
 - `settings/production.py` — Production settings template
 - `home/` — Default Wagtail home app with a blank `HomePage` model
 - `search/` — Wagtail search view
+- `taxonomy/` — Snippet models (`Category` via `@register_snippet` decorator, `Colour` via `SnippetViewSet`) to exercise parameterised admin URL discovery
 - `urls.py` — URL config: Django admin at `/django-admin/`, Wagtail admin at `/admin/`, unveil API at `/unveil-api/`, unveil report at `/unveil-report/`, Wagtail pages at `/`
 - `templates/` — Site-level templates
 - `static/` — Site-level static files
