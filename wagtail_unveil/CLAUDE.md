@@ -16,7 +16,9 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 - `models.py` — Package models
 - `settings.py` — Settings helpers; `get_pages_per_type()` reads `WAGTAIL_UNVEIL_PAGES_PER_TYPE` (default 0 = all pages, positive int = limit per page type)
 - `urls.py` — URL discovery logic:
-  - `get_admin_urls()` returns list of `AdminURL` dataclasses; `_resolve_parameterised_url()` generically resolves parameterised admin URLs (snippets, redirects, images, documents, users, groups) by extracting the model from view callbacks and using real DB instances, populating `AdminURL.resolved_route`
+  - `get_admin_urls()` returns list of `AdminURL` dataclasses; `_resolve_parameterised_url()` generically resolves parameterised admin URLs (snippets, redirects, images, documents, users, groups, modeladmin) by extracting the model from view callbacks and using real DB instances, populating `AdminURL.resolved_route`
+  - `_clean_regex_route()` strips regex anchors (`^`, `$`) and converts named groups (`(?P<name>...)`) to path-style `<name>` — applied to all routes so `re_path()` patterns (e.g. from wagtail-modeladmin) are handled correctly
+  - `_get_model_from_name()` parses modeladmin-style URL names (`{app}_{model}_modeladmin_{action}`) to extract the model class — used as a fallback when the view callback doesn't expose a model directly
   - `get_frontend_urls()` returns list of `FrontendURL` dataclasses; combines page URLs (`_get_page_urls()` via `Page.objects.live().specific()`) and resolver URLs (`_get_resolver_frontend_urls()` — non-admin routes from Django's URL resolver)
   - `_get_page_urls()` respects `WAGTAIL_UNVEIL_PAGES_PER_TYPE` — when set to a positive int, groups page URLs by type and takes up to N per type
 - `views.py` — Views:

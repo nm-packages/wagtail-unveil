@@ -1,9 +1,11 @@
 import logging
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cached_property
 from urllib.parse import urlparse
 
+from django.apps import apps
 from django.urls import URLPattern, URLResolver, get_resolver, reverse
 from django.utils.functional import cached_property as django_cached_property
 
@@ -50,6 +52,33 @@ def _walk_patterns(patterns, prefix="", namespace=""):
 def _is_django_model(obj):
     """Check if obj is a Django model class."""
     return isinstance(obj, type) and hasattr(obj, "_meta")
+
+
+def _clean_regex_route(route):
+    """Strip regex syntax from a route string.
+
+    Removes ^ and $ anchors and converts regex named groups
+    ``(?P<name>...)`` to path-style ``<name>`` placeholders.
+    """
+    route = route.replace("^", "").replace("$", "")
+    route = re.sub(r"\(\?P<(\w+)>[^)]+\)", r"<\1>", route)
+    return route
+
+
+def _get_model_from_name(name):
+    """Extract a Django model from a modeladmin-style URL name.
+
+    Modeladmin URL names follow the pattern ``{app}_{model}_modeladmin_{action}``.
+    Returns the model class or None.
+    """
+    match = re.match(r"^(\w+)_(\w+)_modeladmin_\w+$", name)
+    if not match:
+        return None
+    app_label, model_name = match.groups()
+    try:
+        return apps.get_model(app_label, model_name)
+    except LookupError:
+        return None
 
 
 def _get_model_from_callback(callback):
@@ -106,9 +135,14 @@ def _resolve_parameterised_url(namespace, name, callback):
     and reverses the URL with that instance's PK. For treebeard models
     (e.g. Collection), skips the root node (depth=1) which Wagtail protects.
 
+    Falls back to parsing the URL name for modeladmin-style patterns when
+    the callback doesn't expose a model directly.
+
     Returns the resolved path (without leading '/') or None.
     """
     model = _get_model_from_callback(callback)
+    if model is None:
+        model = _get_model_from_name(name)
     if model is None:
         return None
     queryset = model.objects.all()
@@ -118,7 +152,8 @@ def _resolve_parameterised_url(namespace, name, callback):
     if instance is None:
         return None
     try:
-        url = reverse(f"{namespace}:{name}", args=[instance.pk])
+        url_name = f"{namespace}:{name}" if namespace else name
+        url = reverse(url_name, args=[instance.pk])
         return url.lstrip("/")
     except Exception:
         logger.debug("Failed to reverse %s:%s", namespace, name, exc_info=True)
@@ -144,7 +179,8 @@ def get_admin_urls():
     for route, name, namespace, callback in _walk_patterns(resolver.url_patterns):
         if not route.startswith("admin/"):
             continue
-        has_parameters = "<" in route or "(" in route
+        route = _clean_regex_route(route)
+        has_parameters = "<" in route
         is_testable = True
         skip_reason = ""
         resolved_route = ""
@@ -156,9 +192,6 @@ def get_admin_urls():
             else:
                 is_testable = False
                 skip_reason = "URL requires parameters"
-        elif "^" in route:
-            is_testable = False
-            skip_reason = "Regex-based route pattern"
         elif name in NON_TESTABLE_NAMES:
             is_testable = False
             skip_reason = NON_TESTABLE_NAMES[name]
@@ -256,17 +289,15 @@ def _get_resolver_frontend_urls():
         if namespace in _UNVEIL_NAMESPACES:
             continue
 
+        route = _clean_regex_route(route)
         is_testable = True
         skip_reason = ""
 
         # Parameterized URLs are not directly testable
-        has_parameters = "<" in route or "(" in route
+        has_parameters = "<" in route
         if has_parameters:
             is_testable = False
             skip_reason = "URL requires parameters"
-        elif "^" in route:
-            is_testable = False
-            skip_reason = "Regex-based route pattern"
 
         url = f"/{route}" if not route.startswith("/") else route
         results.append(

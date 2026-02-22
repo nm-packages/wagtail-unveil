@@ -12,6 +12,7 @@ from wagtail.models import Collection, Page
 
 from sandbox.core.models import ListingPage, StandardPage
 from sandbox.home.models import HomePage
+from sandbox.taxonomy.models import Person
 
 # Prefix used to identify sample data created by this command
 SAMPLE_PREFIX = "[Sample]"
@@ -48,6 +49,7 @@ class Command(BaseCommand):
         self._create_child_pages()
         self._create_core_pages()
         self._create_collections()
+        self._create_people()
 
     def _clear_sample_data(self):
         """Remove all sample data created by this command."""
@@ -81,6 +83,10 @@ class Command(BaseCommand):
         for collection in sample_collections:
             collection.delete()
         self.stdout.write(f"Deleted {count} collection(s)")
+
+        # People
+        deleted = Person.objects.filter(name__startswith=SAMPLE_PREFIX).delete()
+        self.stdout.write(f"Deleted {deleted[0]} person(s)")
 
         # Child pages
         Page.objects.filter(title__startswith=SAMPLE_PREFIX).delete()
@@ -230,3 +236,18 @@ class Command(BaseCommand):
                 continue
             root_collection.add_child(name=name)
             self.stdout.write(f"Created collection: {name}")
+
+    def _create_people(self):
+        """Create sample Person instances for ModelAdmin listing."""
+        people = [
+            ("Alice Johnson", "alice@example.com", "Developer"),
+            ("Bob Smith", "bob@example.com", "Designer"),
+            ("Carol Williams", "carol@example.com", "Editor"),
+        ]
+        for name, email, job_title in people:
+            full_name = f"{SAMPLE_PREFIX} {name}"
+            if Person.objects.filter(name=full_name).exists():
+                self.stdout.write(f"Skipped person: {full_name} (already exists)")
+                continue
+            Person.objects.create(name=full_name, email=email, job_title=job_title)
+            self.stdout.write(f"Created person: {full_name}")

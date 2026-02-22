@@ -560,6 +560,18 @@ wheels = [
 ]
 
 [[package]]
+name = "wagtail-modeladmin"
+version = "2.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "wagtail" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/44/72/e687aa58e21708655ceaa731586803031385be82eea0876e4268665e8dc4/wagtail_modeladmin-2.2.0.tar.gz", hash = "sha256:41e12f9a79f8c1595fce73bd6b51007422f258089564f9df8e09a82246a8e133", size = 140057, upload-time = "2025-04-25T12:17:26.925Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0b/29/0f5f4e7ce521836092ad878d032410dd7563e1ac2b06af0deb9e19032ef0/wagtail_modeladmin-2.2.0-py3-none-any.whl", hash = "sha256:60ea08b128761b5b6a1cbfe3c8ab828fba13e41ff3d7563a0b8c62c8fe36c4ce", size = 265632, upload-time = "2025-04-25T12:17:25.538Z" },
+]
+
+[[package]]
 name = "wagtail-unveil-2"
 version = "0.1.0"
 source = { virtual = "." }
@@ -567,8 +579,16 @@ dependencies = [
     { name = "wagtail" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "wagtail-modeladmin" },
+]
+
 [package.metadata]
 requires-dist = [{ name = "wagtail", specifier = ">=7.0,<7.1" }]
+
+[package.metadata.requires-dev]
+dev = [{ name = "wagtail-modeladmin", specifier = ">=2.2.0" }]
 
 [[package]]
 name = "willow"

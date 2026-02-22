@@ -11,7 +11,13 @@ from wagtail.models import Site
 from wagtail.test.utils import WagtailTestUtils
 
 from wagtail_unveil.settings import get_pages_per_type
-from wagtail_unveil.urls import AdminURL, FrontendURL, get_admin_urls, get_frontend_urls
+from wagtail_unveil.urls import (
+    AdminURL,
+    FrontendURL,
+    _clean_regex_route,
+    get_admin_urls,
+    get_frontend_urls,
+)
 from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 
@@ -53,15 +59,15 @@ class TestGetAdminUrls(TestCase):
                 self.assertFalse(url.is_testable, url.route)
                 self.assertEqual(url.skip_reason, "URL requires parameters")
 
-    def test_is_testable_false_for_regex_routes(self):
-        regex_urls = [
+    def test_regex_routes_are_cleaned_and_testable(self):
+        """Regex anchors are stripped so non-parameterised regex routes are testable."""
+        modeladmin_index = [
             url for url in self.urls
-            if "^" in url.route and not url.has_parameters
+            if url.name == "taxonomy_person_modeladmin_index"
         ]
-        self.assertGreater(len(regex_urls), 0)
-        for url in regex_urls:
-            self.assertFalse(url.is_testable, url.route)
-            self.assertEqual(url.skip_reason, "Regex-based route pattern")
+        self.assertEqual(len(modeladmin_index), 1)
+        self.assertNotIn("^", modeladmin_index[0].route)
+        self.assertTrue(modeladmin_index[0].is_testable, modeladmin_index[0].route)
 
     def test_is_testable_false_for_logout(self):
         logout = [url for url in self.urls if url.name == "wagtailadmin_logout"]
@@ -206,7 +212,6 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
         self.assertContains(response, "disabled")
         self.assertContains(response, "POST-only view")
         self.assertContains(response, "Intentional error endpoint")
-        self.assertContains(response, "Regex-based route pattern")
 
     def test_report_has_reset_button(self):
         response = self.client.get("/unveil-report/admin-urls/")
@@ -463,6 +468,91 @@ class TestParameterisedURLResolution(TestCase):
         for url in unresolvable:
             self.assertFalse(url.is_testable, url.route)
             self.assertEqual(url.skip_reason, "URL requires parameters")
+
+
+class TestCleanRegexRoute(TestCase):
+    """Test the _clean_regex_route() helper."""
+
+    def test_strips_caret(self):
+        self.assertEqual(_clean_regex_route("^foo/bar/"), "foo/bar/")
+
+    def test_strips_dollar(self):
+        self.assertEqual(_clean_regex_route("foo/bar/$"), "foo/bar/")
+
+    def test_strips_both_anchors(self):
+        self.assertEqual(_clean_regex_route("^foo/bar/$"), "foo/bar/")
+
+    def test_converts_named_group(self):
+        self.assertEqual(
+            _clean_regex_route("^edit/(?P<instance_pk>[-\\w]+)/$"),
+            "edit/<instance_pk>/",
+        )
+
+    def test_passthrough_normal_route(self):
+        self.assertEqual(_clean_regex_route("admin/home/"), "admin/home/")
+
+    def test_multiple_named_groups(self):
+        self.assertEqual(
+            _clean_regex_route("^a/(?P<pk>[0-9]+)/b/(?P<slug>[-\\w]+)/$"),
+            "a/<pk>/b/<slug>/",
+        )
+
+
+class TestModeladminURLDiscovery(TestCase):
+    """Test that wagtail-modeladmin URLs are discovered and testable."""
+
+    def setUp(self):
+        from sandbox.taxonomy.models import Person
+
+        Person.objects.create(name="Test Person", email="test@example.com")
+        self.urls = get_admin_urls()
+        self.modeladmin_urls = [
+            u for u in self.urls if "modeladmin" in u.name
+        ]
+
+    def test_modeladmin_urls_discovered(self):
+        self.assertGreater(len(self.modeladmin_urls), 0)
+
+    def test_index_is_testable(self):
+        index = [u for u in self.modeladmin_urls if u.name.endswith("_index")]
+        self.assertEqual(len(index), 1)
+        self.assertTrue(index[0].is_testable)
+        self.assertFalse(index[0].has_parameters)
+
+    def test_create_is_testable(self):
+        create = [u for u in self.modeladmin_urls if u.name.endswith("_create")]
+        self.assertEqual(len(create), 1)
+        self.assertTrue(create[0].is_testable)
+        self.assertFalse(create[0].has_parameters)
+
+    def test_edit_is_testable_with_resolved_route(self):
+        edit = [u for u in self.modeladmin_urls if u.name.endswith("_edit")]
+        self.assertEqual(len(edit), 1)
+        self.assertTrue(edit[0].is_testable)
+        self.assertTrue(edit[0].resolved_route)
+        self.assertNotIn("<", edit[0].resolved_route)
+
+    def test_delete_is_testable_with_resolved_route(self):
+        delete = [u for u in self.modeladmin_urls if u.name.endswith("_delete")]
+        self.assertEqual(len(delete), 1)
+        self.assertTrue(delete[0].is_testable)
+        self.assertTrue(delete[0].resolved_route)
+
+    def test_history_is_testable_with_resolved_route(self):
+        history = [u for u in self.modeladmin_urls if u.name.endswith("_history")]
+        self.assertEqual(len(history), 1)
+        self.assertTrue(history[0].is_testable)
+        self.assertTrue(history[0].resolved_route)
+
+    def test_routes_have_no_regex_anchors(self):
+        for url in self.modeladmin_urls:
+            self.assertNotIn("^", url.route, url.route)
+            self.assertNotIn("$", url.route, url.route)
+
+    def test_empty_namespace(self):
+        for url in self.modeladmin_urls:
+            if url.name.startswith("taxonomy_person"):
+                self.assertEqual(url.namespace, "")
 
 
 class TestGetFrontendUrls(TestCase):

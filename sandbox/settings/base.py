@@ -63,6 +63,11 @@ INSTALLED_APPS += [
     "wagtail.contrib.table_block",
 ]
 
+# Optional third-party packages for exercising more URL discovery
+INSTALLED_APPS += [
+    "wagtail_modeladmin",
+]
+
 MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
