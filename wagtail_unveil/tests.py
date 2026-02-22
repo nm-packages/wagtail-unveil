@@ -230,6 +230,18 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
         self.assertIn('data-has-parameters="true" class="hidden"', content)
         self.assertNotIn('data-has-parameters="false" class="hidden"', content)
 
+    def test_report_has_search_input(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(response, "search-input")
+
+    def test_report_has_sortable_headers(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        content = response.content.decode()
+        self.assertIn('data-sort-col="0"', content)
+        self.assertIn('data-sort-col="1"', content)
+        self.assertIn('data-sort-col="2"', content)
+        self.assertIn('data-sort-col="3"', content)
+
     def test_report_loads_static_css(self):
         response = self.client.get("/unveil-report/admin-urls/")
         self.assertContains(
@@ -241,6 +253,16 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
         self.assertContains(
             response, "wagtail_unveil/js/admin_urls_report.js"
         )
+
+    def test_report_has_help_button(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(response, "help-btn")
+
+    def test_report_has_help_panel(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(response, "help-panel")
+        self.assertContains(response, "Django URL name")
+        self.assertContains(response, "How It Works")
 
     def test_report_returns_404_when_not_debug(self):
         with self.settings(DEBUG=False):

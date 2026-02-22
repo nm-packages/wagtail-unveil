@@ -1,18 +1,75 @@
+var currentTypeFilter = "static";
+var currentSearchTerm = "";
+var currentSortCol = null;
+var currentSortAsc = true;
+
+function applyFilters() {
+    var rows = document.querySelectorAll("tbody tr");
+    rows.forEach(function(row) {
+        var hasParams = row.getAttribute("data-has-parameters") === "true";
+        var typeMatch = currentTypeFilter === "all" ||
+            (currentTypeFilter === "static" && !hasParams) ||
+            (currentTypeFilter === "parameterized" && hasParams);
+        var name = row.children[1].textContent.toLowerCase();
+        var namespace = row.children[2].textContent.toLowerCase();
+        var searchMatch = !currentSearchTerm ||
+            name.indexOf(currentSearchTerm) !== -1 ||
+            namespace.indexOf(currentSearchTerm) !== -1;
+        row.classList.toggle("hidden", !(typeMatch && searchMatch));
+    });
+}
+
 document.querySelectorAll(".filter-btn").forEach(function(btn) {
     btn.addEventListener("click", function() {
         document.querySelectorAll(".filter-btn").forEach(function(b) { b.classList.remove("active"); });
         btn.classList.add("active");
-        var filter = btn.getAttribute("data-filter");
-        document.querySelectorAll("tbody tr").forEach(function(row) {
-            var hasParams = row.getAttribute("data-has-parameters") === "true";
-            if (filter === "all") {
-                row.classList.remove("hidden");
-            } else if (filter === "static") {
-                row.classList.toggle("hidden", hasParams);
-            } else {
-                row.classList.toggle("hidden", !hasParams);
-            }
+        currentTypeFilter = btn.getAttribute("data-filter");
+        applyFilters();
+    });
+});
+
+var searchInput = document.querySelector(".search-input");
+var searchClear = document.querySelector(".search-clear");
+
+searchInput.addEventListener("input", function() {
+    currentSearchTerm = this.value.toLowerCase();
+    searchClear.classList.toggle("hidden", !this.value);
+    applyFilters();
+});
+
+searchClear.addEventListener("click", function() {
+    searchInput.value = "";
+    currentSearchTerm = "";
+    searchClear.classList.add("hidden");
+    applyFilters();
+});
+
+// Column sorting
+document.querySelectorAll("th[data-sort-col]").forEach(function(th) {
+    th.addEventListener("click", function() {
+        var col = parseInt(th.getAttribute("data-sort-col"));
+        if (currentSortCol === col) {
+            currentSortAsc = !currentSortAsc;
+        } else {
+            currentSortCol = col;
+            currentSortAsc = true;
+        }
+        // Update sort indicators
+        document.querySelectorAll("th[data-sort-col]").forEach(function(h) {
+            h.removeAttribute("data-sort-dir");
         });
+        th.setAttribute("data-sort-dir", currentSortAsc ? "asc" : "desc");
+        // Sort rows
+        var tbody = document.querySelector("tbody");
+        var rows = Array.from(tbody.querySelectorAll("tr"));
+        rows.sort(function(a, b) {
+            var aText = a.children[col].textContent.toLowerCase();
+            var bText = b.children[col].textContent.toLowerCase();
+            if (aText < bText) return currentSortAsc ? -1 : 1;
+            if (aText > bText) return currentSortAsc ? 1 : -1;
+            return 0;
+        });
+        rows.forEach(function(row) { tbody.appendChild(row); });
     });
 });
 
@@ -41,10 +98,7 @@ function continueTests() {
 }
 
 function cancelTests() {
-    if (!testState) return;
-    testState.cancelled = true;
-    testState.paused = false;
-    finishTests();
+    location.reload();
 }
 
 function finishTests() {
@@ -65,7 +119,7 @@ function testAll() {
     var pauseBtn = document.querySelector(".pause-btn");
     var cancelBtn = document.querySelector(".cancel-btn");
     var summaryEl = document.getElementById("test-all-summary");
-    var buttons = Array.from(document.querySelectorAll(".test-btn:not(:disabled)"));
+    var buttons = Array.from(document.querySelectorAll("tbody tr:not(.hidden) .test-btn:not(:disabled)"));
     if (buttons.length === 0) return;
 
     testAllBtn.classList.add("hidden");
