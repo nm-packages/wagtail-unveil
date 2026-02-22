@@ -1,0 +1,10 @@
+{% extends "wagtailadmin/base.html" %}
+{% block titletag %}{{ month_name }} {{ year }}{% endblock %}
+
+{% block content %}
+    {% include "wagtailadmin/shared/header.html" with title=month_name subtitle=year icon="date" %}
+    <div class="nice-padding">
+        <p><a href="{% url 'calendar:index' %}">View full year</a></p>
+        {{ calendar_html|safe }}
+    </div>
+{% endblock %}

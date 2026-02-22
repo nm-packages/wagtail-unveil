@@ -121,6 +121,7 @@ urlpatterns = [
 
 **Features:**
 
+- Automatically discovers all admin URLs including custom admin views registered via `register_admin_viewset` or `register_admin_urls` hooks
 - Shows all discovered URLs with testable/untestable counts in the summary
 - One-click testing of static URLs with colour-coded status codes (green=2xx, yellow=3xx, red=4xx/5xx)
 - **Parameterised URL resolution** — admin URLs with parameters (snippets, redirects, images, documents, users, groups) are automatically resolved using real database instances, making them testable via the report

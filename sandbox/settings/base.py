@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "sandbox.core",
     "sandbox.search",
     "sandbox.taxonomy",
+    "sandbox.calendar",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.embeds",

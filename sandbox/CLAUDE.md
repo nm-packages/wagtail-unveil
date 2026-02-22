@@ -15,6 +15,7 @@ This is a standard Wagtail project used for developing and testing the `wagtail_
 - `core/` — `ListingPage` and `StandardPage` models providing a realistic page hierarchy (`HomePage > ListingPage > StandardPage`)
 - `search/` — Wagtail search view
 - `taxonomy/` — Snippet models (`Category` via `@register_snippet` decorator, `Colour` via `SnippetViewSet`) and a `Person` model registered via `wagtail-modeladmin` (`PersonModelAdmin`) to exercise parameterised admin URL discovery
+- `calendar/` — Custom admin views using the Wagtail 7.0 `ViewSet` pattern (`register_admin_viewset` hook). Provides year and month calendar views at `admin/calendar/` and `admin/calendar/month/` to exercise custom admin URL discovery
 - `urls.py` — URL config: Django admin at `/django-admin/`, Wagtail admin at `/admin/`, unveil API at `/unveil-api/`, unveil report at `/unveil-report/`, Wagtail pages at `/`
 - `templates/` — Site-level templates
 - `static/` — Site-level static files
