@@ -5,11 +5,18 @@ var currentSortAsc = true;
 function applyFilters() {
     var rows = document.querySelectorAll("tbody tr");
     rows.forEach(function(row) {
-        var name = row.children[1].textContent.toLowerCase();
-        var namespace = row.children[2].textContent.toLowerCase();
-        var searchMatch = !currentSearchTerm ||
-            name.indexOf(currentSearchTerm) !== -1 ||
-            namespace.indexOf(currentSearchTerm) !== -1;
+        var searchMatch = !currentSearchTerm;
+        if (!searchMatch) {
+            var sortableCols = document.querySelectorAll("th[data-sort-col]");
+            for (var i = 0; i < sortableCols.length; i++) {
+                var colIdx = parseInt(sortableCols[i].getAttribute("data-sort-col"));
+                var text = row.children[colIdx].textContent.toLowerCase();
+                if (text.indexOf(currentSearchTerm) !== -1) {
+                    searchMatch = true;
+                    break;
+                }
+            }
+        }
         row.classList.toggle("hidden", !searchMatch);
     });
 }

@@ -10,7 +10,7 @@ from wagtail.images.tests.utils import get_test_image_file
 from wagtail.models import Site
 from wagtail.test.utils import WagtailTestUtils
 
-from wagtail_unveil.urls import AdminURL, get_admin_urls
+from wagtail_unveil.urls import AdminURL, FrontendURL, get_admin_urls, get_frontend_urls
 from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 
@@ -452,3 +452,237 @@ class TestParameterisedURLResolution(TestCase):
         for url in unresolvable:
             self.assertFalse(url.is_testable, url.route)
             self.assertEqual(url.skip_reason, "URL requires parameters")
+
+
+class TestGetFrontendUrls(TestCase):
+    def setUp(self):
+        self.urls = get_frontend_urls()
+
+    def test_returns_urls(self):
+        self.assertGreater(len(self.urls), 0)
+
+    def test_url_has_expected_fields(self):
+        url = self.urls[0]
+        self.assertIsInstance(url, FrontendURL)
+        self.assertIsInstance(url.url, str)
+        self.assertIsInstance(url.source, str)
+        self.assertIsInstance(url.page_type, str)
+        self.assertIsInstance(url.page_title, str)
+        self.assertIsInstance(url.name, str)
+        self.assertIsInstance(url.is_testable, bool)
+
+    def test_sources_are_valid(self):
+        for url in self.urls:
+            self.assertIn(url.source, ("page", "resolver"))
+
+    def test_page_urls_have_page_type(self):
+        page_urls = [u for u in self.urls if u.source == "page"]
+        self.assertGreater(len(page_urls), 0)
+        for url in page_urls:
+            self.assertTrue(url.page_type, url.url)
+            self.assertTrue(url.page_title, url.url)
+
+    def test_resolver_urls_present(self):
+        resolver_urls = [u for u in self.urls if u.source == "resolver"]
+        self.assertGreater(len(resolver_urls), 0)
+
+    def test_no_admin_urls_included(self):
+        for url in self.urls:
+            self.assertFalse(url.url.startswith("/admin/"), url.url)
+
+    def test_no_unveil_urls_included(self):
+        for url in self.urls:
+            self.assertNotIn("unveil-api", url.url)
+            self.assertNotIn("unveil-report", url.url)
+
+    def test_page_urls_are_testable(self):
+        page_urls = [u for u in self.urls if u.source == "page"]
+        for url in page_urls:
+            self.assertTrue(url.is_testable, url.url)
+
+    def test_parameterized_resolver_urls_not_testable(self):
+        for url in self.urls:
+            if url.source == "resolver" and not url.is_testable:
+                self.assertTrue(url.skip_reason, url.url)
+
+    def test_urls_start_with_slash(self):
+        for url in self.urls:
+            self.assertTrue(url.url.startswith("/"), url.url)
+
+
+class TestShowFrontendUrlsCommand(TestCase):
+    def _call(self, *args):
+        out = StringIO()
+        call_command("show_frontend_urls", *args, stdout=out)
+        return out.getvalue()
+
+    def test_command_runs(self):
+        output = self._call()
+        self.assertIn("Total:", output)
+
+    def test_pages_filter(self):
+        output = self._call("--pages")
+        for line in output.splitlines():
+            if line.startswith("/"):
+                self.assertIn("page", line)
+
+    def test_resolver_filter(self):
+        output = self._call("--resolver")
+        for line in output.splitlines():
+            if line.startswith("/"):
+                self.assertIn("resolver", line)
+
+
+@patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
+class TestFrontendUrlsAPIView(TestCase):
+    def test_returns_json(self):
+        response = self.client.get(
+            "/unveil-api/frontend-urls/",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("urls", data)
+        self.assertIn("count", data)
+        self.assertGreater(data["count"], 0)
+        self.assertEqual(len(data["urls"]), data["count"])
+
+    def test_requires_api_key(self):
+        response = self.client.get("/unveil-api/frontend-urls/")
+        self.assertEqual(response.status_code, 403)
+
+    def test_rejects_wrong_key(self):
+        response = self.client.get(
+            "/unveil-api/frontend-urls/",
+            HTTP_AUTHORIZATION="Bearer wrong-key",
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_returns_500_when_no_env_var(self):
+        with patch.dict("os.environ", {}, clear=True):
+            response = self.client.get(
+                "/unveil-api/frontend-urls/",
+                HTTP_AUTHORIZATION="Bearer test-secret",
+            )
+            self.assertEqual(response.status_code, 500)
+
+    def test_filter_pages(self):
+        response = self.client.get(
+            "/unveil-api/frontend-urls/?filter=pages",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        data = response.json()
+        for url in data["urls"]:
+            self.assertEqual(url["source"], "page")
+
+    def test_filter_resolver(self):
+        response = self.client.get(
+            "/unveil-api/frontend-urls/?filter=resolver",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        data = response.json()
+        for url in data["urls"]:
+            self.assertEqual(url["source"], "resolver")
+
+
+@override_settings(DEBUG=True)
+class TestFrontendUrlsReportView(WagtailTestUtils, TestCase):
+    def setUp(self):
+        self.login()
+
+    def test_report_requires_login(self):
+        self.client.logout()
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertEqual(response.status_code, 302)
+
+    def test_report_requires_superuser(self):
+        self.client.logout()
+        User.objects.create_user(
+            username="editor", password="password", is_staff=True
+        )
+        self.client.login(username="editor", password="password")
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertEqual(response.status_code, 302)
+
+    def test_report_returns_html(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Frontend URLs Report", content)
+        self.assertIn("<table", content)
+
+    def test_report_contains_counts(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        content = response.content.decode()
+        self.assertIn("Total:", content)
+        self.assertIn("URLs", content)
+
+    def test_report_has_test_buttons(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(response, "test-btn")
+
+    def test_report_has_reset_button(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(response, "reset-btn")
+
+    def test_report_has_test_all_button(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(response, "test-all-btn")
+        self.assertContains(response, "Test All")
+
+    def test_report_has_search_input(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(response, "search-input")
+
+    def test_report_has_sortable_headers(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        content = response.content.decode()
+        self.assertIn('data-sort-col="0"', content)
+        self.assertIn('data-sort-col="1"', content)
+        self.assertIn('data-sort-col="2"', content)
+        self.assertIn('data-sort-col="3"', content)
+        self.assertIn('data-sort-col="4"', content)
+
+    def test_report_loads_static_css(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(
+            response, "wagtail_unveil/css/admin_urls_report.css"
+        )
+
+    def test_report_loads_static_js(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(
+            response, "wagtail_unveil/js/admin_urls_report.js"
+        )
+
+    def test_report_has_help_panel(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(response, "help-panel")
+        self.assertContains(response, "How It Works")
+
+    def test_report_returns_404_when_not_debug(self):
+        with self.settings(DEBUG=False):
+            response = self.client.get("/unveil-report/frontend-urls/")
+            self.assertEqual(response.status_code, 404)
+
+    def test_report_shows_source_column(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(response, "Source")
+        self.assertContains(response, 'data-source="page"')
+
+
+class TestDashboardPanelFrontendLink(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.panel = UnveilReportPanel()
+        self.superuser = User.objects.create_superuser(
+            username="admin", password="password"
+        )
+
+    @override_settings(DEBUG=True)
+    def test_panel_shows_frontend_link(self):
+        request = self.factory.get("/admin/")
+        request.user = self.superuser
+        html = self.panel.render_html({"request": request})
+        self.assertIn("View Frontend URLs Report", html)
+        self.assertIn("/unveil-report/frontend-urls/", html)

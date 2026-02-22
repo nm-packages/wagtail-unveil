@@ -4,7 +4,7 @@ A reusable Wagtail package that discovers all URLs in a Wagtail site — both fr
 
 ## Features
 
-### Management Command
+### Management Commands
 
 List all admin URLs in the terminal:
 
@@ -17,6 +17,19 @@ python manage.py show_admin_urls --static
 
 # Parameterized URLs only
 python manage.py show_admin_urls --parameterized
+```
+
+List all frontend URLs (pages and resolver routes):
+
+```bash
+# All frontend URLs
+python manage.py show_frontend_urls
+
+# Page URLs only
+python manage.py show_frontend_urls --pages
+
+# Resolver URLs only
+python manage.py show_frontend_urls --resolver
 ```
 
 ### JSON API Endpoint
@@ -74,7 +87,22 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-ap
 
 The endpoint requires a Bearer token matching the `WAGTAIL_UNVEIL_API_KEY` environment variable. Requests without a valid key receive a `403` response. If the environment variable is not set, the endpoint returns `500`.
 
-### HTML Report Page
+#### Frontend URLs API
+
+```bash
+# All frontend URLs
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil-api/frontend-urls/
+
+# Page URLs only
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-api/frontend-urls/?filter=pages"
+
+# Resolver URLs only
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-api/frontend-urls/?filter=resolver"
+```
+
+### HTML Report Pages
+
+#### Admin URLs Report
 
 An interactive browser-based report showing all admin URLs in a table. Click "Test" on static URLs to check their HTTP status codes using your existing Wagtail session.
 
@@ -101,11 +129,22 @@ urlpatterns = [
 - Self-contained — no external CSS or JS dependencies
 - **Superuser-only** — requires Wagtail superuser login; non-superusers are redirected to the login page
 - **DEBUG-only** — returns 404 when `DEBUG=False`
-- **Dashboard widget** — a panel on the Wagtail admin home page links directly to the report (superuser + DEBUG only)
+- **Dashboard widget** — a panel on the Wagtail admin home page links directly to both reports (superuser + DEBUG only)
 
-## Future Features
+#### Frontend URLs Report
 
-- **Page URL testing** — Resolve page URLs like `admin/pages/<int:pk>/edit/` using real page instances.
+An interactive browser-based report showing all frontend URLs — both Wagtail page URLs and Django resolver URLs.
+
+Visit `http://localhost:8000/unveil-report/frontend-urls/` while logged into the Wagtail admin.
+
+**Features:**
+
+- **Two URL sources:** Wagtail page URLs (from `Page.objects.live().specific()`) and Django resolver URLs (non-admin routes)
+- One-click testing with colour-coded status codes
+- **Test All** button with progress indicator and pass/fail summary
+- Searchable and sortable columns (URL, Source, Page Type, Title, Name)
+- Self-contained — no external CSS or JS dependencies
+- **Superuser-only** and **DEBUG-only**
 
 ## Development
 

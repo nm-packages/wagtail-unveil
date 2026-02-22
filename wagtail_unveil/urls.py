@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 from functools import cached_property
+from urllib.parse import urlparse
 
 from django.urls import URLPattern, URLResolver, get_resolver, reverse
 from django.utils.functional import cached_property as django_cached_property
@@ -167,3 +168,109 @@ def get_admin_urls():
             )
         )
     return results
+
+
+@dataclass
+class FrontendURL:
+    url: str
+    source: str
+    page_type: str
+    page_title: str
+    name: str
+    is_testable: bool = True
+    skip_reason: str = ""
+
+
+def _get_page_urls():
+    """Discover frontend URLs from live Wagtail pages.
+
+    Uses Page.objects.live().specific() to get all live pages, returning
+    their .url property. Skips the root Page model and pages without a URL.
+    """
+    from wagtail.models import Page
+
+    results = []
+    pages = Page.objects.live().specific()
+    for page in pages:
+        # Skip the base Page model (depth 1 is the abstract root)
+        if type(page) is Page:
+            continue
+        try:
+            url = page.url
+        except Exception:
+            url = None
+        if not url:
+            continue
+        # Strip to path-only for multi-site support
+        parsed = urlparse(url)
+        path = parsed.path
+        page_type = f"{page._meta.app_label}.{type(page).__name__}"
+        results.append(
+            FrontendURL(
+                url=path,
+                source="page",
+                page_type=page_type,
+                page_title=page.title,
+                name="",
+            )
+        )
+    return results
+
+
+# Namespaces that belong to unveil itself — exclude from frontend resolver URLs.
+_UNVEIL_NAMESPACES = {"wagtail_unveil_api", "wagtail_unveil_report"}
+
+
+def _get_resolver_frontend_urls():
+    """Discover frontend URLs from Django's URL resolver (non-admin routes).
+
+    Reuses _walk_patterns() but excludes admin/ routes and unveil's own
+    namespaces. Parameterized and regex URLs are marked as non-testable.
+    """
+    resolver = get_resolver()
+    results = []
+    for route, name, namespace, _callback in _walk_patterns(resolver.url_patterns):
+        # Exclude admin routes
+        if route.startswith("admin/"):
+            continue
+        # Exclude Django admin
+        if route.startswith("django-admin/"):
+            continue
+        # Exclude unveil's own namespaces
+        if namespace in _UNVEIL_NAMESPACES:
+            continue
+
+        is_testable = True
+        skip_reason = ""
+
+        # Parameterized URLs are not directly testable
+        has_parameters = "<" in route or "(" in route
+        if has_parameters:
+            is_testable = False
+            skip_reason = "URL requires parameters"
+        elif "^" in route:
+            is_testable = False
+            skip_reason = "Regex-based route pattern"
+
+        url = f"/{route}" if not route.startswith("/") else route
+        results.append(
+            FrontendURL(
+                url=url,
+                source="resolver",
+                page_type="",
+                page_title="",
+                name=name,
+                is_testable=is_testable,
+                skip_reason=skip_reason,
+            )
+        )
+    return results
+
+
+def get_frontend_urls():
+    """Discover all frontend URLs from pages and the URL resolver.
+
+    Returns a list of FrontendURL dataclass instances combining page URLs
+    and non-admin resolver URLs.
+    """
+    return _get_page_urls() + _get_resolver_frontend_urls()

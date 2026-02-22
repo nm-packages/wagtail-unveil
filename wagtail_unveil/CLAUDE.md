@@ -14,17 +14,24 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 
 - `apps.py` — Django app config (`WagtailUnveilConfig`)
 - `models.py` — Package models
-- `urls.py` — URL discovery logic (`get_admin_urls()` returns list of `AdminURL` dataclasses); `_resolve_parameterised_url()` generically resolves parameterised admin URLs (snippets, redirects, images, documents, users, groups) by extracting the model from view callbacks and using real DB instances, populating `AdminURL.resolved_route`
-- `views.py` — Views (`admin_urls_json` — JSON endpoint; `admin_urls_report` — HTML report page, requires superuser + DEBUG=True)
-- `api_urls.py` — API URL configuration (`app_name = "wagtail_unveil_api"`)
-- `report_urls.py` — Report URL configuration (`app_name = "wagtail_unveil_report"`)
-- `templates/wagtail_unveil/admin_urls_report.html` — HTML report template
-- `static/wagtail_unveil/css/admin_urls_report.css` — Report page styles
-- `static/wagtail_unveil/js/admin_urls_report.js` — Report page JavaScript (filtering, test buttons, move-failed-to-top)
-- `wagtail_hooks.py` — Wagtail hooks (dashboard panel linking to the HTML report, superuser + DEBUG only)
+- `urls.py` — URL discovery logic:
+  - `get_admin_urls()` returns list of `AdminURL` dataclasses; `_resolve_parameterised_url()` generically resolves parameterised admin URLs (snippets, redirects, images, documents, users, groups) by extracting the model from view callbacks and using real DB instances, populating `AdminURL.resolved_route`
+  - `get_frontend_urls()` returns list of `FrontendURL` dataclasses; combines page URLs (`_get_page_urls()` via `Page.objects.live().specific()`) and resolver URLs (`_get_resolver_frontend_urls()` — non-admin routes from Django's URL resolver)
+- `views.py` — Views:
+  - `admin_urls_json` / `admin_urls_report` — Admin URL endpoints
+  - `frontend_urls_json` / `frontend_urls_report` — Frontend URL endpoints
+  - All report views require superuser + DEBUG=True; JSON views require API key
+- `api_urls.py` — API URL configuration (`app_name = "wagtail_unveil_api"`): `admin-urls/` and `frontend-urls/`
+- `report_urls.py` — Report URL configuration (`app_name = "wagtail_unveil_report"`): `admin-urls/` and `frontend-urls/`
+- `templates/wagtail_unveil/admin_urls_report.html` — Admin URLs HTML report template
+- `templates/wagtail_unveil/frontend_urls_report.html` — Frontend URLs HTML report template
+- `static/wagtail_unveil/css/admin_urls_report.css` — Shared report page styles
+- `static/wagtail_unveil/js/admin_urls_report.js` — Shared report page JavaScript (search, sort, test buttons, move-failed-to-top)
+- `wagtail_hooks.py` — Wagtail hooks (dashboard panel linking to both reports, superuser + DEBUG only)
 - `admin.py` — Wagtail admin integration
 - `tests.py` — Package tests (run with `uv run python manage.py test wagtail_unveil`)
 - `management/commands/show_admin_urls.py` — Management command to list admin URLs
+- `management/commands/show_frontend_urls.py` — Management command to list frontend URLs (`--pages` / `--resolver` filters)
 
 ### Conventions
 
