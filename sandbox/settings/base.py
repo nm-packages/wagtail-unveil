@@ -25,6 +25,7 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 
 INSTALLED_APPS = [
     "sandbox.home",
+    "sandbox.core",
     "sandbox.search",
     "sandbox.taxonomy",
     "wagtail.contrib.forms",

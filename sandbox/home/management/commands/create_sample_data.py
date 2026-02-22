@@ -10,6 +10,7 @@ from wagtail.documents.models import Document
 from wagtail.images.models import Image
 from wagtail.models import Page
 
+from sandbox.core.models import ListingPage, StandardPage
 from sandbox.home.models import HomePage
 
 # Prefix used to identify sample data created by this command
@@ -45,6 +46,7 @@ class Command(BaseCommand):
         self._create_search_promotions()
         self._create_editor_user()
         self._create_child_pages()
+        self._create_core_pages()
 
     def _clear_sample_data(self):
         """Remove all sample data created by this command."""
@@ -172,6 +174,37 @@ class Command(BaseCommand):
                 self.stdout.write(f"Skipped page: {title} (already exists)")
                 continue
             slug = title.replace(SAMPLE_PREFIX, "").strip().lower().replace(" ", "-")
-            page = Page(title=title, slug=f"sample-{slug}")
+            page = StandardPage(title=title, slug=f"sample-{slug}")
             home_page.add_child(instance=page)
+            self.stdout.write(f"Created page: {title}")
+
+    def _create_core_pages(self):
+        """Create a ListingPage with StandardPage children under HomePage."""
+        home_page = HomePage.objects.first()
+        if not home_page:
+            self.stdout.write("Skipped core pages: no HomePage found")
+            return
+
+        listing_title = f"{SAMPLE_PREFIX} Blog"
+        if Page.objects.filter(title=listing_title).exists():
+            self.stdout.write(f"Skipped page: {listing_title} (already exists)")
+            return
+
+        listing_page = ListingPage(
+            title=listing_title,
+            slug="sample-blog",
+            intro="<p>A sample blog listing page.</p>",
+        )
+        home_page.add_child(instance=listing_page)
+        self.stdout.write(f"Created page: {listing_title}")
+
+        for post_title in ["First Post", "Second Post", "Third Post"]:
+            title = f"{SAMPLE_PREFIX} {post_title}"
+            slug = f"sample-{post_title.lower().replace(' ', '-')}"
+            page = StandardPage(
+                title=title,
+                slug=slug,
+                body=f"<p>Content for {post_title}.</p>",
+            )
+            listing_page.add_child(instance=page)
             self.stdout.write(f"Created page: {title}")
