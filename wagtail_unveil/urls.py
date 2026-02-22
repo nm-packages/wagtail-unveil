@@ -1,9 +1,9 @@
 import logging
-import re
 from dataclasses import dataclass
+from functools import cached_property
 
-from django.apps import apps
 from django.urls import URLPattern, URLResolver, get_resolver, reverse
+from django.utils.functional import cached_property as django_cached_property
 
 logger = logging.getLogger(__name__)
 
@@ -43,18 +43,55 @@ def _walk_patterns(patterns, prefix="", namespace=""):
             yield route, pattern.name or "", namespace, pattern.callback
 
 
-def _resolve_snippet_url(namespace, name):
-    """Attempt to resolve a parameterized snippet URL using a real instance.
+def _is_django_model(obj):
+    """Check if obj is a Django model class."""
+    return isinstance(obj, type) and hasattr(obj, "_meta")
+
+
+def _get_model_from_callback(callback):
+    """Extract a Django model class from a view callback.
+
+    Checks three sources in order:
+    1. view_initkwargs["model"] — ModelViewSet views (as_view(model=Model))
+    2. view_class.__dict__["model"] as a plain class attribute
+    3. view_class.__dict__["model"] as a cached_property (calls func(None))
+    """
+    # Source 1: initkwargs (ModelViewSet pattern)
+    initkwargs = getattr(callback, "initkwargs", None) or getattr(
+        callback, "view_initkwargs", None
+    )
+    if initkwargs:
+        model = initkwargs.get("model")
+        if _is_django_model(model):
+            return model
+
+    # Sources 2 & 3: class attribute or cached_property on view_class
+    view_class = getattr(callback, "view_class", None)
+    if view_class:
+        model_attr = view_class.__dict__.get("model")
+        if _is_django_model(model_attr):
+            return model_attr
+        if isinstance(model_attr, (cached_property, django_cached_property)):
+            try:
+                model = model_attr.func(None)
+                if _is_django_model(model):
+                    return model
+            except Exception:
+                pass
+
+    return None
+
+
+def _resolve_parameterised_url(namespace, name, callback):
+    """Attempt to resolve a parameterised URL using a real model instance.
+
+    Extracts the model from the view callback, fetches the first instance,
+    and reverses the URL with that instance's PK.
 
     Returns the resolved path (without leading '/') or None.
     """
-    match = re.match(r"^wagtailsnippets_(\w+)_(\w+)$", namespace.split(":")[-1])
-    if not match:
-        return None
-    app_label, model_name = match.groups()
-    try:
-        model = apps.get_model(app_label, model_name)
-    except LookupError:
+    model = _get_model_from_callback(callback)
+    if model is None:
         return None
     instance = model.objects.first()
     if instance is None:
@@ -91,7 +128,7 @@ def get_admin_urls():
         skip_reason = ""
         resolved_route = ""
         if has_parameters:
-            resolved = _resolve_snippet_url(namespace, name)
+            resolved = _resolve_parameterised_url(namespace, name, callback)
             if resolved:
                 is_testable = True
                 resolved_route = resolved

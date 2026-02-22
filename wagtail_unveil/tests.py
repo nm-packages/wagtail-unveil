@@ -1,9 +1,13 @@
 from io import StringIO
 from unittest.mock import patch
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.core.management import call_command
 from django.test import RequestFactory, TestCase, override_settings
+from wagtail.documents.models import Document
+from wagtail.images.models import Image
+from wagtail.images.tests.utils import get_test_image_file
+from wagtail.models import Site
 from wagtail.test.utils import WagtailTestUtils
 
 from wagtail_unveil.urls import AdminURL, get_admin_urls
@@ -293,10 +297,31 @@ class TestDashboardPanel(TestCase):
             self.assertEqual(html, "")
 
 
-class TestSnippetURLResolution(TestCase):
-    """Test that parameterized snippet URLs are resolved using real instances."""
+class TestParameterisedURLResolution(TestCase):
+    """Test that parameterised admin URLs are resolved using real model instances."""
 
     def setUp(self):
+        # Create instances for models that need them
+        from wagtail.contrib.redirects.models import Redirect
+
+        self.redirect = Redirect.objects.create(
+            old_path="/test-redirect",
+            site=Site.objects.first(),
+            redirect_link="/destination",
+        )
+        self.image = Image.objects.create(
+            title="Test image",
+            file=get_test_image_file(),
+        )
+        self.document = Document.objects.create(
+            title="Test document",
+            file="test.pdf",
+        )
+        self.user = User.objects.create_user(
+            username="testuser", password="password"
+        )
+        self.group = Group.objects.create(name="Test group")
+
         self.urls = get_admin_urls()
         self.snippet_urls = [
             u for u in self.urls
@@ -330,13 +355,88 @@ class TestSnippetURLResolution(TestCase):
                 self.assertNotIn("<", url.resolved_route)
                 self.assertRegex(url.resolved_route, r"/\d+/")
 
-    def test_non_snippet_parameterized_still_untestable(self):
-        non_snippet = [
+    def test_redirect_edit_url_is_testable(self):
+        edit_urls = [
             u for u in self.urls
-            if u.has_parameters and not u.namespace.startswith("wagtailsnippets_")
+            if "redirect" in u.namespace and u.name == "edit"
+        ]
+        self.assertGreater(len(edit_urls), 0)
+        for url in edit_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+
+    def test_redirect_delete_url_is_testable(self):
+        delete_urls = [
+            u for u in self.urls
+            if "redirect" in u.namespace and u.name == "delete"
+        ]
+        self.assertGreater(len(delete_urls), 0)
+        for url in delete_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+
+    def test_image_edit_url_is_testable(self):
+        edit_urls = [
+            u for u in self.urls
+            if "wagtailimages" in u.namespace and u.name == "edit"
+        ]
+        self.assertGreater(len(edit_urls), 0)
+        for url in edit_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+
+    def test_image_delete_url_is_testable(self):
+        delete_urls = [
+            u for u in self.urls
+            if "wagtailimages" in u.namespace and u.name == "delete"
+        ]
+        self.assertGreater(len(delete_urls), 0)
+        for url in delete_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+
+    def test_document_edit_url_is_testable(self):
+        edit_urls = [
+            u for u in self.urls
+            if "wagtaildocs" in u.namespace and u.name == "edit"
+        ]
+        self.assertGreater(len(edit_urls), 0)
+        for url in edit_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+
+    def test_user_edit_url_is_testable(self):
+        edit_urls = [
+            u for u in self.urls
+            if "wagtailusers_users" in u.namespace and u.name == "edit"
+        ]
+        self.assertGreater(len(edit_urls), 0)
+        for url in edit_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+
+    def test_resolved_route_has_no_angle_brackets(self):
+        resolved = [u for u in self.urls if u.resolved_route]
+        self.assertGreater(len(resolved), 0)
+        for url in resolved:
+            self.assertNotIn("<", url.resolved_route, url.route)
+
+    def test_multi_param_urls_remain_untestable(self):
+        multi_param = [
+            u for u in self.urls
+            if u.has_parameters and u.route.count("<") > 1
             and not u.resolved_route
         ]
-        self.assertGreater(len(non_snippet), 0)
-        for url in non_snippet:
+        for url in multi_param:
+            self.assertFalse(url.is_testable, url.route)
+            self.assertEqual(url.skip_reason, "URL requires parameters")
+
+    def test_unresolvable_parameterised_urls_are_untestable(self):
+        unresolvable = [
+            u for u in self.urls
+            if u.has_parameters and not u.resolved_route
+        ]
+        self.assertGreater(len(unresolvable), 0)
+        for url in unresolvable:
             self.assertFalse(url.is_testable, url.route)
             self.assertEqual(url.skip_reason, "URL requires parameters")
