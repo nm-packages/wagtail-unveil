@@ -710,6 +710,7 @@ class TestDashboardPanelFrontendLink(TestCase):
 
 
 class TestGetPagesPerType(TestCase):
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
     def test_default_returns_zero(self):
         self.assertEqual(get_pages_per_type(), 0)
 
@@ -740,6 +741,7 @@ class TestPagesPerTypeLimit(TestCase):
                 slug=f"standard-{i}",
             ))
 
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
     def test_default_returns_all_pages(self):
         urls = get_frontend_urls()
         page_urls = [u for u in urls if u.source == "page"]
@@ -787,6 +789,7 @@ class TestFrontendReportPagesPerType(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
     def test_no_limit_message_by_default(self):
         response = self.client.get("/unveil-report/frontend-urls/")
         self.assertNotContains(response, "WAGTAIL_UNVEIL_PAGES_PER_TYPE")
