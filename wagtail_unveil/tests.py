@@ -303,7 +303,9 @@ class TestParameterisedURLResolution(TestCase):
     def setUp(self):
         # Create instances for models that need them
         from wagtail.contrib.redirects.models import Redirect
+        from wagtail.contrib.search_promotions.models import Query
 
+        self.query = Query.objects.create(query_string="test search")
         self.redirect = Redirect.objects.create(
             old_path="/test-redirect",
             site=Site.objects.first(),
@@ -430,6 +432,16 @@ class TestParameterisedURLResolution(TestCase):
         for url in multi_param:
             self.assertFalse(url.is_testable, url.route)
             self.assertEqual(url.skip_reason, "URL requires parameters")
+
+    def test_searchpick_edit_url_is_testable(self):
+        edit_urls = [
+            u for u in self.urls
+            if "searchpromotions" in u.namespace and u.name == "edit"
+        ]
+        self.assertGreater(len(edit_urls), 0)
+        for url in edit_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
 
     def test_unresolvable_parameterised_urls_are_untestable(self):
         unresolvable = [

@@ -79,6 +79,19 @@ def _get_model_from_callback(callback):
             except Exception:
                 pass
 
+        # Source 4: model inherited from a parent class (e.g. search promotions mixin)
+        for cls in view_class.__mro__:
+            model_attr = cls.__dict__.get("model")
+            if _is_django_model(model_attr):
+                return model_attr
+            if isinstance(model_attr, (cached_property, django_cached_property)):
+                try:
+                    model = model_attr.func(None)
+                    if _is_django_model(model):
+                        return model
+                except Exception:
+                    pass
+
     return None
 
 
