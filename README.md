@@ -93,10 +93,16 @@ urlpatterns = [
 
 **Features:**
 
+- Defaults to showing only static (testable) URLs — parameterized URLs are hidden until you click "All"
 - Filter URLs by All / Static / Parameterized
 - One-click testing of static URLs with colour-coded status codes (green=2xx, yellow=3xx, red=4xx/5xx)
+- **Test All** button — runs all testable (static) URLs sequentially with a progress indicator and pass/fail summary
 - Self-contained — no external CSS or JS dependencies
 - **DEBUG-only** — returns 404 when `DEBUG=False`
+
+## Future Features
+
+- **Parameterized URL testing** — Interrogate routes to discover valid parameter values (e.g. find an existing page PK for `admin/pages/<int:pk>/edit/`) so that parameterized URLs can be tested too.
 
 ## Development
 

@@ -146,6 +146,40 @@ class TestAdminUrlsReportView(TestCase):
         response = self.client.get("/unveil-report/admin-urls/")
         self.assertContains(response, "disabled")
 
+    def test_report_has_test_all_button(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(response, "test-all-btn")
+        self.assertContains(response, "Test All")
+
+    def test_report_default_filter_is_static(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        content = response.content.decode()
+        self.assertIn('data-filter="static">Static</button>', content)
+        self.assertNotIn(
+            'class="filter-btn active" data-filter="all"', content
+        )
+        self.assertIn(
+            'class="filter-btn active" data-filter="static"', content
+        )
+
+    def test_report_parameterized_rows_hidden_by_default(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        content = response.content.decode()
+        self.assertIn('data-has-parameters="true" class="hidden"', content)
+        self.assertNotIn('data-has-parameters="false" class="hidden"', content)
+
+    def test_report_loads_static_css(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(
+            response, "wagtail_unveil/css/admin_urls_report.css"
+        )
+
+    def test_report_loads_static_js(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(
+            response, "wagtail_unveil/js/admin_urls_report.js"
+        )
+
     def test_report_returns_404_when_not_debug(self):
         with self.settings(DEBUG=False):
             response = self.client.get("/unveil-report/admin-urls/")

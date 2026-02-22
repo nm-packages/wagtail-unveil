@@ -1,36 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin URLs Report — wagtail-unveil</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        h1 { font-size: 1.5rem; margin-bottom: 8px; }
-        .summary { color: #666; margin-bottom: 16px; font-size: 0.9rem; }
-        .summary span { font-weight: 600; color: #333; }
-        .filters { margin-bottom: 16px; display: flex; gap: 8px; }
-        .filter-btn { padding: 6px 14px; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
-        .filter-btn.active { background: #007d7e; color: #fff; border-color: #007d7e; }
-        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        th { background: #007d7e; color: #fff; text-align: left; padding: 10px 12px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        td { padding: 8px 12px; border-bottom: 1px solid #eee; font-size: 0.85rem; vertical-align: top; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover { background: #f9f9f9; }
-        .route { font-family: monospace; word-break: break-all; }
-        .param { color: #c05; }
-        .test-btn { padding: 4px 10px; border: 1px solid #007d7e; background: #fff; color: #007d7e; border-radius: 3px; cursor: pointer; font-size: 0.8rem; }
-        .test-btn:hover:not(:disabled) { background: #007d7e; color: #fff; }
-        .test-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .status { font-weight: 600; font-size: 0.85rem; min-width: 50px; display: inline-block; text-align: center; }
-        .status-2xx { color: #2e7d32; }
-        .status-3xx { color: #f57f17; }
-        .status-4xx, .status-5xx { color: #c62828; }
-        .status-err { color: #999; }
-        .hidden { display: none; }
-    </style>
+    <link rel="stylesheet" href="{% static 'wagtail_unveil/css/admin_urls_report.css' %}">
 </head>
 <body>
     <div class="container">
@@ -42,10 +17,12 @@
         </p>
 
         <div class="filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="static">Static</button>
+            <button class="filter-btn" data-filter="all">All</button>
+            <button class="filter-btn active" data-filter="static">Static</button>
             <button class="filter-btn" data-filter="parameterized">Parameterized</button>
+            <button class="test-all-btn" onclick="testAll()">Test All</button>
         </div>
+        <p class="test-all-summary hidden" id="test-all-summary"></p>
 
         <table>
             <thead>
@@ -61,7 +38,7 @@
             </thead>
             <tbody>
                 {% for url in urls %}
-                <tr data-has-parameters="{{ url.has_parameters|yesno:'true,false' }}">
+                <tr data-has-parameters="{{ url.has_parameters|yesno:'true,false' }}"{% if url.has_parameters %} class="hidden"{% endif %}>
                     <td class="route">{{ url.route }}</td>
                     <td>{{ url.name }}</td>
                     <td>{{ url.namespace }}</td>
@@ -81,45 +58,6 @@
         </table>
     </div>
 
-    <script>
-        document.querySelectorAll(".filter-btn").forEach(function(btn) {
-            btn.addEventListener("click", function() {
-                document.querySelectorAll(".filter-btn").forEach(function(b) { b.classList.remove("active"); });
-                btn.classList.add("active");
-                var filter = btn.getAttribute("data-filter");
-                document.querySelectorAll("tbody tr").forEach(function(row) {
-                    var hasParams = row.getAttribute("data-has-parameters") === "true";
-                    if (filter === "all") {
-                        row.classList.remove("hidden");
-                    } else if (filter === "static") {
-                        row.classList.toggle("hidden", hasParams);
-                    } else {
-                        row.classList.toggle("hidden", !hasParams);
-                    }
-                });
-            });
-        });
-
-        function testUrl(btn, url) {
-            btn.disabled = true;
-            btn.textContent = "…";
-            var statusCell = btn.parentElement.nextElementSibling;
-            fetch(url, { credentials: "include" }).then(function(response) {
-                var code = response.status;
-                var cls = "status-err";
-                if (code >= 200 && code < 300) cls = "status-2xx";
-                else if (code >= 300 && code < 400) cls = "status-3xx";
-                else if (code >= 400 && code < 500) cls = "status-4xx";
-                else if (code >= 500) cls = "status-5xx";
-                statusCell.innerHTML = "<span class='status " + cls + "'>" + code + "</span>";
-                btn.disabled = false;
-                btn.textContent = "Test";
-            }).catch(function() {
-                statusCell.innerHTML = "<span class='status status-err'>ERR</span>";
-                btn.disabled = false;
-                btn.textContent = "Test";
-            });
-        }
-    </script>
+    <script src="{% static 'wagtail_unveil/js/admin_urls_report.js' %}"></script>
 </body>
 </html>
