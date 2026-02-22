@@ -11,12 +11,16 @@ This is a standard Wagtail project used for developing and testing the `wagtail_
 - `settings/base.py` — Shared settings; `wagtail_unveil` is included in INSTALLED_APPS
 - `settings/dev.py` — Development overrides (DEBUG=True, SQLite)
 - `settings/production.py` — Production settings template
-- `home/` — Default Wagtail home app with a blank `HomePage` model
+- `home/` — Default Wagtail home app with a blank `HomePage` model; also hosts management commands (e.g. `create_sample_data`)
 - `search/` — Wagtail search view
 - `taxonomy/` — Snippet models (`Category` via `@register_snippet` decorator, `Colour` via `SnippetViewSet`) to exercise parameterised admin URL discovery
 - `urls.py` — URL config: Django admin at `/django-admin/`, Wagtail admin at `/admin/`, unveil API at `/unveil-api/`, unveil report at `/unveil-report/`, Wagtail pages at `/`
 - `templates/` — Site-level templates
 - `static/` — Site-level static files
+
+### Management Commands
+
+- `create_sample_data` — Creates sample instances of Images, Documents, Redirects, Search Promotions, an Editor user, and child Pages. Idempotent by default; use `--clear` to remove and recreate all sample data. Sample data is identified by the `[Sample]` title prefix.
 
 ### Notes
 

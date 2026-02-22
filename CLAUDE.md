@@ -38,6 +38,12 @@ uv run ruff check .
 
 # Lint and fix
 uv run ruff check --fix .
+
+# Create sample data (images, documents, redirects, etc.) in the sandbox
+uv run python manage.py create_sample_data
+
+# Clear and recreate sample data
+uv run python manage.py create_sample_data --clear
 ```
 
 ## Conventions
