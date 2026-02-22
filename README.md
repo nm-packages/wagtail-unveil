@@ -121,11 +121,11 @@ urlpatterns = [
 
 **Features:**
 
-- Defaults to showing only static (testable) URLs — parameterized URLs are hidden until you click "All"
-- Filter URLs by All / Static / Parameterized
+- Shows all discovered URLs with testable/untestable counts in the summary
 - One-click testing of static URLs with colour-coded status codes (green=2xx, yellow=3xx, red=4xx/5xx)
 - **Parameterised URL resolution** — admin URLs with parameters (snippets, redirects, images, documents, users, groups) are automatically resolved using real database instances, making them testable via the report
 - **Test All** button — runs all testable (static and resolved) URLs sequentially with a progress indicator and pass/fail summary
+- **Hide Untestable** toggle — hides non-testable rows (parameterized, POST-only, regex) to focus on testable URLs; preference is saved in a cookie across sessions
 - Self-contained — no external CSS or JS dependencies
 - **Superuser-only** — requires Wagtail superuser login; non-superusers are redirected to the login page
 - **DEBUG-only** — returns 404 when `DEBUG=False`
@@ -142,6 +142,7 @@ Visit `http://localhost:8000/unveil-report/frontend-urls/` while logged into the
 - **Two URL sources:** Wagtail page URLs (from `Page.objects.live().specific()`) and Django resolver URLs (non-admin routes)
 - One-click testing with colour-coded status codes
 - **Test All** button with progress indicator and pass/fail summary
+- **Hide Untestable** toggle — hides non-testable rows; preference saved in a cookie
 - Searchable and sortable columns (URL, Source, Page Type, Title, Name)
 - Self-contained — no external CSS or JS dependencies
 - **Superuser-only** and **DEBUG-only**

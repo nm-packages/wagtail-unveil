@@ -11,7 +11,7 @@
     <div class="container">
         <h1>Admin URLs Report</h1>
         <p class="summary">
-            Total: <span>{{ url_count }}</span> URLs
+            Total: <span>{{ url_count }}</span> URLs (<span>{{ testable_count }}</span> testable, <span>{{ untestable_count }}</span> untestable)
         </p>
 
         <div class="filters">
@@ -19,6 +19,7 @@
                 <input type="text" class="search-input" placeholder="Filter by name or namespace…">
                 <button type="button" class="search-clear hidden" aria-label="Clear search">&times;</button>
             </div>
+            <button class="toggle-untestable-btn" onclick="toggleUntestable()">Hide Untestable</button>
             <button class="test-all-btn" onclick="testAll()">Test All</button>
             <button class="pause-btn hidden">Pause</button>
             <button class="cancel-btn hidden" onclick="cancelTests()">Cancel</button>
@@ -73,6 +74,8 @@
                         <dd>Sends a GET request and shows the HTTP status code.</dd>
                         <dt>Test All</dt>
                         <dd>Runs through all visible URLs sequentially.</dd>
+                        <dt>Hide / Show Untestable</dt>
+                        <dd>Toggles visibility of rows that can't be tested (parameterized, POST-only, regex). Preference is saved in a cookie.</dd>
                         <dt>Pause / Continue / Cancel</dt>
                         <dd>Controls for the Test All run. Failed URLs move to the top.</dd>
                     </dl>

@@ -55,9 +55,12 @@ def admin_urls_report(request):
         return HttpResponseNotFound()
 
     urls = get_admin_urls()
+    testable_count = sum(1 for u in urls if u.is_testable)
     context = {
         "urls": urls,
         "url_count": len(urls),
+        "testable_count": testable_count,
+        "untestable_count": len(urls) - testable_count,
     }
     return render(request, "wagtail_unveil/admin_urls_report.html", context)
 
@@ -108,8 +111,11 @@ def frontend_urls_report(request):
         return HttpResponseNotFound()
 
     urls = get_frontend_urls()
+    testable_count = sum(1 for u in urls if u.is_testable)
     context = {
         "urls": urls,
         "url_count": len(urls),
+        "testable_count": testable_count,
+        "untestable_count": len(urls) - testable_count,
     }
     return render(request, "wagtail_unveil/frontend_urls_report.html", context)

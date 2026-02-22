@@ -39,6 +39,9 @@ tr:hover { background: #f9f9f9; }
 .cancel-btn:hover { background: #a31f1f; }
 .reset-btn { padding: 6px 14px; border: none; background: #e0e0e0; color: #333; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; margin-left: auto; }
 .reset-btn:hover { background: #bdbdbd; }
+.toggle-untestable-btn { padding: 6px 14px; border: none; background: #e0f2f1; color: #00695c; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+.toggle-untestable-btn:hover { background: #b2dfdb; }
+.toggle-untestable-btn.active { background: #007d7e; color: #fff; }
 .help-btn { padding: 6px 14px; border: none; background: #e3f2fd; color: #1565c0; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
 .help-btn:hover { background: #bbdefb; }
 .help-btn.active { background: #1565c0; color: #fff; }

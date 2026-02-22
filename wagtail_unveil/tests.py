@@ -258,6 +258,16 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
         self.assertContains(response, "Django URL name")
         self.assertContains(response, "How It Works")
 
+    def test_report_has_toggle_untestable_button(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(response, "toggle-untestable-btn")
+        self.assertContains(response, "Hide Untestable")
+
+    def test_report_contains_testable_counts(self):
+        response = self.client.get("/unveil-report/admin-urls/")
+        self.assertContains(response, "testable")
+        self.assertContains(response, "untestable")
+
     def test_report_returns_404_when_not_debug(self):
         with self.settings(DEBUG=False):
             response = self.client.get("/unveil-report/admin-urls/")
@@ -659,6 +669,16 @@ class TestFrontendUrlsReportView(WagtailTestUtils, TestCase):
         response = self.client.get("/unveil-report/frontend-urls/")
         self.assertContains(response, "help-panel")
         self.assertContains(response, "How It Works")
+
+    def test_report_has_toggle_untestable_button(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(response, "toggle-untestable-btn")
+        self.assertContains(response, "Hide Untestable")
+
+    def test_report_contains_testable_counts(self):
+        response = self.client.get("/unveil-report/frontend-urls/")
+        self.assertContains(response, "testable")
+        self.assertContains(response, "untestable")
 
     def test_report_returns_404_when_not_debug(self):
         with self.settings(DEBUG=False):

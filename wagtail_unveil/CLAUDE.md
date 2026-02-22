@@ -26,7 +26,7 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 - `templates/wagtail_unveil/admin_urls_report.html` — Admin URLs HTML report template
 - `templates/wagtail_unveil/frontend_urls_report.html` — Frontend URLs HTML report template
 - `static/wagtail_unveil/css/admin_urls_report.css` — Shared report page styles
-- `static/wagtail_unveil/js/admin_urls_report.js` — Shared report page JavaScript (search, sort, test buttons, move-failed-to-top)
+- `static/wagtail_unveil/js/admin_urls_report.js` — Shared report page JavaScript (search, sort, test buttons, move-failed-to-top, hide/show untestable toggle with cookie persistence)
 - `wagtail_hooks.py` — Wagtail hooks (dashboard panel linking to both reports, superuser + DEBUG only)
 - `admin.py` — Wagtail admin integration
 - `tests.py` — Package tests (run with `uv run python manage.py test wagtail_unveil`)
