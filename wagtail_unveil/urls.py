@@ -103,14 +103,18 @@ def _resolve_parameterised_url(namespace, name, callback):
     """Attempt to resolve a parameterised URL using a real model instance.
 
     Extracts the model from the view callback, fetches the first instance,
-    and reverses the URL with that instance's PK.
+    and reverses the URL with that instance's PK. For treebeard models
+    (e.g. Collection), skips the root node (depth=1) which Wagtail protects.
 
     Returns the resolved path (without leading '/') or None.
     """
     model = _get_model_from_callback(callback)
     if model is None:
         return None
-    instance = model.objects.first()
+    queryset = model.objects.all()
+    if hasattr(model, "depth"):
+        queryset = queryset.exclude(depth=1)
+    instance = queryset.first()
     if instance is None:
         return None
     try:

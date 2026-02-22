@@ -8,7 +8,7 @@ from wagtail.contrib.redirects.models import Redirect
 from wagtail.contrib.search_promotions.models import Query, SearchPromotion
 from wagtail.documents.models import Document
 from wagtail.images.models import Image
-from wagtail.models import Page
+from wagtail.models import Collection, Page
 
 from sandbox.core.models import ListingPage, StandardPage
 from sandbox.home.models import HomePage
@@ -47,6 +47,7 @@ class Command(BaseCommand):
         self._create_editor_user()
         self._create_child_pages()
         self._create_core_pages()
+        self._create_collections()
 
     def _clear_sample_data(self):
         """Remove all sample data created by this command."""
@@ -73,6 +74,13 @@ class Command(BaseCommand):
         # Editor user
         deleted = User.objects.filter(username="editor").delete()
         self.stdout.write(f"Deleted {deleted[0]} user(s)")
+
+        # Collections
+        sample_collections = Collection.objects.filter(name__startswith=SAMPLE_PREFIX)
+        count = sample_collections.count()
+        for collection in sample_collections:
+            collection.delete()
+        self.stdout.write(f"Deleted {count} collection(s)")
 
         # Child pages
         Page.objects.filter(title__startswith=SAMPLE_PREFIX).delete()
@@ -208,3 +216,17 @@ class Command(BaseCommand):
             )
             listing_page.add_child(instance=page)
             self.stdout.write(f"Created page: {title}")
+
+    def _create_collections(self):
+        """Create sample collections under the root collection."""
+        root_collection = Collection.objects.first()
+        collection_names = [
+            f"{SAMPLE_PREFIX} Photos",
+            f"{SAMPLE_PREFIX} Downloads",
+        ]
+        for name in collection_names:
+            if Collection.objects.filter(name=name).exists():
+                self.stdout.write(f"Skipped collection: {name} (already exists)")
+                continue
+            root_collection.add_child(name=name)
+            self.stdout.write(f"Created collection: {name}")
