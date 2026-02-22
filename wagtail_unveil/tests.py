@@ -189,8 +189,8 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
     def test_report_contains_counts(self):
         response = self.client.get("/unveil-report/admin-urls/")
         content = response.content.decode()
-        self.assertIn("Static:", content)
-        self.assertIn("Parameterized:", content)
+        self.assertIn("Total:", content)
+        self.assertIn("URLs", content)
 
     def test_report_has_test_buttons(self):
         response = self.client.get("/unveil-report/admin-urls/")
@@ -213,22 +213,12 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
         self.assertContains(response, "test-all-btn")
         self.assertContains(response, "Test All")
 
-    def test_report_default_filter_is_static(self):
+    def test_report_shows_all_rows_by_default(self):
         response = self.client.get("/unveil-report/admin-urls/")
         content = response.content.decode()
-        self.assertIn('data-filter="static">Static</button>', content)
-        self.assertNotIn(
-            'class="filter-btn active" data-filter="all"', content
-        )
-        self.assertIn(
-            'class="filter-btn active" data-filter="static"', content
-        )
-
-    def test_report_parameterized_rows_hidden_by_default(self):
-        response = self.client.get("/unveil-report/admin-urls/")
-        content = response.content.decode()
-        self.assertIn('data-has-parameters="true" class="hidden"', content)
-        self.assertNotIn('data-has-parameters="false" class="hidden"', content)
+        self.assertIn('data-has-parameters="true"', content)
+        self.assertIn('data-has-parameters="false"', content)
+        self.assertNotIn('class="hidden"', content.split("<tbody>")[1].split("</tbody>")[0])
 
     def test_report_has_search_input(self):
         response = self.client.get("/unveil-report/admin-urls/")

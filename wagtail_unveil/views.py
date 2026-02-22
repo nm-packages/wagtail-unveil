@@ -55,11 +55,8 @@ def admin_urls_report(request):
         return HttpResponseNotFound()
 
     urls = get_admin_urls()
-    static_count = sum(1 for u in urls if not u.has_parameters)
     context = {
         "urls": urls,
         "url_count": len(urls),
-        "static_count": static_count,
-        "parameterized_count": len(urls) - static_count,
     }
     return render(request, "wagtail_unveil/admin_urls_report.html", context)

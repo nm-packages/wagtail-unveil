@@ -11,15 +11,10 @@
     <div class="container">
         <h1>Admin URLs Report</h1>
         <p class="summary">
-            Total: <span>{{ url_count }}</span> |
-            Static: <span>{{ static_count }}</span> |
-            Parameterized: <span>{{ parameterized_count }}</span>
+            Total: <span>{{ url_count }}</span> URLs
         </p>
 
         <div class="filters">
-            <button class="filter-btn" data-filter="all">All</button>
-            <button class="filter-btn active" data-filter="static">Static</button>
-            <button class="filter-btn" data-filter="parameterized">Parameterized</button>
             <div class="search-wrapper">
                 <input type="text" class="search-input" placeholder="Filter by name or namespace…">
                 <button type="button" class="search-clear hidden" aria-label="Clear search">&times;</button>
@@ -59,12 +54,8 @@
                         <dd>Python path to the view class or function.</dd>
                     </dl>
 
-                    <h3>Filters</h3>
+                    <h3>Search</h3>
                     <dl>
-                        <dt>Static</dt>
-                        <dd>URLs with no parameters — directly testable.</dd>
-                        <dt>Parameterized</dt>
-                        <dd>URLs containing <code>&lt;pk&gt;</code> etc. Some are resolved via snippet instances.</dd>
                         <dt>Search</dt>
                         <dd>Filters the table by Name or Namespace text.</dd>
                     </dl>
@@ -112,7 +103,7 @@
             </thead>
             <tbody>
                 {% for url in urls %}
-                <tr data-has-parameters="{{ url.has_parameters|yesno:'true,false' }}"{% if url.has_parameters %} class="hidden"{% endif %}>
+                <tr data-has-parameters="{{ url.has_parameters|yesno:'true,false' }}">
                     <td class="route">{{ url.route|slice:"6:" }}</td>
                     <td>{{ url.name }}</td>
                     <td>{{ url.namespace }}</td>

@@ -1,4 +1,3 @@
-var currentTypeFilter = "static";
 var currentSearchTerm = "";
 var currentSortCol = null;
 var currentSortAsc = true;
@@ -6,27 +5,14 @@ var currentSortAsc = true;
 function applyFilters() {
     var rows = document.querySelectorAll("tbody tr");
     rows.forEach(function(row) {
-        var hasParams = row.getAttribute("data-has-parameters") === "true";
-        var typeMatch = currentTypeFilter === "all" ||
-            (currentTypeFilter === "static" && !hasParams) ||
-            (currentTypeFilter === "parameterized" && hasParams);
         var name = row.children[1].textContent.toLowerCase();
         var namespace = row.children[2].textContent.toLowerCase();
         var searchMatch = !currentSearchTerm ||
             name.indexOf(currentSearchTerm) !== -1 ||
             namespace.indexOf(currentSearchTerm) !== -1;
-        row.classList.toggle("hidden", !(typeMatch && searchMatch));
+        row.classList.toggle("hidden", !searchMatch);
     });
 }
-
-document.querySelectorAll(".filter-btn").forEach(function(btn) {
-    btn.addEventListener("click", function() {
-        document.querySelectorAll(".filter-btn").forEach(function(b) { b.classList.remove("active"); });
-        btn.classList.add("active");
-        currentTypeFilter = btn.getAttribute("data-filter");
-        applyFilters();
-    });
-});
 
 var searchInput = document.querySelector(".search-input");
 var searchClear = document.querySelector(".search-clear");
