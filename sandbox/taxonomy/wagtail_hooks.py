@@ -8,7 +8,8 @@ from sandbox.taxonomy.models import Colour, Person
 @register_snippet
 class ColourSnippetViewSet(SnippetViewSet):
     model = Colour
-    icon = "snippet"
+    menu_icon = "view"
+    icon = "view"
     menu_label = "Colours"
     menu_name = "colours"
     add_to_admin_menu = True
@@ -17,7 +18,7 @@ class ColourSnippetViewSet(SnippetViewSet):
 @modeladmin_register
 class PersonModelAdmin(ModelAdmin):
     model = Person
-    icon = "user"
+    menu_icon = "user"
     menu_label = "People"
     list_display = ("name", "email", "job_title")
     search_fields = ("name", "email", "job_title")
