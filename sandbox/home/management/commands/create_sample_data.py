@@ -73,15 +73,11 @@ class Command(BaseCommand):
         self.stdout.write(f"Deleted {deleted[0]} document(s)")
 
         # Redirects
-        deleted = Redirect.objects.filter(
-            old_path__startswith="/sample-old-page-"
-        ).delete()
+        deleted = Redirect.objects.filter(old_path__startswith="/sample-old-page-").delete()
         self.stdout.write(f"Deleted {deleted[0]} redirect(s)")
 
         # Search promotions
-        deleted = SearchPromotion.objects.filter(
-            description__startswith=SAMPLE_PREFIX
-        ).delete()
+        deleted = SearchPromotion.objects.filter(description__startswith=SAMPLE_PREFIX).delete()
         self.stdout.write(f"Deleted {deleted[0]} search promotion(s)")
 
         # Editor user
@@ -116,9 +112,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Deleted {deleted[0]} colour(s)")
 
         # Form submissions (before pages, due to FK)
-        deleted = FormSubmission.objects.filter(
-            page__title__startswith=SAMPLE_PREFIX
-        ).delete()
+        deleted = FormSubmission.objects.filter(page__title__startswith=SAMPLE_PREFIX).delete()
         self.stdout.write(f"Deleted {deleted[0]} form submission(s)")
 
         # Settings
@@ -129,9 +123,7 @@ class Command(BaseCommand):
                 facebook__startswith="https://facebook.com/sample",
             ).delete()
             self.stdout.write(f"Deleted {deleted[0]} social media setting(s)")
-        deleted = BrandingSettings.objects.filter(
-            site_name__startswith=SAMPLE_PREFIX
-        ).delete()
+        deleted = BrandingSettings.objects.filter(site_name__startswith=SAMPLE_PREFIX).delete()
         self.stdout.write(f"Deleted {deleted[0]} branding setting(s)")
 
         # Child pages (includes form pages)
@@ -191,9 +183,7 @@ class Command(BaseCommand):
         for query_string in queries:
             description = f"{SAMPLE_PREFIX} Promoted result for '{query_string}'"
             if SearchPromotion.objects.filter(description=description).exists():
-                self.stdout.write(
-                    f"Skipped search promotion: {query_string} (already exists)"
-                )
+                self.stdout.write(f"Skipped search promotion: {query_string} (already exists)")
                 continue
             query = Query.get(query_string)
             SearchPromotion.objects.create(
@@ -433,9 +423,7 @@ class Command(BaseCommand):
                 page=form_page,
                 form_data=form_data,
             )
-        self.stdout.write(
-            f"Created {len(submissions)} form submission(s) for {form_page.title}"
-        )
+        self.stdout.write(f"Created {len(submissions)} form submission(s) for {form_page.title}")
 
     def _create_event_pages(self):
         """Create a sample EventIndexPage with child EventPages under HomePage."""

@@ -45,12 +45,7 @@ class EventIndexPage(RoutablePageMixin, Page):
 
     def _get_nav_context(self):
         """Return shared navigation context for all sub-routes."""
-        years = (
-            self._get_events()
-            .values_list("event_date__year", flat=True)
-            .distinct()
-            .order_by("-event_date__year")
-        )
+        years = self._get_events().values_list("event_date__year", flat=True).distinct().order_by("-event_date__year")
         return {
             "past_url": self.url + self.reverse_subpage("past_events"),
             "all_url": self.url.rstrip("/") + "/",

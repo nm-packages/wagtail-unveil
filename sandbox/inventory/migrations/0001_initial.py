@@ -5,42 +5,45 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Supplier',
+            name="Supplier",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('email', models.EmailField(blank=True, max_length=254)),
-                ('website', models.URLField(blank=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=255)),
+                ("email", models.EmailField(blank=True, max_length=254)),
+                ("website", models.URLField(blank=True)),
             ],
             options={
-                'verbose_name': 'supplier',
-                'verbose_name_plural': 'suppliers',
-                'ordering': ['name'],
+                "verbose_name": "supplier",
+                "verbose_name_plural": "suppliers",
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='Product',
+            name="Product",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('sku', models.CharField(max_length=50, unique=True, verbose_name='SKU')),
-                ('description', models.TextField(blank=True)),
-                ('price', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('is_active', models.BooleanField(default=True)),
-                ('supplier', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='products', to='inventory.supplier')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=255)),
+                ("sku", models.CharField(max_length=50, unique=True, verbose_name="SKU")),
+                ("description", models.TextField(blank=True)),
+                ("price", models.DecimalField(decimal_places=2, max_digits=10)),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "supplier",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="products", to="inventory.supplier"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'product',
-                'verbose_name_plural': 'products',
-                'ordering': ['name'],
+                "verbose_name": "product",
+                "verbose_name_plural": "products",
+                "ordering": ["name"],
             },
         ),
     ]

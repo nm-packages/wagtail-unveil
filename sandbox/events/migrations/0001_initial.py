@@ -7,38 +7,57 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('wagtailcore', '0094_alter_page_locale'),
+        ("wagtailcore", "0094_alter_page_locale"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EventIndexPage',
+            name="EventIndexPage",
             fields=[
-                ('page_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='wagtailcore.page')),
-                ('intro', wagtail.fields.RichTextField(blank=True)),
+                (
+                    "page_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="wagtailcore.page",
+                    ),
+                ),
+                ("intro", wagtail.fields.RichTextField(blank=True)),
             ],
             options={
-                'verbose_name': 'Event Index Page',
-                'verbose_name_plural': 'Event Index Pages',
+                "verbose_name": "Event Index Page",
+                "verbose_name_plural": "Event Index Pages",
             },
-            bases=(wagtail.contrib.routable_page.models.RoutablePageMixin, 'wagtailcore.page'),
+            bases=(wagtail.contrib.routable_page.models.RoutablePageMixin, "wagtailcore.page"),
         ),
         migrations.CreateModel(
-            name='EventPage',
+            name="EventPage",
             fields=[
-                ('page_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='wagtailcore.page')),
-                ('event_date', models.DateField()),
-                ('location', models.CharField(blank=True, max_length=255)),
-                ('body', wagtail.fields.RichTextField(blank=True)),
+                (
+                    "page_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="wagtailcore.page",
+                    ),
+                ),
+                ("event_date", models.DateField()),
+                ("location", models.CharField(blank=True, max_length=255)),
+                ("body", wagtail.fields.RichTextField(blank=True)),
             ],
             options={
-                'verbose_name': 'Event Page',
-                'verbose_name_plural': 'Event Pages',
+                "verbose_name": "Event Page",
+                "verbose_name_plural": "Event Pages",
             },
-            bases=('wagtailcore.page',),
+            bases=("wagtailcore.page",),
         ),
     ]

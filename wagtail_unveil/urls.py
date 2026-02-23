@@ -90,9 +90,7 @@ def _get_model_from_callback(callback):
     3. view_class.__dict__["model"] as a cached_property (calls func(None))
     """
     # Source 1: initkwargs (ModelViewSet pattern)
-    initkwargs = getattr(callback, "initkwargs", None) or getattr(
-        callback, "view_initkwargs", None
-    )
+    initkwargs = getattr(callback, "initkwargs", None) or getattr(callback, "view_initkwargs", None)
     if initkwargs:
         model = initkwargs.get("model")
         if _is_django_model(model):
@@ -261,7 +259,7 @@ def get_admin_urls():
 
         # Skip routes that still contain regex metacharacters after cleaning
         # (e.g. Wagtail's catch-all `.*/$` pattern)
-        if re.search(r'[.][*+?]|\(', route):
+        if re.search(r"[.][*+?]|\(", route):
             continue
 
         has_parameters = "<" in route

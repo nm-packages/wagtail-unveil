@@ -4,46 +4,44 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Category',
+            name="Category",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=255)),
             ],
             options={
-                'verbose_name': 'category',
-                'verbose_name_plural': 'categories',
+                "verbose_name": "category",
+                "verbose_name_plural": "categories",
             },
         ),
         migrations.CreateModel(
-            name='Colour',
+            name="Colour",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=255)),
             ],
             options={
-                'verbose_name': 'colour',
-                'verbose_name_plural': 'colours',
+                "verbose_name": "colour",
+                "verbose_name_plural": "colours",
             },
         ),
         migrations.CreateModel(
-            name='Person',
+            name="Person",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('email', models.EmailField(blank=True, max_length=254)),
-                ('job_title', models.CharField(blank=True, max_length=255)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=255)),
+                ("email", models.EmailField(blank=True, max_length=254)),
+                ("job_title", models.CharField(blank=True, max_length=255)),
             ],
             options={
-                'verbose_name': 'person',
-                'verbose_name_plural': 'people',
+                "verbose_name": "person",
+                "verbose_name_plural": "people",
             },
         ),
     ]

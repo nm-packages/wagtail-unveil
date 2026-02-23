@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class WagtailUnveilConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'wagtail_unveil'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "wagtail_unveil"

@@ -60,6 +60,7 @@ quote-style = "double"
 
 [dependency-groups]
 dev = [
+    "pre-commit>=4.0.0",
     "tox>=4.44.0",
     "tox-gh-actions>=3.3.0",
     "tox-uv>=1.29.0",

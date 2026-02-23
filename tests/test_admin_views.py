@@ -71,9 +71,7 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
 
     def test_report_requires_superuser(self):
         self.client.logout()
-        User.objects.create_user(
-            username="editor", password="password", is_staff=True
-        )
+        User.objects.create_user(username="editor", password="password", is_staff=True)
         self.client.login(username="editor", password="password")
         response = self.client.get("/unveil-report/admin-urls/")
         self.assertEqual(response.status_code, 302)
@@ -136,15 +134,11 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
 
     def test_report_loads_static_css(self):
         response = self.client.get("/unveil-report/admin-urls/")
-        self.assertContains(
-            response, "wagtail_unveil/css/admin_urls_report.css"
-        )
+        self.assertContains(response, "wagtail_unveil/css/admin_urls_report.css")
 
     def test_report_loads_static_js(self):
         response = self.client.get("/unveil-report/admin-urls/")
-        self.assertContains(
-            response, "wagtail_unveil/js/admin_urls_report.js"
-        )
+        self.assertContains(response, "wagtail_unveil/js/admin_urls_report.js")
 
     def test_report_has_help_button(self):
         response = self.client.get("/unveil-report/admin-urls/")
@@ -177,12 +171,8 @@ class TestDashboardPanel(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.panel = UnveilReportPanel()
-        self.superuser = User.objects.create_superuser(
-            username="admin", password="password"
-        )
-        self.regular_user = User.objects.create_user(
-            username="editor", password="password", is_staff=True
-        )
+        self.superuser = User.objects.create_superuser(username="admin", password="password")
+        self.regular_user = User.objects.create_user(username="editor", password="password", is_staff=True)
 
     def _render(self, user):
         request = self.factory.get("/admin/")

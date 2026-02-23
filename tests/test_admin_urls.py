@@ -55,10 +55,7 @@ class TestGetAdminUrls(TestCase):
 
     def test_regex_routes_are_cleaned_and_testable(self):
         """Regex anchors are stripped so non-parameterised regex routes are testable."""
-        modeladmin_index = [
-            url for url in self.urls
-            if url.name == "taxonomy_person_modeladmin_index"
-        ]
+        modeladmin_index = [url for url in self.urls if url.name == "taxonomy_person_modeladmin_index"]
         self.assertEqual(len(modeladmin_index), 1)
         self.assertNotIn("^", modeladmin_index[0].route)
         self.assertTrue(modeladmin_index[0].is_testable, modeladmin_index[0].route)
@@ -159,9 +156,7 @@ class TestParameterisedURLResolution(TestCase):
             title="Test document",
             file="test.pdf",
         )
-        self.user = User.objects.create_user(
-            username="testuser", password="password"
-        )
+        self.user = User.objects.create_user(username="testuser", password="password")
         self.group = Group.objects.create(name="Test group")
 
         from sandbox.taxonomy.models import Category, Colour
@@ -170,10 +165,7 @@ class TestParameterisedURLResolution(TestCase):
         self.colour = Colour.objects.create(name="Test colour")
 
         self.urls = get_admin_urls()
-        self.snippet_urls = [
-            u for u in self.urls
-            if u.namespace.startswith("wagtailsnippets_") and u.has_parameters
-        ]
+        self.snippet_urls = [u for u in self.urls if u.namespace.startswith("wagtailsnippets_") and u.has_parameters]
 
     def test_snippet_edit_url_is_testable(self):
         edit_urls = [u for u in self.snippet_urls if u.name == "edit"]
@@ -203,60 +195,42 @@ class TestParameterisedURLResolution(TestCase):
                 self.assertRegex(url.resolved_route, r"/\d+/")
 
     def test_redirect_edit_url_is_testable(self):
-        edit_urls = [
-            u for u in self.urls
-            if "redirect" in u.namespace and u.name == "edit"
-        ]
+        edit_urls = [u for u in self.urls if "redirect" in u.namespace and u.name == "edit"]
         self.assertGreater(len(edit_urls), 0)
         for url in edit_urls:
             self.assertTrue(url.is_testable, url.route)
             self.assertTrue(url.resolved_route, url.route)
 
     def test_redirect_delete_url_is_testable(self):
-        delete_urls = [
-            u for u in self.urls
-            if "redirect" in u.namespace and u.name == "delete"
-        ]
+        delete_urls = [u for u in self.urls if "redirect" in u.namespace and u.name == "delete"]
         self.assertGreater(len(delete_urls), 0)
         for url in delete_urls:
             self.assertTrue(url.is_testable, url.route)
             self.assertTrue(url.resolved_route, url.route)
 
     def test_image_edit_url_is_testable(self):
-        edit_urls = [
-            u for u in self.urls
-            if "wagtailimages" in u.namespace and u.name == "edit"
-        ]
+        edit_urls = [u for u in self.urls if "wagtailimages" in u.namespace and u.name == "edit"]
         self.assertGreater(len(edit_urls), 0)
         for url in edit_urls:
             self.assertTrue(url.is_testable, url.route)
             self.assertTrue(url.resolved_route, url.route)
 
     def test_image_delete_url_is_testable(self):
-        delete_urls = [
-            u for u in self.urls
-            if "wagtailimages" in u.namespace and u.name == "delete"
-        ]
+        delete_urls = [u for u in self.urls if "wagtailimages" in u.namespace and u.name == "delete"]
         self.assertGreater(len(delete_urls), 0)
         for url in delete_urls:
             self.assertTrue(url.is_testable, url.route)
             self.assertTrue(url.resolved_route, url.route)
 
     def test_document_edit_url_is_testable(self):
-        edit_urls = [
-            u for u in self.urls
-            if "wagtaildocs" in u.namespace and u.name == "edit"
-        ]
+        edit_urls = [u for u in self.urls if "wagtaildocs" in u.namespace and u.name == "edit"]
         self.assertGreater(len(edit_urls), 0)
         for url in edit_urls:
             self.assertTrue(url.is_testable, url.route)
             self.assertTrue(url.resolved_route, url.route)
 
     def test_user_edit_url_is_testable(self):
-        edit_urls = [
-            u for u in self.urls
-            if "wagtailusers_users" in u.namespace and u.name == "edit"
-        ]
+        edit_urls = [u for u in self.urls if "wagtailusers_users" in u.namespace and u.name == "edit"]
         self.assertGreater(len(edit_urls), 0)
         for url in edit_urls:
             self.assertTrue(url.is_testable, url.route)
@@ -269,30 +243,20 @@ class TestParameterisedURLResolution(TestCase):
             self.assertNotIn("<", url.resolved_route, url.route)
 
     def test_multi_param_urls_remain_untestable(self):
-        multi_param = [
-            u for u in self.urls
-            if u.has_parameters and u.route.count("<") > 1
-            and not u.resolved_route
-        ]
+        multi_param = [u for u in self.urls if u.has_parameters and u.route.count("<") > 1 and not u.resolved_route]
         for url in multi_param:
             self.assertFalse(url.is_testable, url.route)
             self.assertEqual(url.skip_reason, "URL requires parameters")
 
     def test_searchpick_edit_url_is_testable(self):
-        edit_urls = [
-            u for u in self.urls
-            if "searchpromotions" in u.namespace and u.name == "edit"
-        ]
+        edit_urls = [u for u in self.urls if "searchpromotions" in u.namespace and u.name == "edit"]
         self.assertGreater(len(edit_urls), 0)
         for url in edit_urls:
             self.assertTrue(url.is_testable, url.route)
             self.assertTrue(url.resolved_route, url.route)
 
     def test_unresolvable_parameterised_urls_are_untestable(self):
-        unresolvable = [
-            u for u in self.urls
-            if u.has_parameters and not u.resolved_route
-        ]
+        unresolvable = [u for u in self.urls if u.has_parameters and not u.resolved_route]
         self.assertGreater(len(unresolvable), 0)
         for url in unresolvable:
             self.assertFalse(url.is_testable, url.route)
@@ -307,9 +271,7 @@ class TestModeladminURLDiscovery(TestCase):
 
         Person.objects.create(name="Test Person", email="test@example.com")
         self.urls = get_admin_urls()
-        self.modeladmin_urls = [
-            u for u in self.urls if "modeladmin" in u.name
-        ]
+        self.modeladmin_urls = [u for u in self.urls if "modeladmin" in u.name]
 
     def test_modeladmin_urls_discovered(self):
         self.assertGreater(len(self.modeladmin_urls), 0)
@@ -378,9 +340,7 @@ class TestSettingsURLDiscovery(TestCase):
             )
 
         self.urls = get_admin_urls()
-        self.settings_urls = [
-            u for u in self.urls if u.namespace == "wagtailsettings"
-        ]
+        self.settings_urls = [u for u in self.urls if u.namespace == "wagtailsettings"]
 
     def test_settings_urls_discovered(self):
         self.assertGreater(len(self.settings_urls), 0)
@@ -402,20 +362,14 @@ class TestSettingsURLDiscovery(TestCase):
             self.assertTrue(url.route.startswith("admin/settings/"), url.route)
 
     def test_settings_redirect_url_is_testable(self):
-        redirect_urls = [
-            u for u in self.settings_urls
-            if u.name == "edit" and "<int:pk>" not in u.route
-        ]
+        redirect_urls = [u for u in self.settings_urls if u.name == "edit" and "<int:pk>" not in u.route]
         self.assertGreater(len(redirect_urls), 0)
         for url in redirect_urls:
             self.assertTrue(url.is_testable, url.route)
             self.assertTrue(url.resolved_route, url.route)
 
     def test_settings_edit_url_is_testable(self):
-        edit_urls = [
-            u for u in self.settings_urls
-            if u.name == "edit" and "<int:pk>" in u.route
-        ]
+        edit_urls = [u for u in self.settings_urls if u.name == "edit" and "<int:pk>" in u.route]
         self.assertGreater(len(edit_urls), 0)
         for url in edit_urls:
             self.assertTrue(url.is_testable, url.route)

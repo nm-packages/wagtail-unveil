@@ -35,11 +35,7 @@ class Command(BaseCommand):
         name_width = max(len(u.name) for u in urls)
         view_width = max(len(u.view_name) for u in urls)
 
-        header = (
-            f"{'ROUTE':<{route_width}}  "
-            f"{'NAME':<{name_width}}  "
-            f"{'VIEW':<{view_width}}"
-        )
+        header = f"{'ROUTE':<{route_width}}  {'NAME':<{name_width}}  {'VIEW':<{view_width}}"
         separator = "-" * len(header)
 
         self.stdout.write(separator)
@@ -47,11 +43,7 @@ class Command(BaseCommand):
         self.stdout.write(separator)
 
         for u in urls:
-            self.stdout.write(
-                f"{u.route:<{route_width}}  "
-                f"{u.name:<{name_width}}  "
-                f"{u.view_name:<{view_width}}"
-            )
+            self.stdout.write(f"{u.route:<{route_width}}  {u.name:<{name_width}}  {u.view_name:<{view_width}}")
 
         self.stdout.write(separator)
         self.stdout.write(f"\nTotal: {len(urls)} URLs")

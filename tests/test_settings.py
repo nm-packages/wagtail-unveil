@@ -31,10 +31,12 @@ class TestPagesPerTypeLimit(TestCase):
         from sandbox.core.models import StandardPage
 
         for i in range(3):
-            home.add_child(instance=StandardPage(
-                title=f"Standard {i}",
-                slug=f"standard-{i}",
-            ))
+            home.add_child(
+                instance=StandardPage(
+                    title=f"Standard {i}",
+                    slug=f"standard-{i}",
+                )
+            )
 
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
     def test_default_returns_all_pages(self):

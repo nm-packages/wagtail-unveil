@@ -71,9 +71,7 @@ class TestFrontendUrlsReportView(WagtailTestUtils, TestCase):
 
     def test_report_requires_superuser(self):
         self.client.logout()
-        User.objects.create_user(
-            username="editor", password="password", is_staff=True
-        )
+        User.objects.create_user(username="editor", password="password", is_staff=True)
         self.client.login(username="editor", password="password")
         response = self.client.get("/unveil-report/frontend-urls/")
         self.assertEqual(response.status_code, 302)
@@ -119,15 +117,11 @@ class TestFrontendUrlsReportView(WagtailTestUtils, TestCase):
 
     def test_report_loads_static_css(self):
         response = self.client.get("/unveil-report/frontend-urls/")
-        self.assertContains(
-            response, "wagtail_unveil/css/admin_urls_report.css"
-        )
+        self.assertContains(response, "wagtail_unveil/css/admin_urls_report.css")
 
     def test_report_loads_static_js(self):
         response = self.client.get("/unveil-report/frontend-urls/")
-        self.assertContains(
-            response, "wagtail_unveil/js/admin_urls_report.js"
-        )
+        self.assertContains(response, "wagtail_unveil/js/admin_urls_report.js")
 
     def test_report_has_help_panel(self):
         response = self.client.get("/unveil-report/frontend-urls/")
@@ -159,9 +153,7 @@ class TestDashboardPanelFrontendLink(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.panel = UnveilReportPanel()
-        self.superuser = User.objects.create_superuser(
-            username="admin", password="password"
-        )
+        self.superuser = User.objects.create_superuser(username="admin", password="password")
 
     @override_settings(DEBUG=True)
     def test_panel_shows_frontend_link(self):

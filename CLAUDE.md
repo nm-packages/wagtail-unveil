@@ -23,6 +23,7 @@ make test           # Run package tests
 make tox            # Run tests across all Python/Django/Wagtail versions
 make lint           # Run ruff check
 make lint-fix       # Run ruff check --fix
+make pre-commit     # Run pre-commit hooks on all files
 make makemigrations # Create package migrations
 make sample-data    # Create sample data
 make clean          # Remove db.sqlite3 and .env
@@ -82,4 +83,4 @@ See [CONVENTIONS.md](CONVENTIONS.md) for all coding conventions. Follow these st
 - Python 3.10+, Wagtail 7.0–7.3, Django 4.2/5.1/5.2/6.0
 - `uv` for dependency management (pyproject.toml + uv.lock)
 - SQLite for local development
-- Django test runner for tests, ruff for linting
+- Django test runner for tests, ruff for linting, pre-commit for git hooks

@@ -6,58 +6,82 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('wagtailcore', '0094_alter_page_locale'),
+        ("wagtailcore", "0094_alter_page_locale"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='BrandingSettings',
+            name="BrandingSettings",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('site_name', models.CharField(blank=True, help_text='Site name', max_length=255)),
-                ('tagline', models.CharField(blank=True, help_text='Site tagline', max_length=255)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("site_name", models.CharField(blank=True, help_text="Site name", max_length=255)),
+                ("tagline", models.CharField(blank=True, help_text="Site tagline", max_length=255)),
             ],
             options={
-                'verbose_name': 'Branding Settings',
+                "verbose_name": "Branding Settings",
             },
         ),
         migrations.CreateModel(
-            name='ListingPage',
+            name="ListingPage",
             fields=[
-                ('page_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='wagtailcore.page')),
-                ('intro', wagtail.fields.RichTextField(blank=True)),
+                (
+                    "page_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="wagtailcore.page",
+                    ),
+                ),
+                ("intro", wagtail.fields.RichTextField(blank=True)),
             ],
             options={
-                'verbose_name': 'Listing Page',
+                "verbose_name": "Listing Page",
             },
-            bases=('wagtailcore.page',),
+            bases=("wagtailcore.page",),
         ),
         migrations.CreateModel(
-            name='StandardPage',
+            name="StandardPage",
             fields=[
-                ('page_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='wagtailcore.page')),
-                ('body', wagtail.fields.RichTextField(blank=True)),
+                (
+                    "page_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="wagtailcore.page",
+                    ),
+                ),
+                ("body", wagtail.fields.RichTextField(blank=True)),
             ],
             options={
-                'verbose_name': 'Standard Page',
+                "verbose_name": "Standard Page",
             },
-            bases=('wagtailcore.page',),
+            bases=("wagtailcore.page",),
         ),
         migrations.CreateModel(
-            name='SocialMediaSettings',
+            name="SocialMediaSettings",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('facebook', models.URLField(blank=True, help_text='Facebook page URL')),
-                ('twitter', models.URLField(blank=True, help_text='Twitter profile URL')),
-                ('instagram', models.URLField(blank=True, help_text='Instagram profile URL')),
-                ('site', models.OneToOneField(editable=False, on_delete=django.db.models.deletion.CASCADE, to='wagtailcore.site')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("facebook", models.URLField(blank=True, help_text="Facebook page URL")),
+                ("twitter", models.URLField(blank=True, help_text="Twitter profile URL")),
+                ("instagram", models.URLField(blank=True, help_text="Instagram profile URL")),
+                (
+                    "site",
+                    models.OneToOneField(
+                        editable=False, on_delete=django.db.models.deletion.CASCADE, to="wagtailcore.site"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Social Media Settings',
+                "verbose_name": "Social Media Settings",
             },
         ),
     ]
