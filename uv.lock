@@ -669,6 +669,18 @@ wheels = [
 ]
 
 [[package]]
+name = "tox-gh-actions"
+version = "3.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tox" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9c/11/6c3f818887c37a144a4b48bfc440150f006bdac7a68d92de1046680f578f/tox_gh_actions-3.5.0.tar.gz", hash = "sha256:cc8e148c4513042e5019973e5672594c3df241b035e7fb550f6f778588110051", size = 18815, upload-time = "2025-10-22T14:12:24.846Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fd/9e/8d50f3b3fc4af8c73154f64d4a2293bfa2d517a19000e70ef2d614254084/tox_gh_actions-3.5.0-py3-none-any.whl", hash = "sha256:070790114c92f4c94337047515ca5e077ceb269a5cb9366e0a0b3440a024eca1", size = 9910, upload-time = "2025-10-22T14:12:23.405Z" },
+]
+
+[[package]]
 name = "tox-uv"
 version = "1.29.0"
 source = { registry = "https://pypi.org/simple" }
@@ -802,6 +814,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "tox" },
+    { name = "tox-gh-actions" },
     { name = "tox-uv" },
     { name = "wagtail-modeladmin" },
 ]
@@ -815,6 +828,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "tox", specifier = ">=4.44.0" },
+    { name = "tox-gh-actions", specifier = ">=3.3.0" },
     { name = "tox-uv", specifier = ">=1.29.0" },
     { name = "wagtail-modeladmin", specifier = ">=2.2.0" },
 ]
