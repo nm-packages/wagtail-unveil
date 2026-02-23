@@ -2,6 +2,8 @@
 
 A reusable Wagtail package that discovers all URLs in a Wagtail site — both frontend and backend (admin) URLs. Useful for verifying that all routes return expected response codes.
 
+![Frontend URLs Report](docs/frontend-urls-report.png)
+
 ## Features
 
 ### Management Commands
