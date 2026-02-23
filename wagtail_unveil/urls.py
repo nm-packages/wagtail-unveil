@@ -214,6 +214,16 @@ def _resolve_parameterised_url(namespace, name, callback, route=""):
     if instance is None and namespace == "wagtailforms":
         instance = _get_form_page_instance()
 
+    # Fallback: workflow usage views inherit model=Page from PageListingMixin
+    # but actually look up a Workflow instance by pk
+    if namespace == "wagtailadmin_workflows" and name in ("usage", "usage_results"):
+        try:
+            from wagtail.models import Workflow
+
+            instance = Workflow.objects.first()
+        except Exception:
+            instance = None
+
     if instance is None:
         return None
     try:
@@ -239,6 +249,7 @@ def get_admin_urls():
         "wagtailadmin_block_preview": "POST-only view",
         "lock": "POST-only view",
         "unlock": "POST-only view",
+        "find": "Requires query parameters",
     }
 
     resolver = get_resolver()
