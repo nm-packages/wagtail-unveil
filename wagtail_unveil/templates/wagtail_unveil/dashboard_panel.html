@@ -1,0 +1,11 @@
+{% load wagtailadmin_tags %}
+<section class="w-panel w-panel--dashboard" aria-labelledby="unveil-panel-heading">
+    <div class="w-panel__header">
+        <h2 class="w-panel__heading" id="unveil-panel-heading">Wagtail Unveil</h2>
+    </div>
+    <div class="w-panel__content" style="padding: 0.5em 1em;">
+        <p>View the reports:</p>
+        <a href="{% url 'wagtail_unveil_report:admin_urls' %}" rel="noopener noreferrer" class="button button-small button-secondary">View Admin URLs Report</a>
+        <a href="{% url 'wagtail_unveil_report:frontend_urls' %}" rel="noopener noreferrer" class="button button-small button-secondary">View Frontend URLs Report</a>
+    </div>
+</section>
