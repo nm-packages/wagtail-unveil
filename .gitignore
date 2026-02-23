@@ -37,4 +37,6 @@ media/
 # Environment
 .env
 .env.*
-db.sqlite3
+
+# Cache
+.riff_cache/
