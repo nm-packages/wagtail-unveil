@@ -165,7 +165,7 @@ function testAll() {
     };
 
     // Clear all status cells in visible rows before testing
-    document.querySelectorAll("tbody tr:not(.hidden) .status-cell").forEach(function(cell) {
+    document.querySelectorAll("tbody tr:not(.hidden):not(.untestable) .status-cell").forEach(function(cell) {
         cell.innerHTML = "\u2014";
     });
 
