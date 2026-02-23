@@ -35,7 +35,8 @@ htmlcov/
 media/
 
 # Environment
-.env.*
+.env
+!.env.example
 
 # Cache
 .riff_cache/

@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `wagtail_unveil/` — The reusable package (installable from PyPI)
 - `sandbox/` — An example Wagtail site with the package installed, used for development and testing
-- `.env` — Sets `DJANGO_SETTINGS_MODULE` and `PYTHONPATH` for `django-admin` via `uv run --env-file .env`
+- `.env.example` — Template for `.env`; copy to `.env` before developing (`cp .env.example .env`)
 
 ## Development Commands
 

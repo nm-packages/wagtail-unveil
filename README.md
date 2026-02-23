@@ -180,6 +180,9 @@ WAGTAIL_UNVEIL_PAGES_PER_TYPE = 0
 # Install dependencies
 uv sync
 
+# Copy the environment file
+cp .env.example .env
+
 # Run the sandbox dev server
 uv run --env-file .env django-admin runserver
 
