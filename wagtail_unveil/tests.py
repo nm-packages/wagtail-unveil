@@ -57,7 +57,7 @@ class TestGetAdminUrls(TestCase):
         for url in self.urls:
             if url.has_parameters and not url.resolved_route:
                 self.assertFalse(url.is_testable, url.route)
-                self.assertEqual(url.skip_reason, "URL requires parameters")
+                self.assertIn(url.skip_reason, ("URL requires parameters", "POST-only view"))
 
     def test_regex_routes_are_cleaned_and_testable(self):
         """Regex anchors are stripped so non-parameterised regex routes are testable."""
@@ -472,7 +472,7 @@ class TestParameterisedURLResolution(TestCase):
         self.assertGreater(len(unresolvable), 0)
         for url in unresolvable:
             self.assertFalse(url.is_testable, url.route)
-            self.assertEqual(url.skip_reason, "URL requires parameters")
+            self.assertIn(url.skip_reason, ("URL requires parameters", "POST-only view"))
 
 
 class TestCleanRegexRoute(TestCase):

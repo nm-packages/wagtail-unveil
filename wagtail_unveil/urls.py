@@ -237,6 +237,8 @@ def get_admin_urls():
         "wagtailadmin_error_test": "Intentional error endpoint",
         "process_import": "POST-only view",
         "wagtailadmin_block_preview": "POST-only view",
+        "lock": "POST-only view",
+        "unlock": "POST-only view",
     }
 
     resolver = get_resolver()
@@ -245,11 +247,20 @@ def get_admin_urls():
         if not route.startswith("admin/"):
             continue
         route = _clean_regex_route(route)
+
+        # Skip routes that still contain regex metacharacters after cleaning
+        # (e.g. Wagtail's catch-all `.*/$` pattern)
+        if re.search(r'[.][*+?]|\(', route):
+            continue
+
         has_parameters = "<" in route
         is_testable = True
         skip_reason = ""
         resolved_route = ""
-        if has_parameters:
+        if name in NON_TESTABLE_NAMES:
+            is_testable = False
+            skip_reason = NON_TESTABLE_NAMES[name]
+        elif has_parameters:
             resolved = _resolve_parameterised_url(namespace, name, callback, route)
             if resolved:
                 is_testable = True
@@ -257,9 +268,6 @@ def get_admin_urls():
             else:
                 is_testable = False
                 skip_reason = "URL requires parameters"
-        elif name in NON_TESTABLE_NAMES:
-            is_testable = False
-            skip_reason = NON_TESTABLE_NAMES[name]
         results.append(
             AdminURL(
                 route=route,
