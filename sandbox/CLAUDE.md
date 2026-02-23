@@ -25,7 +25,7 @@ This is a standard Wagtail project used for developing and testing the `wagtail_
 
 ### Management Commands
 
-- `create_sample_data` — Creates sample instances of Images, Documents, Redirects, Search Promotions, an Editor user, child Pages, Collections, People, Suppliers, Products, Form Pages, Event Pages (routable), and Settings (SocialMediaSettings, BrandingSettings). Idempotent by default; use `--clear` to remove and recreate all sample data. Sample data is identified by the `[Sample]` title/name prefix.
+- `create_sample_data` — Creates sample instances of Images, Documents, Redirects, Search Promotions, an Editor user, child Pages, Collections, People, Categories, Colours, Suppliers, Products, Form Pages, Event Pages (routable), and Settings (SocialMediaSettings, BrandingSettings). Idempotent by default; use `--clear` to remove and recreate all sample data. Sample data is identified by the `[Sample]` title/name prefix.
 
 ### Notes
 

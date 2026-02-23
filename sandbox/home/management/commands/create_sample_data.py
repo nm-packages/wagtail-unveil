@@ -16,7 +16,7 @@ from sandbox.events.models import EventIndexPage, EventPage
 from sandbox.forms.models import FormField, FormPage
 from sandbox.home.models import HomePage
 from sandbox.inventory.models import Product, Supplier
-from sandbox.taxonomy.models import Person
+from sandbox.taxonomy.models import Category, Colour, Person
 
 # Prefix used to identify sample data created by this command
 SAMPLE_PREFIX = "[Sample]"
@@ -54,6 +54,8 @@ class Command(BaseCommand):
         self._create_core_pages()
         self._create_collections()
         self._create_people()
+        self._create_categories()
+        self._create_colours()
         self._create_suppliers()
         self._create_products()
         self._create_form_pages()
@@ -104,6 +106,14 @@ class Command(BaseCommand):
         # People
         deleted = Person.objects.filter(name__startswith=SAMPLE_PREFIX).delete()
         self.stdout.write(f"Deleted {deleted[0]} person(s)")
+
+        # Categories
+        deleted = Category.objects.filter(name__startswith=SAMPLE_PREFIX).delete()
+        self.stdout.write(f"Deleted {deleted[0]} category/categories")
+
+        # Colours
+        deleted = Colour.objects.filter(name__startswith=SAMPLE_PREFIX).delete()
+        self.stdout.write(f"Deleted {deleted[0]} colour(s)")
 
         # Form submissions (before pages, due to FK)
         deleted = FormSubmission.objects.filter(
@@ -288,6 +298,28 @@ class Command(BaseCommand):
             Person.objects.create(name=full_name, email=email, job_title=job_title)
             self.stdout.write(f"Created person: {full_name}")
 
+    def _create_categories(self):
+        """Create sample Category snippet instances."""
+        categories = ["News", "Events", "Blog"]
+        for name in categories:
+            full_name = f"{SAMPLE_PREFIX} {name}"
+            if Category.objects.filter(name=full_name).exists():
+                self.stdout.write(f"Skipped category: {full_name} (already exists)")
+                continue
+            Category.objects.create(name=full_name)
+            self.stdout.write(f"Created category: {full_name}")
+
+    def _create_colours(self):
+        """Create sample Colour instances."""
+        colours = ["Red", "Green", "Blue"]
+        for name in colours:
+            full_name = f"{SAMPLE_PREFIX} {name}"
+            if Colour.objects.filter(name=full_name).exists():
+                self.stdout.write(f"Skipped colour: {full_name} (already exists)")
+                continue
+            Colour.objects.create(name=full_name)
+            self.stdout.write(f"Created colour: {full_name}")
+
     def _create_suppliers(self):
         """Create sample Supplier instances for ModelViewSet listing."""
         suppliers = [
@@ -444,7 +476,7 @@ class Command(BaseCommand):
             return
 
         # Site-specific social media settings
-        _, created = SocialMediaSettings.objects.get_or_create(
+        _, created = SocialMediaSettings.objects.update_or_create(
             site=default_site,
             defaults={
                 "facebook": "https://facebook.com/sample-site",
@@ -455,11 +487,15 @@ class Command(BaseCommand):
         if created:
             self.stdout.write("Created social media settings")
         else:
-            self.stdout.write("Skipped social media settings (already exists)")
+            self.stdout.write("Updated social media settings")
 
         # Generic branding settings
-        if BrandingSettings.objects.exists():
-            self.stdout.write("Skipped branding settings (already exists)")
+        existing = BrandingSettings.objects.first()
+        if existing:
+            existing.site_name = f"{SAMPLE_PREFIX} My Wagtail Site"
+            existing.tagline = f"{SAMPLE_PREFIX} A sample tagline for the site"
+            existing.save()
+            self.stdout.write("Updated branding settings")
         else:
             BrandingSettings.objects.create(
                 site_name=f"{SAMPLE_PREFIX} My Wagtail Site",
