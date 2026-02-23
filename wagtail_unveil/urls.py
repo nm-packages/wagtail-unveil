@@ -444,10 +444,12 @@ def _get_resolver_frontend_urls():
         skip_reason = ""
 
         # Parameterized URLs are not directly testable
-        has_parameters = "<" in route
-        if has_parameters:
+        if "<" in route:
             is_testable = False
             skip_reason = "URL requires parameters"
+        elif "(" in route:
+            is_testable = False
+            skip_reason = "URL contains regex patterns"
 
         url = f"/{route}" if not route.startswith("/") else route
         results.append(

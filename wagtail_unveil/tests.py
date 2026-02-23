@@ -611,6 +611,18 @@ class TestGetFrontendUrls(TestCase):
             if url.source == "resolver" and not url.is_testable:
                 self.assertTrue(url.skip_reason, url.url)
 
+    def test_regex_parameterized_resolver_urls_not_testable(self):
+        regex_urls = {
+            "wagtail_serve": "URL contains regex patterns",
+            "wagtaildocs_serve": "URL contains regex patterns",
+        }
+        for name, expected_reason in regex_urls.items():
+            matches = [u for u in self.urls if u.name == name]
+            self.assertTrue(matches, f"Expected to find URL named {name}")
+            for url in matches:
+                self.assertFalse(url.is_testable, f"{name} should not be testable")
+                self.assertEqual(url.skip_reason, expected_reason, name)
+
     def test_urls_start_with_slash(self):
         for url in self.urls:
             self.assertTrue(url.url.startswith("/"), url.url)
