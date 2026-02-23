@@ -4,6 +4,7 @@ from django.contrib.auth.models import Group, User
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from PIL import Image as PILImage
+from wagtail.contrib.forms.models import FormSubmission
 from wagtail.contrib.redirects.models import Redirect
 from wagtail.contrib.search_promotions.models import Query, SearchPromotion
 from wagtail.documents.models import Document
@@ -11,6 +12,7 @@ from wagtail.images.models import Image
 from wagtail.models import Collection, Page
 
 from sandbox.core.models import ListingPage, StandardPage
+from sandbox.forms.models import FormField, FormPage
 from sandbox.home.models import HomePage
 from sandbox.inventory.models import Product, Supplier
 from sandbox.taxonomy.models import Person
@@ -53,6 +55,7 @@ class Command(BaseCommand):
         self._create_people()
         self._create_suppliers()
         self._create_products()
+        self._create_form_pages()
 
     def _clear_sample_data(self):
         """Remove all sample data created by this command."""
@@ -99,7 +102,13 @@ class Command(BaseCommand):
         deleted = Person.objects.filter(name__startswith=SAMPLE_PREFIX).delete()
         self.stdout.write(f"Deleted {deleted[0]} person(s)")
 
-        # Child pages
+        # Form submissions (before pages, due to FK)
+        deleted = FormSubmission.objects.filter(
+            page__title__startswith=SAMPLE_PREFIX
+        ).delete()
+        self.stdout.write(f"Deleted {deleted[0]} form submission(s)")
+
+        # Child pages (includes form pages)
         Page.objects.filter(title__startswith=SAMPLE_PREFIX).delete()
         self.stdout.write("Deleted sample pages")
 
@@ -303,3 +312,69 @@ class Command(BaseCommand):
                 supplier=supplier,
             )
             self.stdout.write(f"Created product: {full_name}")
+
+    def _create_form_pages(self):
+        """Create a sample form page with form fields under HomePage."""
+        home_page = HomePage.objects.first()
+        if not home_page:
+            self.stdout.write("Skipped form pages: no HomePage found")
+            return
+
+        title = f"{SAMPLE_PREFIX} Contact Form"
+        if Page.objects.filter(title=title).exists():
+            self.stdout.write(f"Skipped page: {title} (already exists)")
+            return
+
+        form_page = FormPage(
+            title=title,
+            slug="sample-contact-form",
+            intro="<p>Fill in the form below to get in touch.</p>",
+            thank_you_text="<p>Thank you for your message. We will be in touch shortly.</p>",
+        )
+        home_page.add_child(instance=form_page)
+
+        fields = [
+            ("name", "singleline", "Your name"),
+            ("email", "email", "Your email address"),
+            ("message", "multiline", "Your message"),
+        ]
+        for sort_order, (clean_name, field_type, label) in enumerate(fields):
+            FormField.objects.create(
+                page=form_page,
+                sort_order=sort_order,
+                label=label,
+                field_type=field_type,
+                clean_name=clean_name,
+            )
+
+        self.stdout.write(f"Created page: {title} (with {len(fields)} form fields)")
+
+        self._create_form_submissions(form_page)
+
+    def _create_form_submissions(self, form_page):
+        """Create sample form submissions for the given form page."""
+        submissions = [
+            {
+                "name": "Alice Johnson",
+                "email": "alice@example.com",
+                "message": "Hello, I have a question about your services.",
+            },
+            {
+                "name": "Bob Smith",
+                "email": "bob@example.com",
+                "message": "I would like to request a demo.",
+            },
+            {
+                "name": "Carol Williams",
+                "email": "carol@example.com",
+                "message": "Great website! Keep up the good work.",
+            },
+        ]
+        for form_data in submissions:
+            FormSubmission.objects.create(
+                page=form_page,
+                form_data=form_data,
+            )
+        self.stdout.write(
+            f"Created {len(submissions)} form submission(s) for {form_page.title}"
+        )

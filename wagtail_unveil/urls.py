@@ -128,6 +128,26 @@ def _get_model_from_callback(callback):
     return None
 
 
+def _get_form_page_instance():
+    """Find a live form page instance for wagtailforms URL resolution.
+
+    Returns the first Page instance whose specific type is an AbstractForm
+    subclass, or None if wagtail.contrib.forms is not installed or no form
+    pages exist.
+    """
+    try:
+        from wagtail.contrib.forms.models import FormMixin
+    except ImportError:
+        return None
+
+    from wagtail.models import Page
+
+    for page in Page.objects.live().specific().iterator():
+        if isinstance(page, FormMixin):
+            return page
+    return None
+
+
 def _resolve_parameterised_url(namespace, name, callback):
     """Attempt to resolve a parameterised URL using a real model instance.
 
@@ -136,19 +156,26 @@ def _resolve_parameterised_url(namespace, name, callback):
     (e.g. Collection), skips the root node (depth=1) which Wagtail protects.
 
     Falls back to parsing the URL name for modeladmin-style patterns when
-    the callback doesn't expose a model directly.
+    the callback doesn't expose a model directly. For ``wagtailforms``
+    namespace URLs, falls back to finding a live form page instance.
 
     Returns the resolved path (without leading '/') or None.
     """
     model = _get_model_from_callback(callback)
     if model is None:
         model = _get_model_from_name(name)
-    if model is None:
-        return None
-    queryset = model.objects.all()
-    if hasattr(model, "depth"):
-        queryset = queryset.exclude(depth=1)
-    instance = queryset.first()
+
+    instance = None
+    if model is not None:
+        queryset = model.objects.all()
+        if hasattr(model, "depth"):
+            queryset = queryset.exclude(depth=1)
+        instance = queryset.first()
+
+    # Fallback: wagtailforms views use page_id but don't expose a model
+    if instance is None and namespace == "wagtailforms":
+        instance = _get_form_page_instance()
+
     if instance is None:
         return None
     try:
