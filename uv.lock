@@ -808,8 +808,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "django", specifier = ">=4.2,<6.0" },
-    { name = "wagtail", specifier = ">=7.0,<7.1" },
+    { name = "django", specifier = ">=4.2,<6.1" },
+    { name = "wagtail", specifier = ">=7.0,<7.4" },
 ]
 
 [package.metadata.requires-dev]

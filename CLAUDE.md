@@ -79,7 +79,7 @@ See [CONVENTIONS.md](CONVENTIONS.md) for all coding conventions. Follow these st
 
 ## Tech Stack
 
-- Python 3.10+, Wagtail 7.0, Django 4.2/5.1/5.2
+- Python 3.10+, Wagtail 7.0–7.3, Django 4.2/5.1/5.2/6.0
 - `uv` for dependency management (pyproject.toml + uv.lock)
 - SQLite for local development
 - Django test runner for tests, ruff for linting
