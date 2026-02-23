@@ -141,6 +141,7 @@ Visit `http://localhost:8000/unveil-report/frontend-urls/` while logged into the
 **Features:**
 
 - **Two URL sources:** Wagtail page URLs (from `Page.objects.live().specific()`) and Django resolver URLs (non-admin routes)
+- **RoutablePageMixin support** — automatically discovers `@path()` sub-routes on routable pages (static sub-routes are testable, parameterized sub-routes are marked non-testable)
 - **Configurable page limit** — limit how many page instances per type are tested (see [Configuration](#configuration))
 - One-click testing with colour-coded status codes
 - **Test All** button with progress indicator and pass/fail summary

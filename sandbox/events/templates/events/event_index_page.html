@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block body_class %}template-eventindexpage{% endblock %}
+
+{% block content %}
+<h1>{{ filter_title|default:page.title }}</h1>
+{% if page.intro %}
+<div class="intro">{{ page.intro }}</div>
+{% endif %}
+<nav>
+    <a href="{{ all_url }}">All Events</a>
+    | <a href="{{ past_url }}">Past Events</a>
+    {% for year, year_url in years %}
+    | <a href="{{ year_url }}">{{ year }}</a>
+    {% endfor %}
+</nav>
+{% if events %}
+<ul>
+    {% for event in events %}
+    <li>
+        <a href="{% pageurl event %}">{{ event.title }}</a>
+        — {{ event.event_date }}
+        {% if event.location %}({{ event.location }}){% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No events found.</p>
+{% endif %}
+{% endblock content %}

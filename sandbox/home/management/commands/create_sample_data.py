@@ -12,6 +12,7 @@ from wagtail.images.models import Image
 from wagtail.models import Collection, Page, Site
 
 from sandbox.core.models import BrandingSettings, ListingPage, SocialMediaSettings, StandardPage
+from sandbox.events.models import EventIndexPage, EventPage
 from sandbox.forms.models import FormField, FormPage
 from sandbox.home.models import HomePage
 from sandbox.inventory.models import Product, Supplier
@@ -56,6 +57,7 @@ class Command(BaseCommand):
         self._create_suppliers()
         self._create_products()
         self._create_form_pages()
+        self._create_event_pages()
         self._create_settings()
 
     def _clear_sample_data(self):
@@ -392,6 +394,47 @@ class Command(BaseCommand):
         self.stdout.write(
             f"Created {len(submissions)} form submission(s) for {form_page.title}"
         )
+
+    def _create_event_pages(self):
+        """Create a sample EventIndexPage with child EventPages under HomePage."""
+        home_page = HomePage.objects.first()
+        if not home_page:
+            self.stdout.write("Skipped event pages: no HomePage found")
+            return
+
+        title = f"{SAMPLE_PREFIX} Events"
+        if Page.objects.filter(title=title).exists():
+            self.stdout.write(f"Skipped page: {title} (already exists)")
+            return
+
+        index_page = EventIndexPage(
+            title=title,
+            slug="sample-events",
+            intro="<p>A sample events index page with routable sub-URLs.</p>",
+        )
+        home_page.add_child(instance=index_page)
+        self.stdout.write(f"Created page: {title}")
+
+        from datetime import date
+
+        events = [
+            ("Spring Conference", date(2025, 4, 15), "Convention Centre"),
+            ("Summer Workshop", date(2025, 7, 20), "Community Hall"),
+            ("Autumn Meetup", date(2024, 10, 5), "Library"),
+            ("Winter Gala", date(2024, 12, 12), "Grand Hotel"),
+        ]
+        for event_title, event_date, location in events:
+            full_title = f"{SAMPLE_PREFIX} {event_title}"
+            slug = f"sample-{event_title.lower().replace(' ', '-')}"
+            event = EventPage(
+                title=full_title,
+                slug=slug,
+                event_date=event_date,
+                location=location,
+                body=f"<p>Details for {event_title}.</p>",
+            )
+            index_page.add_child(instance=event)
+            self.stdout.write(f"Created page: {full_title}")
 
     def _create_settings(self):
         """Create sample site and generic settings."""

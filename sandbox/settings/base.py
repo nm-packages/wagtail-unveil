@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "sandbox.calendar",
     "sandbox.forms",
     "sandbox.inventory",
+    "sandbox.events",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.embeds",

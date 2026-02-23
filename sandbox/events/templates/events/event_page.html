@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block body_class %}template-eventpage{% endblock %}
+
+{% block content %}
+<h1>{{ page.title }}</h1>
+<p><strong>Date:</strong> {{ page.event_date }}</p>
+{% if page.location %}
+<p><strong>Location:</strong> {{ page.location }}</p>
+{% endif %}
+{% if page.body %}
+<div class="body">{{ page.body }}</div>
+{% endif %}
+{% endblock content %}

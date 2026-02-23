@@ -292,12 +292,18 @@ def _get_page_urls():
     Uses Page.objects.live().specific() to get all live pages, returning
     their .url property. Skips the root Page model and pages without a URL.
     Form pages (FormMixin subclasses) also get a second non-testable entry
-    for the landing page (POST response).
+    for the landing page (POST response). RoutablePageMixin pages also get
+    entries for each sub-route defined via @path() decorators.
     """
     try:
         from wagtail.contrib.forms.models import FormMixin
     except ImportError:
         FormMixin = None
+
+    try:
+        from wagtail.contrib.routable_page.models import RoutablePageMixin
+    except ImportError:
+        RoutablePageMixin = None
 
     from wagtail.models import Page
 
@@ -338,15 +344,75 @@ def _get_page_urls():
                     skip_reason="Requires POST submission",
                 )
             )
+        # Discover sub-routes from RoutablePageMixin pages
+        if RoutablePageMixin is not None and isinstance(page, RoutablePageMixin):
+            for sub_url_entry in _get_routable_sub_urls(page, path, page_type):
+                results.append(sub_url_entry)
+
     limit = get_pages_per_type()
     if limit:
-        grouped = defaultdict(list)
+        # Group URLs by page (type + title), then limit to N pages per type.
+        # Each page may have multiple URL entries (sub-routes, landing pages).
+        page_urls = defaultdict(list)
         for frontend_url in results:
-            grouped[frontend_url.page_type].append(frontend_url)
+            key = (frontend_url.page_type, frontend_url.page_title)
+            page_urls[key].append(frontend_url)
+        # Group pages by type and take up to `limit` pages per type
+        type_pages = defaultdict(list)
+        for (page_type, _title), urls in page_urls.items():
+            type_pages[page_type].append(urls)
         results = []
-        for page_type_urls in grouped.values():
-            results.extend(page_type_urls[:limit])
+        for pages_in_type in type_pages.values():
+            for page_entries in pages_in_type[:limit]:
+                results.extend(page_entries)
 
+    return results
+
+
+def _get_routable_sub_urls(page, page_path, page_type):
+    """Discover sub-route URLs from a RoutablePageMixin page.
+
+    Inspects the page class's subpage_urls to find @path() decorated routes,
+    and builds FrontendURL entries for each non-index sub-route.
+    """
+    results = []
+    for pattern in type(page).get_subpage_urls():
+        # Extract the route string from the URL pattern
+        if hasattr(pattern.pattern, "_route"):
+            sub_route = pattern.pattern._route
+        elif hasattr(pattern.pattern, "_regex"):
+            sub_route = _clean_regex_route(pattern.pattern._regex)
+        else:
+            continue
+
+        # Skip the index route (empty string) — already covered by base page URL
+        if not sub_route:
+            continue
+
+        full_url = page_path.rstrip("/") + "/" + sub_route.lstrip("/")
+        has_parameters = "<" in sub_route
+        if has_parameters:
+            results.append(
+                FrontendURL(
+                    url=full_url,
+                    source="page",
+                    page_type=page_type,
+                    page_title=page.title,
+                    name=pattern.name or "",
+                    is_testable=False,
+                    skip_reason="URL requires parameters",
+                )
+            )
+        else:
+            results.append(
+                FrontendURL(
+                    url=full_url,
+                    source="page",
+                    page_type=page_type,
+                    page_title=page.title,
+                    name=pattern.name or "",
+                )
+            )
     return results
 
 
