@@ -1,13 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "wagtail-unveil-2"
+name = "wagtail-unveil"
 version = "0.1.0"
-description = "Add your description here"
+description = "Discover and test all URLs in your Wagtail site — frontend and admin."
 readme = "README.md"
 requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    { name = "Nick Moreton" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 5.2",
+    "Framework :: Wagtail",
+    "Framework :: Wagtail :: 7",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
 dependencies = [
     "django>=4.2,<6.0",
     "wagtail>=7.0,<7.1",
 ]
+
+[project.urls]
+Homepage = "https://github.com/nickmoreton/wagtail-unveil"
+Source = "https://github.com/nickmoreton/wagtail-unveil"
+Issues = "https://github.com/nickmoreton/wagtail-unveil/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["wagtail_unveil"]
 
 [tool.ruff]
 line-length = 120
