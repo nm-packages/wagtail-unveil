@@ -1,162 +1,124 @@
 # wagtail-unveil
 
-A reusable Wagtail package that discovers all URLs in a Wagtail site — both frontend and backend (admin) URLs. Useful for verifying that all routes return expected response codes.
+> Discover and test every URL in your Wagtail site — frontend and admin.
+
+[![PyPI version](https://img.shields.io/pypi/v/wagtail-unveil.svg)](https://pypi.org/project/wagtail-unveil/)
+[![Python versions](https://img.shields.io/pypi/pyversions/wagtail-unveil.svg)](https://pypi.org/project/wagtail-unveil/)
+[![Wagtail versions](https://img.shields.io/badge/wagtail-7.0--7.3-teal.svg)](https://pypi.org/project/wagtail-unveil/)
+[![License](https://img.shields.io/pypi/l/wagtail-unveil.svg)](https://github.com/nickmoreton/wagtail-unveil/blob/main/LICENSE)
 
 ![Frontend URLs Report](docs/frontend-urls-report.png)
 
+## Why?
+
+Wagtail sites accumulate hundreds of URLs — admin views, page routes, routable sub-paths, API endpoints. Broken routes hide in plain sight until a user hits a 500 error. **wagtail-unveil** automatically discovers every URL in your site and lets you verify they all return 200 OK.
+
 ## Features
 
-### Management Commands
+- **Full URL discovery** — walks Django's URL resolver tree and Wagtail's page tree to find every admin and frontend route, including `RoutablePageMixin` sub-paths
+- **Smart parameterized URL resolution** — automatically resolves URLs with parameters (snippets, images, documents, users) using real database instances so they become testable
+- **Interactive HTML reports** — browser-based tables with one-click testing, Test All with progress tracking, search, sort, and a Hide Untestable toggle
+- **Management commands** — `show_admin_urls` and `show_frontend_urls` for terminal output with filtering options
+- **JSON API** — bearer-token-authenticated endpoints for CI/CD integration and external monitoring tools
+- **Dashboard widget** — links to both reports directly from the Wagtail admin home page
 
-List all admin URLs in the terminal:
-
-```bash
-# All admin URLs
-django-admin show_admin_urls
-
-# Static URLs only (no path parameters)
-django-admin show_admin_urls --static
-
-# Parameterized URLs only
-django-admin show_admin_urls --parameterized
-```
-
-List all frontend URLs (pages and resolver routes):
+## Quick Start
 
 ```bash
-# All frontend URLs
-django-admin show_frontend_urls
-
-# Page URLs only
-django-admin show_frontend_urls --pages
-
-# Resolver URLs only
-django-admin show_frontend_urls --resolver
+pip install wagtail-unveil
 ```
 
-### JSON API Endpoint
-
-Query admin URLs programmatically from a running site — useful for external testing tools and monitoring.
-
-**Setup:**
-
-1. Add the API URLs to your project's `urls.py`:
+Add to your `INSTALLED_APPS`:
 
 ```python
-urlpatterns = [
-    # ... your other URLs ...
-    path("unveil-api/", include("wagtail_unveil.api_urls")),
+INSTALLED_APPS = [
+    # ...
+    "wagtail_unveil",
+    # ...
 ]
 ```
 
-2. Set the `WAGTAIL_UNVEIL_API_KEY` environment variable:
+Run migrations:
 
 ```bash
-export WAGTAIL_UNVEIL_API_KEY=your-secret-key
+python manage.py migrate
 ```
 
-**Usage:**
+Discover your URLs:
 
 ```bash
-# All admin URLs
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil-api/admin-urls/
+# List all admin URLs
+python manage.py show_admin_urls
 
-# Static URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-api/admin-urls/?filter=static"
-
-# Parameterized URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-api/admin-urls/?filter=parameterized"
+# List all frontend URLs
+python manage.py show_frontend_urls
 ```
 
-**Response:**
-
-```json
-{
-  "urls": [
-    {
-      "route": "admin/",
-      "name": "wagtailadmin_home",
-      "namespace": "wagtailadmin",
-      "has_parameters": false,
-      "view_name": "wagtail.admin.views.home.HomeView"
-    }
-  ],
-  "count": 190
-}
-```
-
-**Authentication:**
-
-The endpoint requires a Bearer token matching the `WAGTAIL_UNVEIL_API_KEY` environment variable. Requests without a valid key receive a `403` response. If the environment variable is not set, the endpoint returns `500`.
-
-#### Frontend URLs API
-
-```bash
-# All frontend URLs
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil-api/frontend-urls/
-
-# Page URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-api/frontend-urls/?filter=pages"
-
-# Resolver URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-api/frontend-urls/?filter=resolver"
-```
-
-### HTML Report Pages
-
-#### Admin URLs Report
-
-An interactive browser-based report showing all admin URLs in a table. Click "Test" on static URLs to check their HTTP status codes using your existing Wagtail session.
-
-**Setup:**
-
-1. Add the report URLs to your project's `urls.py`:
+Or add the HTML reports to your `urls.py` and browse them interactively:
 
 ```python
 urlpatterns = [
-    # ... your other URLs ...
+    # ...
     path("unveil-report/", include("wagtail_unveil.report_urls")),
 ]
 ```
 
-2. Visit `http://localhost:8000/unveil-report/admin-urls/` while logged into the Wagtail admin.
+Then visit `/unveil-report/admin-urls/` or `/unveil-report/frontend-urls/` while logged in as a superuser (requires `DEBUG=True`).
 
-**Features:**
+## Usage
 
-- Automatically discovers all admin URLs including custom admin views registered via `register_admin_viewset` or `register_admin_urls` hooks
-- Shows all discovered URLs with testable/untestable counts in the summary
-- One-click testing of static URLs with colour-coded status codes (green=2xx, yellow=3xx, red=4xx/5xx)
-- **Parameterised URL resolution** — admin URLs with parameters (snippets, redirects, images, documents, users, groups) are automatically resolved using real database instances, making them testable via the report
-- **Test All** button — runs all testable (static and resolved) URLs sequentially with a progress indicator and pass/fail summary
-- **Hide Untestable** toggle — hides non-testable rows (parameterized, POST-only, regex) to focus on testable URLs; preference is saved in a cookie across sessions
-- Self-contained — no external CSS or JS dependencies
-- **Superuser-only** — requires Wagtail superuser login; non-superusers are redirected to the login page
-- **DEBUG-only** — returns 404 when `DEBUG=False`
-- **Dashboard widget** — a panel on the Wagtail admin home page links directly to both reports (superuser + DEBUG only)
+### Management Commands
 
-#### Frontend URLs Report
+```bash
+# Admin URLs — all, static only, or parameterized only
+python manage.py show_admin_urls
+python manage.py show_admin_urls --static
+python manage.py show_admin_urls --parameterized
 
-An interactive browser-based report showing all frontend URLs — both Wagtail page URLs and Django resolver URLs.
+# Frontend URLs — all, pages only, or resolver only
+python manage.py show_frontend_urls
+python manage.py show_frontend_urls --pages
+python manage.py show_frontend_urls --resolver
+```
 
-Visit `http://localhost:8000/unveil-report/frontend-urls/` while logged into the Wagtail admin.
+### HTML Reports
 
-**Features:**
+Interactive browser-based reports with one-click URL testing. Requires superuser login and `DEBUG=True`.
 
-- **Two URL sources:** Wagtail page URLs (from `Page.objects.live().specific()`) and Django resolver URLs (non-admin routes)
-- **RoutablePageMixin support** — automatically discovers `@path()` sub-routes on routable pages (static sub-routes are testable, parameterized sub-routes are marked non-testable)
-- **Configurable page limit** — limit how many page instances per type are tested (see [Configuration](#configuration))
-- One-click testing with colour-coded status codes
-- **Test All** button with progress indicator and pass/fail summary
-- **Hide Untestable** toggle — hides non-testable rows; preference saved in a cookie
-- Searchable and sortable columns (URL, Source, Page Type, Title, Name)
-- Self-contained — no external CSS or JS dependencies
-- **Superuser-only** and **DEBUG-only**
+- **Admin URLs Report** — `/unveil-report/admin-urls/`
+- **Frontend URLs Report** — `/unveil-report/frontend-urls/`
+
+### JSON API
+
+Add the API endpoints to your `urls.py`:
+
+```python
+urlpatterns = [
+    # ...
+    path("unveil-api/", include("wagtail_unveil.api_urls")),
+]
+```
+
+Set the `WAGTAIL_UNVEIL_API_KEY` environment variable and query with a Bearer token:
+
+```bash
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil-api/admin-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil-api/frontend-urls/
+```
+
+Filter with `?filter=static`, `?filter=parameterized`, `?filter=pages`, or `?filter=resolver`.
+
+For full API response examples and detailed feature documentation, see [docs/usage.md](docs/usage.md).
+
+### Dashboard Widget
+
+A panel on the Wagtail admin home page links directly to both reports (superuser + `DEBUG` only).
 
 ## Configuration
 
 ### `WAGTAIL_UNVEIL_PAGES_PER_TYPE`
 
-Controls how many page instances per page type are included in the frontend URL report. Useful for sites with many pages of the same type (e.g., hundreds of blog posts) where testing every single one is unnecessary.
+Controls how many page instances per page type are included in the frontend URL report. Useful for sites with many pages of the same type where testing every one is unnecessary.
 
 ```python
 # settings.py
@@ -171,41 +133,26 @@ WAGTAIL_UNVEIL_PAGES_PER_TYPE = 3
 WAGTAIL_UNVEIL_PAGES_PER_TYPE = 0
 ```
 
-- **Default:** `0` (all pages — no limit)
-- **Positive integer:** Limits to that many page instances per page type
-- Only affects page URLs; resolver URLs are unaffected
-- When active, the frontend report summary shows the limit
+## Compatibility
+
+| Python                        | Django              | Wagtail    |
+|-------------------------------|---------------------|------------|
+| 3.10, 3.11, 3.12, 3.13, 3.14 | 4.2, 5.1, 5.2, 6.0 | 7.0 – 7.3 |
 
 ## Development
 
-### Quick Start
-
 ```bash
-make setup      # copies .env, installs deps, migrates, creates superuser & sample data
-make runserver  # start the dev server
+make setup      # Full dev setup: env, install, migrate, superuser, sample data
+make runserver  # Start the sandbox dev server
+make test       # Run package tests
+make tox        # Run tests across all Python/Django/Wagtail versions
+make lint       # Lint with ruff
+make coverage   # Run tests with coverage report
+make pre-commit # Run pre-commit hooks on all files
 ```
 
-### Individual Commands
+See [CLAUDE.md](CLAUDE.md) for the full list of development commands.
 
-```bash
-make install        # Install dependencies
-make migrate        # Run migrations
-make test           # Run package tests
-make lint           # Lint with ruff
-make lint-fix       # Lint and auto-fix
-make coverage       # Run tests with coverage report
-make coverage-html  # Generate HTML coverage report
-make makemigrations # Create package migrations
-make sample-data    # Create sample data
-make clean          # Remove db.sqlite3 and .env
-```
+## License
 
-Or run manually:
-
-```bash
-uv sync
-cp .env.example .env
-uv run --env-file .env django-admin runserver
-uv run --env-file .env django-admin test tests
-uv run ruff check .
-```
+[MIT](LICENSE)
