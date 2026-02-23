@@ -63,3 +63,7 @@ tr:hover { background: #f9f9f9; }
 .test-all-summary { margin-bottom: 16px; font-size: 0.85rem; color: #666; }
 .test-all-summary .pass { color: #2e7d32; font-weight: 600; }
 .test-all-summary .fail { color: #c62828; font-weight: 600; }
+tr.untestable { background: #fafafa; }
+tr.untestable td { color: #999; }
+tr.untestable:hover { background: #f5f5f5; }
+.skip-reason { font-size: 0.78rem; color: #999; font-style: italic; }

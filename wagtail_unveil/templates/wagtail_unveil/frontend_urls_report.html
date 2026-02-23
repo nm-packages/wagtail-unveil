@@ -84,7 +84,7 @@ Total: <span>{{ url_count }}</span> URLs (<span>{{ testable_count }}</span> test
     </thead>
     <tbody>
         {% for url in urls %}
-        <tr data-source="{{ url.source }}">
+        <tr data-source="{{ url.source }}"{% if not url.is_testable %} class="untestable"{% endif %}>
             <td class="route">{{ url.url }}</td>
             <td>{{ url.source }}</td>
             <td>{{ url.page_type }}</td>
@@ -97,7 +97,13 @@ Total: <span>{{ url_count }}</span> URLs (<span>{{ testable_count }}</span> test
                 <button class="test-btn" disabled title="{{ url.skip_reason }}">Test</button>
                 {% endif %}
             </td>
-            <td class="status-cell">—</td>
+            <td class="status-cell">
+                {% if not url.is_testable %}
+                <span class="skip-reason">{{ url.skip_reason }}</span>
+                {% else %}
+                —
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>

@@ -23,8 +23,7 @@ function applyFilters() {
         }
         var untestableMatch = true;
         if (hideUntestable) {
-            var testBtn = row.querySelector(".test-btn");
-            if (testBtn && testBtn.disabled) {
+            if (row.classList.contains("untestable")) {
                 untestableMatch = false;
             }
         }
