@@ -12,7 +12,7 @@
 
 ## Testing Conventions
 
-- **Single `tests.py`** per app (not a tests/ package)
+- **Root-level `tests/` package** split by feature area (not inside the distributable package)
 - **Base class:** `django.test.TestCase` (or `wagtail.test.utils.WagtailTestUtils` mixin when testing admin views)
 - **Test naming:** `test_<what_it_does>` — descriptive, not just `test_1`, `test_2`
 - **Test class naming:** `Test<Feature>` (e.g., `TestURLDiscovery`, `TestAdminViews`)

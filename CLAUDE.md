@@ -31,7 +31,7 @@ uv run python manage.py makemigrations wagtail_unveil
 uv run python manage.py test
 
 # Run tests for the package only
-uv run python manage.py test wagtail_unveil
+uv run python manage.py test tests
 
 # Lint
 uv run ruff check .
