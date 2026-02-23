@@ -12,7 +12,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `sandbox/` — An example Wagtail site with the package installed, used for development and testing
 - `.env.example` — Template for `.env`; copy to `.env` before developing (`cp .env.example .env`)
 
+## Makefile
+
+A `Makefile` provides shortcuts for common development tasks:
+
+```bash
+make setup          # Full dev setup: env, install, migrate, superuser, sample-data
+make runserver      # Start the sandbox dev server (alias: make run)
+make test           # Run package tests
+make lint           # Run ruff check
+make lint-fix       # Run ruff check --fix
+make makemigrations # Create package migrations
+make sample-data    # Create sample data
+make clean          # Remove db.sqlite3 and .env
+```
+
 ## Development Commands
+
+The full commands (also used by the Makefile):
 
 ```bash
 # Install dependencies (uses uv)

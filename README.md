@@ -176,19 +176,32 @@ WAGTAIL_UNVEIL_PAGES_PER_TYPE = 0
 
 ## Development
 
+### Quick Start
+
 ```bash
-# Install dependencies
+make setup      # copies .env, installs deps, migrates, creates superuser & sample data
+make runserver  # start the dev server
+```
+
+### Individual Commands
+
+```bash
+make install        # Install dependencies
+make migrate        # Run migrations
+make test           # Run package tests
+make lint           # Lint with ruff
+make lint-fix       # Lint and auto-fix
+make makemigrations # Create package migrations
+make sample-data    # Create sample data
+make clean          # Remove db.sqlite3 and .env
+```
+
+Or run manually:
+
+```bash
 uv sync
-
-# Copy the environment file
 cp .env.example .env
-
-# Run the sandbox dev server
 uv run --env-file .env django-admin runserver
-
-# Run tests
-uv run --env-file .env django-admin test wagtail_unveil
-
-# Lint
+uv run --env-file .env django-admin test tests
 uv run ruff check .
 ```
