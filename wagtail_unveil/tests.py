@@ -340,6 +340,11 @@ class TestParameterisedURLResolution(TestCase):
         )
         self.group = Group.objects.create(name="Test group")
 
+        from sandbox.taxonomy.models import Category, Colour
+
+        self.category = Category.objects.create(name="Test category")
+        self.colour = Colour.objects.create(name="Test colour")
+
         self.urls = get_admin_urls()
         self.snippet_urls = [
             u for u in self.urls
