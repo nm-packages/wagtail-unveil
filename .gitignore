@@ -35,7 +35,6 @@ htmlcov/
 media/
 
 # Environment
-.env
 .env.*
 
 # Cache

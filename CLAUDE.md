@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `wagtail_unveil/` — The reusable package (installable from PyPI)
 - `sandbox/` — An example Wagtail site with the package installed, used for development and testing
-- `manage.py` — Uses `sandbox.settings.dev` by default
+- `.env` — Sets `DJANGO_SETTINGS_MODULE` and `PYTHONPATH` for `django-admin` via `uv run --env-file .env`
 
 ## Development Commands
 
@@ -19,19 +19,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 uv sync
 
 # Run the sandbox dev server
-uv run python manage.py runserver
+uv run --env-file .env django-admin runserver
 
 # Run migrations
-uv run python manage.py migrate
+uv run --env-file .env django-admin migrate
 
 # Create migrations for the package
-uv run python manage.py makemigrations wagtail_unveil
+uv run --env-file .env django-admin makemigrations wagtail_unveil
 
 # Run all tests
-uv run python manage.py test
+uv run --env-file .env django-admin test
 
 # Run tests for the package only
-uv run python manage.py test tests
+uv run --env-file .env django-admin test tests
 
 # Lint
 uv run ruff check .
@@ -40,10 +40,10 @@ uv run ruff check .
 uv run ruff check --fix .
 
 # Create sample data (images, documents, redirects, etc.) in the sandbox
-uv run python manage.py create_sample_data
+uv run --env-file .env django-admin create_sample_data
 
 # Clear and recreate sample data
-uv run python manage.py create_sample_data --clear
+uv run --env-file .env django-admin create_sample_data --clear
 ```
 
 ## Conventions

@@ -13,12 +13,20 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
-PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+DEBUG = True
+
+SECRET_KEY = "django-insecure-^*^xj-&@p(ex2p#jgw%t_9q$#8stnoa*nt8w=1j1c+os&j7*8v"
+
+ALLOWED_HOSTS = ["*"]
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 
 # Application definition

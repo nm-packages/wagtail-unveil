@@ -10,26 +10,26 @@ List all admin URLs in the terminal:
 
 ```bash
 # All admin URLs
-python manage.py show_admin_urls
+django-admin show_admin_urls
 
 # Static URLs only (no path parameters)
-python manage.py show_admin_urls --static
+django-admin show_admin_urls --static
 
 # Parameterized URLs only
-python manage.py show_admin_urls --parameterized
+django-admin show_admin_urls --parameterized
 ```
 
 List all frontend URLs (pages and resolver routes):
 
 ```bash
 # All frontend URLs
-python manage.py show_frontend_urls
+django-admin show_frontend_urls
 
 # Page URLs only
-python manage.py show_frontend_urls --pages
+django-admin show_frontend_urls --pages
 
 # Resolver URLs only
-python manage.py show_frontend_urls --resolver
+django-admin show_frontend_urls --resolver
 ```
 
 ### JSON API Endpoint
@@ -181,10 +181,10 @@ WAGTAIL_UNVEIL_PAGES_PER_TYPE = 0
 uv sync
 
 # Run the sandbox dev server
-uv run python manage.py runserver
+uv run --env-file .env django-admin runserver
 
 # Run tests
-uv run python manage.py test wagtail_unveil
+uv run --env-file .env django-admin test wagtail_unveil
 
 # Lint
 uv run ruff check .

@@ -8,9 +8,7 @@ This is a standard Wagtail project used for developing and testing the `wagtail_
 
 ### Structure
 
-- `settings/base.py` — Shared settings; `wagtail_unveil` is included in INSTALLED_APPS
-- `settings/dev.py` — Development overrides (DEBUG=True, SQLite)
-- `settings/production.py` — Production settings template
+- `settings.py` — All settings; `wagtail_unveil` is included in INSTALLED_APPS
 - `home/` — Default Wagtail home app with a blank `HomePage` model; also hosts management commands (e.g. `create_sample_data`)
 - `core/` — `ListingPage` and `StandardPage` models providing a realistic page hierarchy (`HomePage > ListingPage > StandardPage`). Also includes `SocialMediaSettings` (`BaseSiteSetting`) and `BrandingSettings` (`BaseGenericSetting`) registered via `@register_setting` to exercise `wagtailsettings` admin URL discovery
 - `search/` — Wagtail search view
@@ -29,5 +27,5 @@ This is a standard Wagtail project used for developing and testing the `wagtail_
 
 ### Notes
 
-- Default settings module: `sandbox.settings.dev` (set in `manage.py`)
+- Default settings module: `sandbox.settings` (set in `.env` via `DJANGO_SETTINGS_MODULE`)
 - Add example pages, routes, and content here to exercise the `wagtail_unveil` URL discovery features

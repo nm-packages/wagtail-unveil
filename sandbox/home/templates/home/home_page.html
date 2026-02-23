@@ -10,7 +10,7 @@
     {% for child in page.get_children.live %}
     <li><a href="{{ child.url }}">{{ child.title }}</a> <small>({{ child.specific.content_type }})</small></li>
     {% empty %}
-    <li>No child pages found. Run <code>manage.py create_sample_data</code> to create sample content.</li>
+    <li>No child pages found. Run <code>django-admin create_sample_data</code> to create sample content.</li>
     {% endfor %}
 </ul>
 
