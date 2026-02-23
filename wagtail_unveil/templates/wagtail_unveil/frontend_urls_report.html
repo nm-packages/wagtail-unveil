@@ -1,124 +1,105 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frontend URLs Report — wagtail-unveil</title>
-    <link rel="stylesheet" href="{% static 'wagtail_unveil/css/admin_urls_report.css' %}">
-</head>
-<body>
-    <div class="container">
-        <h1>Frontend URLs Report</h1>
-        <p class="summary">
-            Total: <span>{{ url_count }}</span> URLs (<span>{{ testable_count }}</span> testable, <span>{{ untestable_count }}</span> untestable)
-            {% if pages_per_type %}
-            — Showing {{ pages_per_type }} page{{ pages_per_type|pluralize }} per type (<code>WAGTAIL_UNVEIL_PAGES_PER_TYPE</code>)
-            {% endif %}
+{% extends "wagtail_unveil/base_report.html" %}
+
+{% block title %}Frontend URLs Report{% endblock %}
+{% block frontend_nav_class %}active{% endblock %}
+{% block heading %}Frontend URLs Report{% endblock %}
+
+{% block summary %}
+Total: <span>{{ url_count }}</span> URLs (<span>{{ testable_count }}</span> testable, <span>{{ untestable_count }}</span> untestable)
+{% if pages_per_type %}
+— Showing {{ pages_per_type }} page{{ pages_per_type|pluralize }} per type (<code>WAGTAIL_UNVEIL_PAGES_PER_TYPE</code>)
+{% endif %}
+{% endblock %}
+
+{% block search_placeholder %}Filter by URL, title or name…{% endblock %}
+
+{% block help_panel %}
+<div class="help-panel hidden">
+    <div class="help-intro">
+        <h3>How It Works</h3>
+        <p>
+            This report combines two sources of frontend URLs: <strong>Page URLs</strong>
+            discovered from live Wagtail pages via <code>Page.objects.live().specific()</code>,
+            and <strong>Resolver URLs</strong> discovered by walking Django's URL resolver
+            for non-admin routes. Page URLs are concrete paths derived from the page tree.
+            Resolver URLs with parameters are marked as non-testable. Testing sends a
+            browser-side <code>fetch()</code> GET request using your current session.
         </p>
-
-        <div class="filters">
-            <div class="search-wrapper">
-                <input type="text" class="search-input" placeholder="Filter by URL, title or name…">
-                <button type="button" class="search-clear hidden" aria-label="Clear search">&times;</button>
-            </div>
-            <button class="toggle-untestable-btn" onclick="toggleUntestable()">Hide Untestable</button>
-            <button class="test-all-btn" onclick="testAll()">Test All</button>
-            <button class="pause-btn hidden">Pause</button>
-            <button class="cancel-btn hidden" onclick="cancelTests()">Cancel</button>
-            <button class="help-btn" onclick="this.classList.toggle('active');document.querySelector('.help-panel').classList.toggle('hidden')">Help</button>
-            <button class="reset-btn" onclick="location.reload()">Reset</button>
-        </div>
-        <p class="test-all-summary hidden" id="test-all-summary"></p>
-
-        <div class="help-panel hidden">
-            <div class="help-intro">
-                <h3>How It Works</h3>
-                <p>
-                    This report combines two sources of frontend URLs: <strong>Page URLs</strong>
-                    discovered from live Wagtail pages via <code>Page.objects.live().specific()</code>,
-                    and <strong>Resolver URLs</strong> discovered by walking Django's URL resolver
-                    for non-admin routes. Page URLs are concrete paths derived from the page tree.
-                    Resolver URLs with parameters are marked as non-testable. Testing sends a
-                    browser-side <code>fetch()</code> GET request using your current session.
-                </p>
-            </div>
-            <div class="help-columns">
-                <div>
-                    <h3>Columns</h3>
-                    <dl>
-                        <dt>URL</dt>
-                        <dd>The frontend URL path.</dd>
-                        <dt>Source</dt>
-                        <dd>"page" for Wagtail page URLs, "resolver" for Django URL patterns.</dd>
-                        <dt>Page Type</dt>
-                        <dd>The page model class (e.g. <code>home.HomePage</code>). Blank for resolver URLs.</dd>
-                        <dt>Title</dt>
-                        <dd>The page title. Blank for resolver URLs.</dd>
-                        <dt>Name</dt>
-                        <dd>Django URL name. Blank for page URLs.</dd>
-                    </dl>
-                </div>
-                <div>
-                    <h3>Testing</h3>
-                    <dl>
-                        <dt>Test</dt>
-                        <dd>Sends a GET request and shows the HTTP status code.</dd>
-                        <dt>Test All</dt>
-                        <dd>Runs through all visible testable URLs sequentially.</dd>
-                        <dt>Hide / Show Untestable</dt>
-                        <dd>Toggles visibility of rows that can't be tested (parameterized, regex). Preference is saved in a cookie.</dd>
-                        <dt>Pause / Continue / Cancel</dt>
-                        <dd>Controls for the Test All run. Failed URLs move to the top.</dd>
-                    </dl>
-
-                    <h3>Status Codes</h3>
-                    <dl>
-                        <dt>2xx (green)</dt>
-                        <dd>Success — the URL responded normally.</dd>
-                        <dt>3xx (amber)</dt>
-                        <dd>Redirect — the URL redirects elsewhere.</dd>
-                        <dt>4xx / 5xx (red)</dt>
-                        <dd>Error — client or server error.</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th data-sort-col="0">URL</th>
-                    <th data-sort-col="1">Source</th>
-                    <th data-sort-col="2">Page Type</th>
-                    <th data-sort-col="3">Title</th>
-                    <th data-sort-col="4">Name</th>
-                    <th>Test</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for url in urls %}
-                <tr data-source="{{ url.source }}">
-                    <td class="route">{{ url.url }}</td>
-                    <td>{{ url.source }}</td>
-                    <td>{{ url.page_type }}</td>
-                    <td>{{ url.page_title }}</td>
-                    <td>{{ url.name }}</td>
-                    <td>
-                        {% if url.is_testable %}
-                        <button class="test-btn" onclick="testUrl(this, '{{ url.url }}')">Test</button>
-                        {% else %}
-                        <button class="test-btn" disabled title="{{ url.skip_reason }}">Test</button>
-                        {% endif %}
-                    </td>
-                    <td class="status-cell">—</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
     </div>
+    <div class="help-columns">
+        <div>
+            <h3>Columns</h3>
+            <dl>
+                <dt>URL</dt>
+                <dd>The frontend URL path.</dd>
+                <dt>Source</dt>
+                <dd>"page" for Wagtail page URLs, "resolver" for Django URL patterns.</dd>
+                <dt>Page Type</dt>
+                <dd>The page model class (e.g. <code>home.HomePage</code>). Blank for resolver URLs.</dd>
+                <dt>Title</dt>
+                <dd>The page title. Blank for resolver URLs.</dd>
+                <dt>Name</dt>
+                <dd>Django URL name. Blank for page URLs.</dd>
+            </dl>
+        </div>
+        <div>
+            <h3>Testing</h3>
+            <dl>
+                <dt>Test</dt>
+                <dd>Sends a GET request and shows the HTTP status code.</dd>
+                <dt>Test All</dt>
+                <dd>Runs through all visible testable URLs sequentially.</dd>
+                <dt>Hide / Show Untestable</dt>
+                <dd>Toggles visibility of rows that can't be tested (parameterized, regex). Preference is saved in a cookie.</dd>
+                <dt>Pause / Continue / Cancel</dt>
+                <dd>Controls for the Test All run. Failed URLs move to the top.</dd>
+            </dl>
 
-    <script src="{% static 'wagtail_unveil/js/admin_urls_report.js' %}"></script>
-</body>
-</html>
+            <h3>Status Codes</h3>
+            <dl>
+                <dt>2xx (green)</dt>
+                <dd>Success — the URL responded normally.</dd>
+                <dt>3xx (amber)</dt>
+                <dd>Redirect — the URL redirects elsewhere.</dd>
+                <dt>4xx / 5xx (red)</dt>
+                <dd>Error — client or server error.</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block table %}
+<table>
+    <thead>
+        <tr>
+            <th data-sort-col="0">URL</th>
+            <th data-sort-col="1">Source</th>
+            <th data-sort-col="2">Page Type</th>
+            <th data-sort-col="3">Title</th>
+            <th data-sort-col="4">Name</th>
+            <th>Test</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for url in urls %}
+        <tr data-source="{{ url.source }}">
+            <td class="route">{{ url.url }}</td>
+            <td>{{ url.source }}</td>
+            <td>{{ url.page_type }}</td>
+            <td>{{ url.page_title }}</td>
+            <td>{{ url.name }}</td>
+            <td>
+                {% if url.is_testable %}
+                <button class="test-btn" onclick="testUrl(this, '{{ url.url }}')">Test</button>
+                {% else %}
+                <button class="test-btn" disabled title="{{ url.skip_reason }}">Test</button>
+                {% endif %}
+            </td>
+            <td class="status-cell">—</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

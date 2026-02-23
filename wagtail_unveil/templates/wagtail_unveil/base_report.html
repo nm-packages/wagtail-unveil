@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} — wagtail-unveil</title>
+    <link rel="stylesheet" href="{% static 'wagtail_unveil/css/admin_urls_report.css' %}">
+</head>
+<body>
+    <nav class="report-nav">
+        <a href="/">Home</a>
+        <a class="{% block admin_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil_report:admin_urls' %}">Admin URLs</a>
+        <a class="{% block frontend_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil_report:frontend_urls' %}">Frontend URLs</a>
+        <a href="{% url 'wagtailadmin_home' %}">Wagtail Admin</a>
+    </nav>
+    <div class="container">
+        <h1>{% block heading %}{% endblock %}</h1>
+        <p class="summary">
+            {% block summary %}{% endblock %}
+        </p>
+
+        <div class="filters">
+            <div class="search-wrapper">
+                <input type="text" class="search-input" placeholder="{% block search_placeholder %}{% endblock %}">
+                <button type="button" class="search-clear hidden" aria-label="Clear search">&times;</button>
+            </div>
+            <button class="toggle-untestable-btn" onclick="toggleUntestable()">Hide Untestable</button>
+            <button class="test-all-btn" onclick="testAll()">Test All</button>
+            <button class="pause-btn hidden">Pause</button>
+            <button class="cancel-btn hidden" onclick="cancelTests()">Cancel</button>
+            <button class="help-btn" onclick="this.classList.toggle('active');document.querySelector('.help-panel').classList.toggle('hidden')">Help</button>
+            <button class="reset-btn" onclick="location.reload()">Reset</button>
+        </div>
+        <p class="test-all-summary hidden" id="test-all-summary"></p>
+
+        {% block help_panel %}{% endblock %}
+
+        {% block table %}{% endblock %}
+    </div>
+
+    <script src="{% static 'wagtail_unveil/js/admin_urls_report.js' %}"></script>
+</body>
+</html>

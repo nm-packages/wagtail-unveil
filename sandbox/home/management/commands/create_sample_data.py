@@ -225,16 +225,26 @@ class Command(BaseCommand):
             self.stdout.write("Skipped child pages: no HomePage found")
             return
 
-        page_titles = [
-            f"{SAMPLE_PREFIX} About Us",
-            f"{SAMPLE_PREFIX} Contact",
+        pages = [
+            (
+                f"{SAMPLE_PREFIX} About Us",
+                "<p>Welcome to our About Us page. We are a team of developers "
+                "building great things with Wagtail.</p>"
+                "<p>Our mission is to make content management simple and enjoyable.</p>",
+            ),
+            (
+                f"{SAMPLE_PREFIX} Contact",
+                "<p>Get in touch with us using the details below.</p>"
+                "<p>Email: hello@example.com</p>"
+                "<p>Phone: +44 1234 567890</p>",
+            ),
         ]
-        for title in page_titles:
+        for title, body in pages:
             if Page.objects.filter(title=title).exists():
                 self.stdout.write(f"Skipped page: {title} (already exists)")
                 continue
             slug = title.replace(SAMPLE_PREFIX, "").strip().lower().replace(" ", "-")
-            page = StandardPage(title=title, slug=f"sample-{slug}")
+            page = StandardPage(title=title, slug=f"sample-{slug}", body=body)
             home_page.add_child(instance=page)
             self.stdout.write(f"Created page: {title}")
 

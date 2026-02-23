@@ -1,21 +1,23 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block body_class %}template-homepage{% endblock %}
 
-{% block extra_css %}
-
-{% comment %}
-Delete the line below if you're just getting started and want to remove the welcome screen!
-{% endcomment %}
-<link rel="stylesheet" href="{% static 'css/welcome_page.css' %}">
-{% endblock extra_css %}
-
 {% block content %}
+<h1>{{ page.title }}</h1>
 
-{% comment %}
-Delete the line below if you're just getting started and want to remove the welcome screen!
-{% endcomment %}
-{% include 'home/welcome_page.html' %}
+<h2>Site Pages</h2>
+<ul>
+    {% for child in page.get_children.live %}
+    <li><a href="{{ child.url }}">{{ child.title }}</a> <small>({{ child.specific.content_type }})</small></li>
+    {% empty %}
+    <li>No child pages found. Run <code>manage.py create_sample_data</code> to create sample content.</li>
+    {% endfor %}
+</ul>
 
+<h2>Admin Links</h2>
+<ul>
+    <li><a href="{% url 'wagtailadmin_home' %}">Wagtail Admin</a></li>
+    <li><a href="{% url 'wagtail_unveil_report:admin_urls' %}">Unveil Admin URLs Report</a></li>
+    <li><a href="{% url 'wagtail_unveil_report:frontend_urls' %}">Unveil Frontend URLs Report</a></li>
+</ul>
 {% endblock content %}

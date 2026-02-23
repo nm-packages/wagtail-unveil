@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load wagtailcore_tags %}
 
 {% block body_class %}template-eventpage{% endblock %}
 
@@ -9,6 +10,6 @@
 <p><strong>Location:</strong> {{ page.location }}</p>
 {% endif %}
 {% if page.body %}
-<div class="body">{{ page.body }}</div>
+<div class="body">{{ page.body|richtext }}</div>
 {% endif %}
 {% endblock content %}
