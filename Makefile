@@ -2,7 +2,7 @@ UV = uv
 RUN = $(UV) run --env-file .env
 MANAGE = $(RUN) django-admin
 
-.PHONY: help setup env install migrate superuser sample-data runserver run test tox lint lint-fix makemigrations pre-commit clean
+.PHONY: help setup env install migrate superuser sample-data runserver run test tox lint lint-fix makemigrations pre-commit coverage coverage-html clean
 
 help:
 	@echo "Usage: make <target>"
@@ -18,6 +18,8 @@ help:
 	@echo "  pre-commit      Run pre-commit hooks on all files"
 	@echo "  makemigrations  Create package migrations"
 	@echo "  sample-data     Create sample data"
+	@echo "  coverage        Run tests with coverage and show terminal report"
+	@echo "  coverage-html   Generate HTML coverage report and open it"
 	@echo "  clean           Remove db.sqlite3, .env, and media"
 
 setup: env install migrate sample-data
@@ -59,6 +61,14 @@ pre-commit:
 
 makemigrations:
 	$(MANAGE) makemigrations wagtail_unveil
+
+coverage:
+	$(RUN) coverage run -m django test tests
+	$(RUN) coverage report
+
+coverage-html: coverage
+	$(RUN) coverage html
+	open htmlcov/index.html
 
 clean:
 	rm -f db.sqlite3 .env

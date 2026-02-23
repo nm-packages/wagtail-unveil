@@ -191,6 +191,8 @@ make migrate        # Run migrations
 make test           # Run package tests
 make lint           # Lint with ruff
 make lint-fix       # Lint and auto-fix
+make coverage       # Run tests with coverage report
+make coverage-html  # Generate HTML coverage report
 make makemigrations # Create package migrations
 make sample-data    # Create sample data
 make clean          # Remove db.sqlite3 and .env

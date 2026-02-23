@@ -25,6 +25,8 @@ make tox            # Run tests across all Python/Django/Wagtail versions
 make lint           # Run ruff check
 make lint-fix       # Run ruff check --fix
 make pre-commit     # Run pre-commit hooks on all files
+make coverage       # Run tests with coverage and show terminal report
+make coverage-html  # Generate HTML coverage report and open it
 make makemigrations # Create package migrations
 make sample-data    # Create sample data
 make clean          # Remove db.sqlite3 and .env
@@ -73,6 +75,13 @@ uv run --env-file .env django-admin create_sample_data
 
 # Clear and recreate sample data
 uv run --env-file .env django-admin create_sample_data --clear
+
+# Run tests with coverage
+uv run --env-file .env coverage run -m django test tests
+uv run --env-file .env coverage report
+
+# Generate HTML coverage report
+uv run --env-file .env coverage html
 
 # Run tox (all Python/Django/Wagtail versions)
 uv run tox
