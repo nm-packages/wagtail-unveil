@@ -2,7 +2,9 @@ from io import StringIO
 
 from django.core.management import call_command
 from django.test import TestCase
+from wagtail.models import Page
 
+from sandbox.events.models import EventIndexPage
 from wagtail_unveil.urls import (
     FrontendURL,
     get_frontend_urls,
@@ -52,7 +54,8 @@ class TestGetFrontendUrls(TestCase):
 
     def test_page_urls_are_testable(self):
         page_urls = [u for u in self.urls if u.source == "page"]
-        for url in page_urls:
+        testable = [u for u in page_urls if not u.skip_reason]
+        for url in testable:
             self.assertTrue(url.is_testable, url.url)
 
     def test_parameterized_resolver_urls_not_testable(self):
@@ -75,6 +78,64 @@ class TestGetFrontendUrls(TestCase):
     def test_urls_start_with_slash(self):
         for url in self.urls:
             self.assertTrue(url.url.startswith("/"), url.url)
+
+
+class TestRoutableSubUrls(TestCase):
+    def setUp(self):
+        root = Page.objects.first()
+        home = root.get_children().first()
+        self.event_index = EventIndexPage(title="Events", slug="events")
+        home.add_child(instance=self.event_index)
+        self.event_index.save_revision().publish()
+        self.urls = get_frontend_urls()
+        self.page_type = "events.EventIndexPage"
+
+    def _get_event_urls(self):
+        return [u for u in self.urls if u.source == "page" and u.page_type == self.page_type]
+
+    def test_static_sub_route_discovered_and_testable(self):
+        event_urls = self._get_event_urls()
+        past_urls = [u for u in event_urls if u.url.endswith("/past/")]
+        self.assertEqual(len(past_urls), 1)
+        past = past_urls[0]
+        self.assertTrue(past.is_testable)
+        self.assertFalse(past.skip_reason)
+        self.assertEqual(past.name, "past_events")
+
+    def test_parameterized_sub_route_discovered_and_not_testable(self):
+        event_urls = self._get_event_urls()
+        year_urls = [u for u in event_urls if "year/" in u.url]
+        self.assertEqual(len(year_urls), 1)
+        year = year_urls[0]
+        self.assertFalse(year.is_testable)
+        self.assertEqual(year.skip_reason, "URL requires parameters")
+        self.assertEqual(year.name, "events_for_year")
+
+    def test_index_route_not_duplicated(self):
+        event_urls = self._get_event_urls()
+        base_path = self.event_index.url
+        # Only one entry should match the base page URL (no duplicate from @path(""))
+        base_urls = [u for u in event_urls if u.url == base_path]
+        self.assertEqual(len(base_urls), 1)
+
+    def test_sub_route_urls_correctly_constructed(self):
+        event_urls = self._get_event_urls()
+        base_path = self.event_index.url.rstrip("/")
+        for url in event_urls:
+            self.assertTrue(
+                url.url.startswith(base_path),
+                f"{url.url} does not start with {base_path}",
+            )
+
+    def test_sub_route_fields(self):
+        event_urls = self._get_event_urls()
+        sub_routes = [u for u in event_urls if u.url != self.event_index.url]
+        self.assertGreater(len(sub_routes), 0)
+        for url in sub_routes:
+            self.assertEqual(url.source, "page")
+            self.assertEqual(url.page_type, self.page_type)
+            self.assertEqual(url.page_title, "Events")
+            self.assertTrue(url.name)
 
 
 class TestShowFrontendUrlsCommand(TestCase):
