@@ -12,7 +12,7 @@ This is a standard Wagtail project used for developing and testing the `wagtail_
 - `settings/dev.py` — Development overrides (DEBUG=True, SQLite)
 - `settings/production.py` — Production settings template
 - `home/` — Default Wagtail home app with a blank `HomePage` model; also hosts management commands (e.g. `create_sample_data`)
-- `core/` — `ListingPage` and `StandardPage` models providing a realistic page hierarchy (`HomePage > ListingPage > StandardPage`)
+- `core/` — `ListingPage` and `StandardPage` models providing a realistic page hierarchy (`HomePage > ListingPage > StandardPage`). Also includes `SocialMediaSettings` (`BaseSiteSetting`) and `BrandingSettings` (`BaseGenericSetting`) registered via `@register_setting` to exercise `wagtailsettings` admin URL discovery
 - `search/` — Wagtail search view
 - `taxonomy/` — Snippet models (`Category` via `@register_snippet` decorator, `Colour` via `SnippetViewSet`) and a `Person` model registered via `wagtail-modeladmin` (`PersonModelAdmin`) to exercise parameterised admin URL discovery
 - `calendar/` — Custom admin views using the Wagtail 7.0 `ViewSet` pattern (`register_admin_viewset` hook). Provides year and month calendar views at `admin/calendar/` and `admin/calendar/month/` to exercise custom admin URL discovery
@@ -24,7 +24,7 @@ This is a standard Wagtail project used for developing and testing the `wagtail_
 
 ### Management Commands
 
-- `create_sample_data` — Creates sample instances of Images, Documents, Redirects, Search Promotions, an Editor user, child Pages, Collections, People, Suppliers, Products, and Form Pages. Idempotent by default; use `--clear` to remove and recreate all sample data. Sample data is identified by the `[Sample]` title/name prefix.
+- `create_sample_data` — Creates sample instances of Images, Documents, Redirects, Search Promotions, an Editor user, child Pages, Collections, People, Suppliers, Products, Form Pages, and Settings (SocialMediaSettings, BrandingSettings). Idempotent by default; use `--clear` to remove and recreate all sample data. Sample data is identified by the `[Sample]` title/name prefix.
 
 ### Notes
 

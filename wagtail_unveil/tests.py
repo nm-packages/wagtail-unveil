@@ -799,6 +799,78 @@ class TestDashboardPanelFrontendLink(TestCase):
         self.assertIn("/unveil-report/frontend-urls/", html)
 
 
+class TestSettingsURLDiscovery(TestCase):
+    """Test that Wagtail site and generic settings URLs are discovered and testable."""
+
+    def setUp(self):
+        from sandbox.core.models import BrandingSettings, SocialMediaSettings
+
+        site = Site.objects.first()
+        SocialMediaSettings.objects.get_or_create(
+            site=site,
+            defaults={
+                "facebook": "https://facebook.com/test",
+                "twitter": "https://twitter.com/test",
+                "instagram": "https://instagram.com/test",
+            },
+        )
+        if not BrandingSettings.objects.exists():
+            BrandingSettings.objects.create(
+                site_name="Test Site",
+                tagline="Test tagline",
+            )
+
+        self.urls = get_admin_urls()
+        self.settings_urls = [
+            u for u in self.urls if u.namespace == "wagtailsettings"
+        ]
+
+    def test_settings_urls_discovered(self):
+        self.assertGreater(len(self.settings_urls), 0)
+
+    def test_settings_urls_have_correct_namespace(self):
+        for url in self.settings_urls:
+            self.assertEqual(url.namespace, "wagtailsettings")
+
+    def test_settings_edit_urls_present(self):
+        edit_urls = [u for u in self.settings_urls if u.name == "edit"]
+        self.assertGreater(len(edit_urls), 0)
+
+    def test_settings_urls_are_parameterised(self):
+        for url in self.settings_urls:
+            self.assertTrue(url.has_parameters, url.route)
+
+    def test_settings_routes_contain_settings_prefix(self):
+        for url in self.settings_urls:
+            self.assertTrue(url.route.startswith("admin/settings/"), url.route)
+
+    def test_settings_redirect_url_is_testable(self):
+        redirect_urls = [
+            u for u in self.settings_urls
+            if u.name == "edit" and "<int:pk>" not in u.route
+        ]
+        self.assertGreater(len(redirect_urls), 0)
+        for url in redirect_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+
+    def test_settings_edit_url_is_testable(self):
+        edit_urls = [
+            u for u in self.settings_urls
+            if u.name == "edit" and "<int:pk>" in u.route
+        ]
+        self.assertGreater(len(edit_urls), 0)
+        for url in edit_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+            self.assertNotIn("<", url.resolved_route)
+
+    def test_settings_resolved_route_contains_app_and_model(self):
+        for url in self.settings_urls:
+            if url.resolved_route:
+                self.assertIn("/core/", url.resolved_route)
+
+
 class TestGetPagesPerType(TestCase):
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
     def test_default_returns_zero(self):

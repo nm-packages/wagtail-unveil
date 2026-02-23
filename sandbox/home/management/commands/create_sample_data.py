@@ -9,9 +9,9 @@ from wagtail.contrib.redirects.models import Redirect
 from wagtail.contrib.search_promotions.models import Query, SearchPromotion
 from wagtail.documents.models import Document
 from wagtail.images.models import Image
-from wagtail.models import Collection, Page
+from wagtail.models import Collection, Page, Site
 
-from sandbox.core.models import ListingPage, StandardPage
+from sandbox.core.models import BrandingSettings, ListingPage, SocialMediaSettings, StandardPage
 from sandbox.forms.models import FormField, FormPage
 from sandbox.home.models import HomePage
 from sandbox.inventory.models import Product, Supplier
@@ -56,6 +56,7 @@ class Command(BaseCommand):
         self._create_suppliers()
         self._create_products()
         self._create_form_pages()
+        self._create_settings()
 
     def _clear_sample_data(self):
         """Remove all sample data created by this command."""
@@ -107,6 +108,19 @@ class Command(BaseCommand):
             page__title__startswith=SAMPLE_PREFIX
         ).delete()
         self.stdout.write(f"Deleted {deleted[0]} form submission(s)")
+
+        # Settings
+        default_site = Site.objects.filter(is_default_site=True).first()
+        if default_site:
+            deleted = SocialMediaSettings.objects.filter(
+                site=default_site,
+                facebook__startswith="https://facebook.com/sample",
+            ).delete()
+            self.stdout.write(f"Deleted {deleted[0]} social media setting(s)")
+        deleted = BrandingSettings.objects.filter(
+            site_name__startswith=SAMPLE_PREFIX
+        ).delete()
+        self.stdout.write(f"Deleted {deleted[0]} branding setting(s)")
 
         # Child pages (includes form pages)
         Page.objects.filter(title__startswith=SAMPLE_PREFIX).delete()
@@ -378,3 +392,34 @@ class Command(BaseCommand):
         self.stdout.write(
             f"Created {len(submissions)} form submission(s) for {form_page.title}"
         )
+
+    def _create_settings(self):
+        """Create sample site and generic settings."""
+        default_site = Site.objects.filter(is_default_site=True).first()
+        if not default_site:
+            self.stdout.write("Skipped settings: no default site found")
+            return
+
+        # Site-specific social media settings
+        _, created = SocialMediaSettings.objects.get_or_create(
+            site=default_site,
+            defaults={
+                "facebook": "https://facebook.com/sample-site",
+                "twitter": "https://twitter.com/sample-site",
+                "instagram": "https://instagram.com/sample-site",
+            },
+        )
+        if created:
+            self.stdout.write("Created social media settings")
+        else:
+            self.stdout.write("Skipped social media settings (already exists)")
+
+        # Generic branding settings
+        if BrandingSettings.objects.exists():
+            self.stdout.write("Skipped branding settings (already exists)")
+        else:
+            BrandingSettings.objects.create(
+                site_name=f"{SAMPLE_PREFIX} My Wagtail Site",
+                tagline=f"{SAMPLE_PREFIX} A sample tagline for the site",
+            )
+            self.stdout.write("Created branding settings")

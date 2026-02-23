@@ -1,4 +1,4 @@
-{% load static wagtailcore_tags wagtailuserbar %}
+{% load static wagtailcore_tags wagtailuserbar wagtailsettings_tags %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -34,7 +34,33 @@
     <body class="{% block body_class %}{% endblock %}">
         {% wagtailuserbar %}
 
+        {% get_settings %}
+        <header>
+            {% if settings.core.BrandingSettings.site_name %}
+            <div class="site-name">{{ settings.core.BrandingSettings.site_name }}</div>
+            {% endif %}
+            {% if settings.core.BrandingSettings.tagline %}
+            <div class="tagline">{{ settings.core.BrandingSettings.tagline }}</div>
+            {% endif %}
+        </header>
+
         {% block content %}{% endblock %}
+
+        <footer>
+            {% if settings.core.SocialMediaSettings.facebook or settings.core.SocialMediaSettings.twitter or settings.core.SocialMediaSettings.instagram %}
+            <nav class="social-links">
+                {% if settings.core.SocialMediaSettings.facebook %}
+                <a href="{{ settings.core.SocialMediaSettings.facebook }}">Facebook</a>
+                {% endif %}
+                {% if settings.core.SocialMediaSettings.twitter %}
+                <a href="{{ settings.core.SocialMediaSettings.twitter }}">Twitter</a>
+                {% endif %}
+                {% if settings.core.SocialMediaSettings.instagram %}
+                <a href="{{ settings.core.SocialMediaSettings.instagram }}">Instagram</a>
+                {% endif %}
+            </nav>
+            {% endif %}
+        </footer>
 
         {# Global javascript #}
         <script type="text/javascript" src="{% static 'js/sandbox.js' %}"></script>

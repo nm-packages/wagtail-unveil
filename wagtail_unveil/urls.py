@@ -148,7 +148,39 @@ def _get_form_page_instance():
     return None
 
 
-def _resolve_parameterised_url(namespace, name, callback):
+def _resolve_settings_url(name, route):
+    """Resolve a wagtailsettings URL using registered setting models.
+
+    Settings URLs use kwargs (app_name, model_name, and optionally pk)
+    rather than positional args. Iterates over registered setting models
+    to find one with an existing instance.
+
+    Returns the resolved path (without leading '/') or None.
+    """
+    try:
+        from wagtail.contrib.settings.registry import registry
+    except ImportError:
+        return None
+
+    has_pk = "<int:pk>" in route
+    for model in registry:
+        app_name = model._meta.app_label
+        model_name = model._meta.model_name
+        kwargs = {"app_name": app_name, "model_name": model_name}
+        if has_pk:
+            instance = model.objects.first()
+            if not instance:
+                continue
+            kwargs["pk"] = instance.pk
+        try:
+            url = reverse(f"wagtailsettings:{name}", kwargs=kwargs)
+            return url.lstrip("/")
+        except Exception:
+            continue
+    return None
+
+
+def _resolve_parameterised_url(namespace, name, callback, route=""):
     """Attempt to resolve a parameterised URL using a real model instance.
 
     Extracts the model from the view callback, fetches the first instance,
@@ -157,10 +189,16 @@ def _resolve_parameterised_url(namespace, name, callback):
 
     Falls back to parsing the URL name for modeladmin-style patterns when
     the callback doesn't expose a model directly. For ``wagtailforms``
-    namespace URLs, falls back to finding a live form page instance.
+    namespace URLs, falls back to finding a live form page instance. For
+    ``wagtailsettings`` namespace URLs, uses registered setting models
+    with kwargs-based reversal.
 
     Returns the resolved path (without leading '/') or None.
     """
+    # Settings URLs use kwargs, not positional args
+    if namespace == "wagtailsettings":
+        return _resolve_settings_url(name, route)
+
     model = _get_model_from_callback(callback)
     if model is None:
         model = _get_model_from_name(name)
@@ -212,7 +250,7 @@ def get_admin_urls():
         skip_reason = ""
         resolved_route = ""
         if has_parameters:
-            resolved = _resolve_parameterised_url(namespace, name, callback)
+            resolved = _resolve_parameterised_url(namespace, name, callback, route)
             if resolved:
                 is_testable = True
                 resolved_route = resolved
