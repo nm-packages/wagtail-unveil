@@ -2,7 +2,7 @@ UV = uv
 RUN = $(UV) run --env-file .env
 MANAGE = $(RUN) django-admin
 
-.PHONY: help setup env install migrate superuser sample-data runserver run test lint lint-fix makemigrations clean
+.PHONY: help setup env install migrate superuser sample-data runserver run test tox lint lint-fix makemigrations clean
 
 help:
 	@echo "Usage: make <target>"
@@ -12,6 +12,7 @@ help:
 	@echo "  superuser       Create a superuser"
 	@echo "  runserver       Start the sandbox dev server (alias: run)"
 	@echo "  test            Run package tests"
+	@echo "  tox             Run tests across all Python/Django/Wagtail versions"
 	@echo "  lint            Run ruff check"
 	@echo "  lint-fix        Run ruff check --fix"
 	@echo "  makemigrations  Create package migrations"
@@ -42,6 +43,9 @@ run: runserver
 
 test:
 	$(MANAGE) test tests
+
+tox:
+	$(UV) run tox
 
 lint:
 	$(UV) run ruff check .

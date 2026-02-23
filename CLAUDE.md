@@ -20,6 +20,7 @@ A `Makefile` provides shortcuts for common development tasks:
 make setup          # Full dev setup: env, install, migrate, superuser, sample-data
 make runserver      # Start the sandbox dev server (alias: make run)
 make test           # Run package tests
+make tox            # Run tests across all Python/Django/Wagtail versions
 make lint           # Run ruff check
 make lint-fix       # Run ruff check --fix
 make makemigrations # Create package migrations
@@ -61,6 +62,15 @@ uv run --env-file .env django-admin create_sample_data
 
 # Clear and recreate sample data
 uv run --env-file .env django-admin create_sample_data --clear
+
+# Run tox (all Python/Django/Wagtail versions)
+uv run tox
+
+# Run tox for a single environment
+uv run tox -e py313-django52-wagtail70
+
+# Run tox with specific test args
+uv run tox -- tests.test_admin_urls
 ```
 
 ## Conventions
@@ -69,7 +79,7 @@ See [CONVENTIONS.md](CONVENTIONS.md) for all coding conventions. Follow these st
 
 ## Tech Stack
 
-- Python 3.11+, Wagtail 7.0, Django 5.2
+- Python 3.10+, Wagtail 7.0, Django 4.2/5.1/5.2
 - `uv` for dependency management (pyproject.toml + uv.lock)
 - SQLite for local development
 - Django test runner for tests, ruff for linting

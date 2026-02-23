@@ -18,6 +18,7 @@
 - **Test class naming:** `Test<Feature>` (e.g., `TestURLDiscovery`, `TestAdminViews`)
 - **Use Django test client** for view tests, not external HTTP libraries
 - **Factories/fixtures:** Use Django's `setUp()` method, not pytest fixtures
+- **tox:** Use `make tox` (or `uv run tox`) to run tests across all Python/Django/Wagtail versions; matrix defined in `tox.ini`
 
 ## Project Structure
 
