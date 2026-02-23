@@ -37,3 +37,4 @@ media/
 # Environment
 .env
 .env.*
+db.sqlite3
