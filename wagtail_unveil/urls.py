@@ -253,7 +253,14 @@ def _get_page_urls():
 
     Uses Page.objects.live().specific() to get all live pages, returning
     their .url property. Skips the root Page model and pages without a URL.
+    Form pages (FormMixin subclasses) also get a second non-testable entry
+    for the landing page (POST response).
     """
+    try:
+        from wagtail.contrib.forms.models import FormMixin
+    except ImportError:
+        FormMixin = None
+
     from wagtail.models import Page
 
     results = []
@@ -281,6 +288,18 @@ def _get_page_urls():
                 name="",
             )
         )
+        if FormMixin is not None and isinstance(page, FormMixin):
+            results.append(
+                FrontendURL(
+                    url=path,
+                    source="page",
+                    page_type=page_type,
+                    page_title=page.title,
+                    name="landing_page",
+                    is_testable=False,
+                    skip_reason="Requires POST submission",
+                )
+            )
     limit = get_pages_per_type()
     if limit:
         grouped = defaultdict(list)

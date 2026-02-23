@@ -20,7 +20,7 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
   - `_clean_regex_route()` strips regex anchors (`^`, `$`) and converts named groups (`(?P<name>...)`) to path-style `<name>` — applied to all routes so `re_path()` patterns (e.g. from wagtail-modeladmin) are handled correctly
   - `_get_model_from_name()` parses modeladmin-style URL names (`{app}_{model}_modeladmin_{action}`) to extract the model class — used as a fallback when the view callback doesn't expose a model directly
   - `get_frontend_urls()` returns list of `FrontendURL` dataclasses; combines page URLs (`_get_page_urls()` via `Page.objects.live().specific()`) and resolver URLs (`_get_resolver_frontend_urls()` — non-admin routes from Django's URL resolver)
-  - `_get_page_urls()` respects `WAGTAIL_UNVEIL_PAGES_PER_TYPE` — when set to a positive int, groups page URLs by type and takes up to N per type
+  - `_get_page_urls()` respects `WAGTAIL_UNVEIL_PAGES_PER_TYPE` — when set to a positive int, groups page URLs by type and takes up to N per type. Form pages (`FormMixin` subclasses) also emit a second non-testable entry with `name="landing_page"` for the POST landing page (guarded with try/except so `wagtail.contrib.forms` is optional)
 - `views.py` — Views:
   - `admin_urls_json` / `admin_urls_report` — Admin URL endpoints
   - `frontend_urls_json` / `frontend_urls_report` — Frontend URL endpoints
