@@ -222,6 +222,17 @@ class TestParameterisedURLResolution(TestCase):
             self.assertTrue(url.is_testable, url.route)
             self.assertTrue(url.resolved_route, url.route)
 
+    def test_image_url_generator_is_testable(self):
+        url_gen_urls = [
+            u
+            for u in self.urls
+            if "wagtailimages" in u.namespace and u.name in ("url_generator", "url_generator_output")
+        ]
+        self.assertGreater(len(url_gen_urls), 0)
+        for url in url_gen_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertTrue(url.resolved_route, url.route)
+
     def test_document_edit_url_is_testable(self):
         edit_urls = [u for u in self.urls if "wagtaildocs" in u.namespace and u.name == "edit"]
         self.assertGreater(len(edit_urls), 0)

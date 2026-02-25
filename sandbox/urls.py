@@ -4,6 +4,7 @@ from django.urls import include, path
 from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
+from wagtail.images import urls as wagtailimages_urls
 
 from sandbox.search import views as search_views
 
@@ -11,6 +12,7 @@ urlpatterns = [
     path("django-admin/", admin.site.urls),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
+    path("images/", include(wagtailimages_urls)),
     path("search/", search_views.search, name="search"),
     path("unveil-api/", include("wagtail_unveil.api_urls")),
     path("unveil-report/", include("wagtail_unveil.report_urls")),
