@@ -380,3 +380,29 @@ class TestSettingsURLDiscovery(TestCase):
         for url in self.settings_urls:
             if url.resolved_route:
                 self.assertIn("/core/", url.resolved_route)
+
+    def test_settings_edit_url_uses_site_pk(self):
+        """For BaseSiteSetting edit URL, resolved_route should contain site pk, not settings row pk."""
+        from sandbox.core.models import SocialMediaSettings
+
+        # Get the site_id from the settings instance
+        settings_instance = SocialMediaSettings.objects.first()
+        self.assertIsNotNone(settings_instance)
+        expected_site_pk = settings_instance.site_id
+
+        # Find the edit URL for SocialMediaSettings
+        edit_urls = [u for u in self.settings_urls if u.name == "edit" and "<int:pk>" in u.route and u.resolved_route]
+        self.assertGreater(len(edit_urls), 0)
+
+        # Assert the resolved_route contains the site pk (from settings.site_id), not settings row pk
+        for url in edit_urls:
+            self.assertIn(f"/{expected_site_pk}/", url.resolved_route)
+
+    def test_settings_preview_url_is_non_testable(self):
+        """preview_on_edit URL should be non-testable since sandbox settings don't implement PreviewableMixin."""
+        preview_urls = [u for u in self.settings_urls if u.name == "preview_on_edit"]
+
+        # If preview_on_edit URLs are discovered, they should all be non-testable
+        for url in preview_urls:
+            self.assertFalse(url.is_testable, url.route)
+            self.assertTrue(url.skip_reason)

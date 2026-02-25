@@ -153,6 +153,16 @@ def _resolve_settings_url(name, route):
     rather than positional args. Iterates over registered setting models
     to find one with an existing instance.
 
+    Note: This function handles version-specific differences:
+    - Wagtail 7.0: No preview_on_edit URL; BaseSiteSetting.site_id always correct
+    - Wagtail 7.1+: Adds preview_on_edit URL (only for PreviewableMixin models)
+    - Wagtail 7.0+: pk parameter differs by model type (site_id vs instance pk)
+
+    If we drop Wagtail 7.0 support, we can simplify:
+    - Remove the preview_on_edit guard (always check PreviewableMixin)
+    - Remove the try/except on PreviewableMixin import
+    - Always use BaseSiteSetting (no fallback needed)
+
     Returns the resolved path (without leading '/') or None.
     """
     try:
@@ -165,11 +175,38 @@ def _resolve_settings_url(name, route):
         app_name = model._meta.app_label
         model_name = model._meta.model_name
         kwargs = {"app_name": app_name, "model_name": model_name}
+
+        # preview_on_edit is only meaningful for previewable settings models
+        # This URL was added in Wagtail 7.1. In 7.0, it doesn't exist in URL patterns.
+        # If Wagtail 7.0 support is dropped, the try/except can be removed.
+        if name == "preview_on_edit":
+            try:
+                from wagtail.models import PreviewableMixin
+
+                if not issubclass(model, PreviewableMixin):
+                    continue
+            except ImportError:
+                # Wagtail <7.1: PreviewableMixin doesn't exist; skip this URL
+                continue
+
         if has_pk:
             instance = model.objects.first()
             if not instance:
                 continue
-            kwargs["pk"] = instance.pk
+            # Wagtail 7.0+: The <int:pk> parameter means different things by model type.
+            # BaseSiteSetting: pk in URL = site pk (not settings row pk)
+            # BaseGenericSetting: pk in URL = settings row pk
+            # If Wagtail 7.0 support is dropped, always use BaseSiteSetting and remove the check.
+            try:
+                from wagtail.contrib.settings.models import BaseSiteSetting
+
+                if issubclass(model, BaseSiteSetting):
+                    kwargs["pk"] = instance.site_id
+                else:
+                    kwargs["pk"] = instance.pk
+            except ImportError:
+                # Fallback: assume BaseGenericSetting (unlikely in modern Wagtail)
+                kwargs["pk"] = instance.pk
         try:
             url = reverse(f"wagtailsettings:{name}", kwargs=kwargs)
             return url.lstrip("/")
