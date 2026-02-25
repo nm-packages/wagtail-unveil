@@ -113,10 +113,12 @@ Once a model is found, the first real DB instance is fetched and the URL is reve
 
 ### Delivery Layer
 
-- **Management commands** (`show_admin_urls`, `show_frontend_urls`) — terminal output with `--static`/`--parameterized`/`--pages`/`--resolver` filters
-- **JSON API** (`wagtail_unveil/api_urls.py`) — bearer token auth via `WAGTAIL_UNVEIL_API_KEY` env var
-- **HTML reports** (`wagtail_unveil/report_urls.py`) — superuser + DEBUG-only browser pages with client-side fetch testing
-- **Dashboard widget** (`wagtail_hooks.py`) — registers panel linking to both reports
+- **Management commands** (`show_admin_urls`, `show_frontend_urls`) — terminal output
+  - `show_admin_urls --static` / `--parameterized` — filter to static or parameterized routes only
+  - `show_frontend_urls --pages` / `--resolver` — filter to page-source or resolver-source URLs only
+- **JSON API** (`wagtail_unveil/api_urls.py`, namespace `wagtail_unveil_api`) — bearer token auth via `WAGTAIL_UNVEIL_API_KEY` env var; `?filter=static|parameterized` / `?filter=pages|resolver` query params supported
+- **HTML reports** (`wagtail_unveil/report_urls.py`, namespace `wagtail_unveil_report`) — superuser + `DEBUG=True` only; client-side fetch testing with search, sort, Test All, and Hide Untestable (cookie-persisted)
+- **Dashboard widget** (`wagtail_hooks.py`) — registers panel linking to both reports, superuser + `DEBUG=True` only
 
 ### Frontend (JS/CSS)
 
@@ -125,7 +127,16 @@ Single `admin_urls_report.js` shared by both report templates. Uses `data-sort-c
 ### Configuration
 
 - `WAGTAIL_UNVEIL_PAGES_PER_TYPE` Django setting (default `0` = all pages; positive int = limit per page type)
-- `WAGTAIL_UNVEIL_API_KEY` env var for API authentication
+- `WAGTAIL_UNVEIL_API_KEY` env var for API authentication (absent → 500; invalid → 403)
+
+### Consuming Project Setup
+
+Add to `INSTALLED_APPS`: `"wagtail_unveil"`. Then include both URL configs in `urls.py`:
+
+```python
+path("unveil-api/", include("wagtail_unveil.api_urls")),
+path("unveil-report/", include("wagtail_unveil.report_urls")),
+```
 
 ### Sandbox Apps
 
@@ -153,4 +164,4 @@ See [CONVENTIONS.md](CONVENTIONS.md) for all coding conventions. Follow these st
 - Python 3.10+, Wagtail 7.0–7.3, Django 4.2/5.1/5.2/6.0
 - `uv` for dependency management (pyproject.toml + uv.lock)
 - SQLite for local development
-- Django test runner for tests, ruff for linting, pre-commit for git hooks
+- Django test runner for tests, ruff for linting (line length 120), pre-commit for git hooks

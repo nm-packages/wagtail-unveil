@@ -21,6 +21,7 @@ jobs:
       - run: uv run ruff check .
 
   coverage:
+    needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +37,7 @@ jobs:
           DJANGO_SETTINGS_MODULE: sandbox.settings
 
   test:
+    needs: lint
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
