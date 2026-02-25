@@ -30,6 +30,7 @@ tr:hover { background: #f9f9f9; }
 .test-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .open-btn { padding: 4px 10px; border: 1px solid #666; background: #fff; color: #666; border-radius: 3px; cursor: pointer; font-size: 0.8rem; text-decoration: none; display: inline-block; margin-left: 4px; }
 .open-btn:hover { background: #666; color: #fff; }
+.btn-group { white-space: nowrap; }
 .status { font-weight: 600; font-size: 0.85rem; min-width: 50px; display: inline-block; text-align: center; }
 .status-2xx { color: #2e7d32; }
 .status-3xx { color: #f57f17; }

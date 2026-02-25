@@ -98,8 +98,8 @@ Total: <span>{{ url_count }}</span> URLs (<span>{{ testable_count }}</span> test
             <td class="view"><small>{{ url.view_name }}</small></td>
             <td>
                 {% if url.is_testable %}
-                <button class="test-btn" onclick="testUrl(this, '/{% if url.resolved_route %}{{ url.resolved_route }}{% else %}{{ url.route }}{% endif %}')">Test</button>
-                <a class="open-btn" href="/{% if url.resolved_route %}{{ url.resolved_route }}{% else %}{{ url.route }}{% endif %}" target="_blank" rel="noopener noreferrer">Open</a>
+                <span class="btn-group"><button class="test-btn" onclick="testUrl(this, '/{% if url.resolved_route %}{{ url.resolved_route }}{% else %}{{ url.route }}{% endif %}')">Test</button>
+                <a class="open-btn" href="/{% if url.resolved_route %}{{ url.resolved_route }}{% else %}{{ url.route }}{% endif %}" target="_blank" rel="noopener noreferrer">Open</a></span>
                 {% else %}
                 <button class="test-btn" disabled title="{{ url.skip_reason }}">Test</button>
                 {% endif %}

@@ -190,7 +190,7 @@ function testAll() {
         var url = btn.getAttribute("onclick").match(/'([^']+)'/)[1];
         btn.disabled = true;
         btn.textContent = "\u2026";
-        var statusCell = btn.parentElement.nextElementSibling;
+        var statusCell = btn.closest("td").nextElementSibling;
         fetch(url, { credentials: "include" }).then(function(response) {
             var code = response.status;
             var cls = "status-err";
@@ -230,7 +230,7 @@ function testUrl(btn, url) {
     btn.disabled = true;
     btn.textContent = "\u2026";
     var row = btn.closest("tr");
-    var statusCell = btn.parentElement.nextElementSibling;
+    var statusCell = btn.closest("td").nextElementSibling;
     // Clear previous result before fetching
     statusCell.innerHTML = "\u2014";
     fetch(url, { credentials: "include" }).then(function(response) {
