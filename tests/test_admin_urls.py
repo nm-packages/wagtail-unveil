@@ -159,10 +159,11 @@ class TestParameterisedURLResolution(TestCase):
         self.user = User.objects.create_user(username="testuser", password="password")
         self.group = Group.objects.create(name="Test group")
 
-        from sandbox.taxonomy.models import Category, Colour
+        from sandbox.taxonomy.models import Banner, Category, Colour
 
         self.category = Category.objects.create(name="Test category")
         self.colour = Colour.objects.create(name="Test colour")
+        self.banner = Banner.objects.create(title="Test banner")
 
         self.urls = get_admin_urls()
         self.snippet_urls = [u for u in self.urls if u.namespace.startswith("wagtailsnippets_") and u.has_parameters]
