@@ -1,4 +1,5 @@
 from io import StringIO
+from unittest import mock
 
 from django.contrib.auth.models import Group, User
 from django.core.management import call_command
@@ -418,3 +419,41 @@ class TestSettingsURLDiscovery(TestCase):
         for url in preview_urls:
             self.assertFalse(url.is_testable, url.route)
             self.assertTrue(url.skip_reason)
+
+
+class TestMissingServeUrls(TestCase):
+    """Test that admin URLs are marked non-testable when required serve URLs are absent."""
+
+    def _get_admin_urls_without(self, *missing_names):
+        with mock.patch(
+            "wagtail_unveil.urls._is_url_registered",
+            side_effect=lambda name: name not in missing_names,
+        ):
+            return get_admin_urls()
+
+    def test_doc_urls_non_testable_without_docs_serve(self):
+        urls = self._get_admin_urls_without("wagtaildocs_serve")
+        doc_urls = [u for u in urls if u.namespace in {"wagtaildocs", "wagtaildocs_chooser"}]
+        self.assertGreater(len(doc_urls), 0)
+        for url in doc_urls:
+            self.assertFalse(url.is_testable, url.route)
+            self.assertIn("wagtaildocs_urls", url.skip_reason)
+
+    def test_image_url_generator_non_testable_without_images_serve(self):
+        urls = self._get_admin_urls_without("wagtailimages_serve")
+        gen_urls = [
+            u for u in urls if u.namespace == "wagtailimages" and u.name in {"url_generator", "url_generator_output"}
+        ]
+        self.assertGreater(len(gen_urls), 0)
+        for url in gen_urls:
+            self.assertFalse(url.is_testable, url.route)
+            self.assertIn("wagtailimages_urls", url.skip_reason)
+
+    def test_other_image_urls_still_testable_without_images_serve(self):
+        urls = self._get_admin_urls_without("wagtailimages_serve")
+        image_urls = [
+            u
+            for u in urls
+            if u.namespace == "wagtailimages" and u.name not in {"url_generator", "url_generator_output"}
+        ]
+        self.assertTrue(any(u.is_testable for u in image_urls))

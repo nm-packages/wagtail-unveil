@@ -49,6 +49,11 @@ def _walk_patterns(patterns, prefix="", namespace=""):
             yield route, pattern.name or "", namespace, pattern.callback
 
 
+def _is_url_registered(url_name):
+    """Return True if the given URL name exists in the root URLconf."""
+    return url_name in get_resolver().reverse_dict
+
+
 def _is_django_model(obj):
     """Check if obj is a Django model class."""
     return isinstance(obj, type) and hasattr(obj, "_meta")
@@ -287,6 +292,9 @@ def get_admin_urls():
         "find": "Requires query parameters",
     }
 
+    images_serve_available = _is_url_registered("wagtailimages_serve")
+    docs_serve_available = _is_url_registered("wagtaildocs_serve")
+
     resolver = get_resolver()
     results = []
     for route, name, namespace, callback in _walk_patterns(resolver.url_patterns):
@@ -306,6 +314,24 @@ def get_admin_urls():
         if name in NON_TESTABLE_NAMES:
             is_testable = False
             skip_reason = NON_TESTABLE_NAMES[name]
+        elif not docs_serve_available and namespace in {
+            "wagtaildocs",
+            "wagtaildocs_chooser",
+            "wagtailadmin_api:documents",
+        }:
+            is_testable = False
+            skip_reason = 'Requires path("documents/", include(wagtaildocs_urls)) in URLconf'
+        elif (
+            not images_serve_available
+            and namespace == "wagtailimages"
+            and name
+            in {
+                "url_generator",
+                "url_generator_output",
+            }
+        ):
+            is_testable = False
+            skip_reason = 'Requires path("images/", include(wagtailimages_urls)) in URLconf'
         elif has_parameters:
             resolved = _resolve_parameterised_url(namespace, name, callback, route)
             if resolved:
