@@ -16,7 +16,7 @@ from sandbox.events.models import EventIndexPage, EventPage
 from sandbox.forms.models import FormField, FormPage
 from sandbox.home.models import HomePage
 from sandbox.inventory.models import Product, Supplier
-from sandbox.taxonomy.models import Category, Colour, Person
+from sandbox.taxonomy.models import Banner, Category, Colour, Person
 
 # Prefix used to identify sample data created by this command
 SAMPLE_PREFIX = "[Sample]"
@@ -56,6 +56,8 @@ class Command(BaseCommand):
         self._create_people()
         self._create_categories()
         self._create_colours()
+        self._create_banners()
+        self._assign_banners_to_home()
         self._create_suppliers()
         self._create_products()
         self._create_form_pages()
@@ -110,6 +112,14 @@ class Command(BaseCommand):
         # Colours
         deleted = Colour.objects.filter(name__startswith=SAMPLE_PREFIX).delete()
         self.stdout.write(f"Deleted {deleted[0]} colour(s)")
+
+        # Banners (clear FK assignment before deleting)
+        home_page = HomePage.objects.first()
+        if home_page and home_page.banner and home_page.banner.title.startswith(SAMPLE_PREFIX):
+            home_page.banner = None
+            home_page.save_revision().publish()
+        deleted = Banner.objects.filter(title__startswith=SAMPLE_PREFIX).delete()
+        self.stdout.write(f"Deleted {deleted[0]} banner(s)")
 
         # Form submissions (before pages, due to FK)
         deleted = FormSubmission.objects.filter(page__title__startswith=SAMPLE_PREFIX).delete()
@@ -319,6 +329,55 @@ class Command(BaseCommand):
                 continue
             Colour.objects.create(name=full_name)
             self.stdout.write(f"Created colour: {full_name}")
+
+    def _create_banners(self):
+        """Create sample Banner snippet instances (previewable)."""
+        banners = [
+            (
+                "Welcome",
+                "<p>Welcome to our website. Discover what we have to offer.</p>",
+                "https://example.com/about",
+                "Find out more",
+            ),
+            (
+                "Special Offer",
+                "<p>Don't miss our limited-time offers. Available this month only.</p>",
+                "https://example.com/offers",
+                "View offers",
+            ),
+        ]
+        for title, body, url, cta_text in banners:
+            full_title = f"{SAMPLE_PREFIX} {title}"
+            if Banner.objects.filter(title=full_title).exists():
+                self.stdout.write(f"Skipped banner: {full_title} (already exists)")
+                continue
+            Banner.objects.create(
+                title=full_title,
+                body=body,
+                call_to_action_url=url,
+                call_to_action_text=cta_text,
+            )
+            self.stdout.write(f"Created banner: {full_title}")
+
+    def _assign_banners_to_home(self):
+        """Assign the first sample banner to the HomePage."""
+        home_page = HomePage.objects.first()
+        if not home_page:
+            self.stdout.write("Skipped banner assignment: no HomePage found")
+            return
+
+        banner = Banner.objects.filter(title__startswith=SAMPLE_PREFIX).first()
+        if not banner:
+            self.stdout.write("Skipped banner assignment: no sample banners found")
+            return
+
+        if home_page.banner == banner:
+            self.stdout.write(f"Skipped banner assignment: already set to '{banner}'")
+            return
+
+        home_page.banner = banner
+        home_page.save_revision().publish()
+        self.stdout.write(f"Assigned banner '{banner}' to HomePage")
 
     def _create_suppliers(self):
         """Create sample Supplier instances for ModelViewSet listing."""

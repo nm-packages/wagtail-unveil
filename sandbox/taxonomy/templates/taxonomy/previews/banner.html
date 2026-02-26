@@ -1,0 +1,23 @@
+{% load static wagtailcore_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banner preview: {{ object.title }}</title>
+    <link rel="stylesheet" href="{% static 'css/sandbox.css' %}">
+</head>
+<body class="banner-preview">
+    <div class="banner">
+        <h1>{{ object.title }}</h1>
+        {% if object.body %}
+            <div class="body">{{ object.body|richtext }}</div>
+        {% endif %}
+        {% if object.call_to_action_url %}
+            <a class="cta" href="{{ object.call_to_action_url }}">
+                {{ object.call_to_action_text|default:"Learn more" }}
+            </a>
+        {% endif %}
+    </div>
+</body>
+</html>
