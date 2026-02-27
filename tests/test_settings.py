@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 
-from wagtail_unveil.settings import get_pages_per_type
-from wagtail_unveil.urls import get_frontend_urls
+from wagtail_unveil.settings import get_pages_per_type, get_skip_url_prefixes
+from wagtail_unveil.urls import get_admin_urls, get_frontend_urls
 
 
 class TestGetPagesPerType(TestCase):
@@ -120,3 +120,72 @@ class TestPagesPerTypeLimit(TestCase):
     def test_negative_setting_does_not_crash_frontend_discovery(self):
         urls = get_frontend_urls()
         self.assertGreater(len(urls), 0)
+
+
+class TestGetSkipUrlPrefixes(TestCase):
+    def test_missing_setting_returns_empty_list(self):
+        with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
+            self.assertEqual(get_skip_url_prefixes(), [])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=None)
+    def test_none_returns_empty_list(self):
+        self.assertEqual(get_skip_url_prefixes(), [])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=[])
+    def test_empty_list_returns_empty_list(self):
+        self.assertEqual(get_skip_url_prefixes(), [])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["__debug__/", "silk/"])
+    def test_list_of_strings_returned(self):
+        self.assertEqual(get_skip_url_prefixes(), ["__debug__/", "silk/"])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["/__debug__/"])
+    def test_leading_slash_is_stripped(self):
+        self.assertEqual(get_skip_url_prefixes(), ["__debug__/"])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES="__debug__/")
+    def test_non_list_value_returns_empty_list(self):
+        self.assertEqual(get_skip_url_prefixes(), [])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=[123, None, "__debug__/"])
+    def test_non_string_items_are_dropped(self):
+        self.assertEqual(get_skip_url_prefixes(), ["__debug__/"])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["valid/", 42, None, "/also-valid/"])
+    def test_mixed_valid_and_invalid_items(self):
+        self.assertEqual(get_skip_url_prefixes(), ["valid/", "also-valid/"])
+
+
+class TestSkipUrlPrefixesFilter(TestCase):
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["search/"])
+    def test_skip_prefix_excludes_frontend_resolver_url(self):
+        urls = get_frontend_urls()
+        resolver_urls = [u for u in urls if u.source == "resolver"]
+        search_urls = [u for u in resolver_urls if u.url.startswith("/search")]
+        self.assertEqual(search_urls, [])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=[])
+    def test_no_skip_prefix_includes_frontend_resolver_url(self):
+        urls = get_frontend_urls()
+        resolver_urls = [u for u in urls if u.source == "resolver"]
+        search_urls = [u for u in resolver_urls if u.url.startswith("/search")]
+        self.assertGreater(len(search_urls), 0)
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["admin/images/"])
+    def test_skip_prefix_excludes_admin_url(self):
+        urls = get_admin_urls()
+        images_urls = [u for u in urls if u.route.startswith("admin/images/")]
+        self.assertEqual(images_urls, [])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=[])
+    def test_no_skip_prefix_includes_admin_url(self):
+        urls = get_admin_urls()
+        images_urls = [u for u in urls if u.route.startswith("admin/images/")]
+        self.assertGreater(len(images_urls), 0)
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["/search/"])
+    def test_leading_slash_prefix_also_works(self):
+        urls = get_frontend_urls()
+        resolver_urls = [u for u in urls if u.source == "resolver"]
+        search_urls = [u for u in resolver_urls if u.url.startswith("/search")]
+        self.assertEqual(search_urls, [])

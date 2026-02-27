@@ -127,6 +127,7 @@ Single `admin_urls_report.js` shared by both report templates. Uses `data-sort-c
 ### Configuration
 
 - `WAGTAIL_UNVEIL_PAGES_PER_TYPE` Django setting (default `1` page per type when omitted; positive int = limit per page type; `0` = no limit; invalid/negative values fall back to `1`)
+- `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES` Django setting (default `[]`; list of URL path prefixes to exclude from both frontend resolver and admin URL discovery; leading slashes are stripped internally)
 - `WAGTAIL_UNVEIL_API_KEY` env var for API authentication (absent → 500; invalid → 403)
 
 ### Consuming Project Setup

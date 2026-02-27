@@ -9,7 +9,7 @@ from django.apps import apps
 from django.urls import URLPattern, URLResolver, get_resolver, reverse
 from django.utils.functional import cached_property as django_cached_property
 
-from wagtail_unveil.settings import get_pages_per_type
+from wagtail_unveil.settings import get_pages_per_type, get_skip_url_prefixes
 
 logger = logging.getLogger(__name__)
 
@@ -296,6 +296,7 @@ def get_admin_urls():
     docs_serve_available = _is_url_registered("wagtaildocs_serve")
 
     resolver = get_resolver()
+    skip_prefixes = get_skip_url_prefixes()
     results = []
     for route, name, namespace, callback in _walk_patterns(resolver.url_patterns):
         if not route.startswith("admin/"):
@@ -305,6 +306,10 @@ def get_admin_urls():
         # Skip routes that still contain regex metacharacters after cleaning
         # (e.g. Wagtail's catch-all `.*/$` pattern)
         if re.search(r"[.][*+?]|\(", route):
+            continue
+
+        # User-configured prefix exclusions
+        if skip_prefixes and any(route.startswith(p) for p in skip_prefixes):
             continue
 
         has_parameters = "<" in route
@@ -507,6 +512,7 @@ def _get_resolver_frontend_urls():
     namespaces. Parameterized and regex URLs are marked as non-testable.
     """
     resolver = get_resolver()
+    skip_prefixes = get_skip_url_prefixes()
     results = []
     for route, name, namespace, _callback in _walk_patterns(resolver.url_patterns):
         # Exclude admin routes
@@ -517,6 +523,9 @@ def _get_resolver_frontend_urls():
             continue
         # Exclude unveil's own namespaces
         if namespace in _UNVEIL_NAMESPACES:
+            continue
+        # User-configured prefix exclusions
+        if skip_prefixes and any(route.startswith(p) for p in skip_prefixes):
             continue
 
         route = _clean_regex_route(route)

@@ -31,3 +31,22 @@ def get_pages_per_type():
         return parsed if parsed >= 0 else 1
 
     return 1
+
+
+def get_skip_url_prefixes():
+    """Return WAGTAIL_UNVEIL_SKIP_URL_PREFIXES as a list of normalised prefix strings.
+
+    Accepted inputs:
+    - missing / None -> []
+    - list of strings -> each string stripped of a leading slash
+
+    Invalid types and non-string items are silently dropped.
+    """
+    raw = getattr(settings, "WAGTAIL_UNVEIL_SKIP_URL_PREFIXES", [])
+    if not isinstance(raw, (list, tuple)):
+        return []
+    result = []
+    for item in raw:
+        if isinstance(item, str):
+            result.append(item.lstrip("/"))
+    return result
