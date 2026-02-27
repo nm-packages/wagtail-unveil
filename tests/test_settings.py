@@ -1,3 +1,6 @@
+from types import SimpleNamespace
+from unittest.mock import patch
+
 from django.test import TestCase, override_settings
 
 from wagtail_unveil.settings import get_pages_per_type
@@ -5,9 +8,17 @@ from wagtail_unveil.urls import get_frontend_urls
 
 
 class TestGetPagesPerType(TestCase):
+    def test_missing_setting_returns_one(self):
+        with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
+            self.assertEqual(get_pages_per_type(), 1)
+
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
-    def test_default_returns_zero(self):
+    def test_zero_means_no_limit(self):
         self.assertEqual(get_pages_per_type(), 0)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=None)
+    def test_none_returns_one(self):
+        self.assertEqual(get_pages_per_type(), 1)
 
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1)
     def test_returns_configured_value(self):
@@ -16,6 +27,26 @@ class TestGetPagesPerType(TestCase):
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=5)
     def test_returns_higher_value(self):
         self.assertEqual(get_pages_per_type(), 5)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE="2")
+    def test_numeric_string_is_coerced(self):
+        self.assertEqual(get_pages_per_type(), 2)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE="0")
+    def test_zero_string_is_coerced(self):
+        self.assertEqual(get_pages_per_type(), 0)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=-1)
+    def test_negative_int_falls_back_to_one(self):
+        self.assertEqual(get_pages_per_type(), 1)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE="abc")
+    def test_invalid_string_falls_back_to_one(self):
+        self.assertEqual(get_pages_per_type(), 1)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1.5)
+    def test_float_falls_back_to_one(self):
+        self.assertEqual(get_pages_per_type(), 1)
 
 
 class TestPagesPerTypeLimit(TestCase):
@@ -79,3 +110,13 @@ class TestPagesPerTypeLimit(TestCase):
         urls = get_frontend_urls()
         resolver_urls = [u for u in urls if u.source == "resolver"]
         self.assertGreater(len(resolver_urls), 0)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE="abc")
+    def test_invalid_setting_does_not_crash_frontend_discovery(self):
+        urls = get_frontend_urls()
+        self.assertGreater(len(urls), 0)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=-1)
+    def test_negative_setting_does_not_crash_frontend_discovery(self):
+        urls = get_frontend_urls()
+        self.assertGreater(len(urls), 0)

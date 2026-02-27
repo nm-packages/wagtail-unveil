@@ -216,6 +216,4 @@ WAGTAILADMIN_BASE_URL = "http://example.com"
 # see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
 WAGTAILDOCS_EXTENSIONS = ["csv", "docx", "key", "odt", "pdf", "pptx", "rtf", "txt", "xlsx", "zip"]
 
-
-WAGTAIL_UNVEIL_PAGES_PER_TYPE = 1
 WAGTAIL_UNVEIL_API_KEY = "test"
