@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 
 
@@ -11,8 +13,10 @@ def get_pages_per_type():
 
     Invalid, unusable, or negative values fall back to 1.
     Use 0 explicitly for no limit.
+
+    Env var WAGTAIL_UNVEIL_PAGES_PER_TYPE is checked first; Django setting is the fallback.
     """
-    raw_value = getattr(settings, "WAGTAIL_UNVEIL_PAGES_PER_TYPE", 1)
+    raw_value = os.environ.get("WAGTAIL_UNVEIL_PAGES_PER_TYPE") or getattr(settings, "WAGTAIL_UNVEIL_PAGES_PER_TYPE", 1)
 
     if raw_value is None:
         return 1
@@ -41,7 +45,15 @@ def get_skip_url_prefixes():
     - list of strings -> each string stripped of a leading slash
 
     Invalid types and non-string items are silently dropped.
+
+    Env var WAGTAIL_UNVEIL_SKIP_URL_PREFIXES is checked first (comma-separated string);
+    Django setting is the fallback.
     """
+    env_value = os.environ.get("WAGTAIL_UNVEIL_SKIP_URL_PREFIXES")
+    if env_value is not None:
+        if not env_value.strip():
+            return []
+        return [item.strip().lstrip("/") for item in env_value.split(",") if item.strip()]
     raw = getattr(settings, "WAGTAIL_UNVEIL_SKIP_URL_PREFIXES", [])
     if not isinstance(raw, (list, tuple)):
         return []
@@ -61,8 +73,6 @@ def get_api_key():
 
     Invalid, non-string, or empty values return ''.
     """
-    import os
-
     value = os.environ.get("WAGTAIL_UNVEIL_API_KEY") or getattr(settings, "WAGTAIL_UNVEIL_API_KEY", "")
     if not isinstance(value, str):
         return ""

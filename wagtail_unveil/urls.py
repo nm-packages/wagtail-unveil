@@ -392,6 +392,7 @@ def _get_page_urls():
 
     from wagtail.models import Page
 
+    skip_prefixes = get_skip_url_prefixes()
     results = []
     pages = Page.objects.live().specific()
     for page in pages:
@@ -407,6 +408,8 @@ def _get_page_urls():
         # Strip to path-only for multi-site support
         parsed = urlparse(url)
         path = parsed.path
+        if skip_prefixes and any(path.lstrip("/").startswith(p) for p in skip_prefixes):
+            continue
         page_type = f"{page._meta.app_label}.{type(page).__name__}"
         results.append(
             FrontendURL(
@@ -431,7 +434,7 @@ def _get_page_urls():
             )
         # Discover sub-routes from RoutablePageMixin pages
         if RoutablePageMixin is not None and isinstance(page, RoutablePageMixin):
-            for sub_url_entry in _get_routable_sub_urls(page, path, page_type):
+            for sub_url_entry in _get_routable_sub_urls(page, path, page_type, skip_prefixes):
                 results.append(sub_url_entry)
 
     limit = get_pages_per_type()
@@ -454,7 +457,7 @@ def _get_page_urls():
     return results
 
 
-def _get_routable_sub_urls(page, page_path, page_type):
+def _get_routable_sub_urls(page, page_path, page_type, skip_prefixes=()):
     """Discover sub-route URLs from a RoutablePageMixin page.
 
     Inspects the page class's subpage_urls to find @path() decorated routes,
@@ -475,6 +478,8 @@ def _get_routable_sub_urls(page, page_path, page_type):
             continue
 
         full_url = page_path.rstrip("/") + "/" + sub_route.lstrip("/")
+        if skip_prefixes and any(full_url.lstrip("/").startswith(p) for p in skip_prefixes):
+            continue
         has_parameters = "<" in sub_route
         if has_parameters:
             results.append(

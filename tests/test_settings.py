@@ -1,3 +1,4 @@
+import os
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -47,6 +48,27 @@ class TestGetPagesPerType(TestCase):
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1.5)
     def test_float_falls_back_to_one(self):
         self.assertEqual(get_pages_per_type(), 1)
+
+    def test_env_var_numeric_string_is_coerced(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "3"}):
+            self.assertEqual(get_pages_per_type(), 3)
+
+    def test_env_var_zero_string_means_no_limit(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "0"}):
+            self.assertEqual(get_pages_per_type(), 0)
+
+    def test_env_var_negative_string_falls_back_to_one(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "-1"}):
+            self.assertEqual(get_pages_per_type(), 1)
+
+    def test_env_var_invalid_string_falls_back_to_one(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "abc"}):
+            self.assertEqual(get_pages_per_type(), 1)
+
+    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=5)
+    def test_env_var_wins_over_django_setting(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "2"}):
+            self.assertEqual(get_pages_per_type(), 2)
 
 
 class TestPagesPerTypeLimit(TestCase):
@@ -123,6 +145,13 @@ class TestPagesPerTypeLimit(TestCase):
 
 
 class TestGetSkipUrlPrefixes(TestCase):
+    def setUp(self):
+        self._orig_env = os.environ.pop("WAGTAIL_UNVEIL_SKIP_URL_PREFIXES", None)
+
+    def tearDown(self):
+        if self._orig_env is not None:
+            os.environ["WAGTAIL_UNVEIL_SKIP_URL_PREFIXES"] = self._orig_env
+
     def test_missing_setting_returns_empty_list(self):
         with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
             self.assertEqual(get_skip_url_prefixes(), [])
@@ -154,6 +183,23 @@ class TestGetSkipUrlPrefixes(TestCase):
     @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["valid/", 42, None, "/also-valid/"])
     def test_mixed_valid_and_invalid_items(self):
         self.assertEqual(get_skip_url_prefixes(), ["valid/", "also-valid/"])
+
+    def test_env_var_comma_separated_string(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_SKIP_URL_PREFIXES": "search/,admin/images/"}):
+            self.assertEqual(get_skip_url_prefixes(), ["search/", "admin/images/"])
+
+    def test_env_var_empty_string_returns_empty_list(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_SKIP_URL_PREFIXES": ""}):
+            self.assertEqual(get_skip_url_prefixes(), [])
+
+    def test_env_var_strips_whitespace_and_leading_slash(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_SKIP_URL_PREFIXES": "  /search/ , silk/ "}):
+            self.assertEqual(get_skip_url_prefixes(), ["search/", "silk/"])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["django-setting/"])
+    def test_env_var_wins_over_django_setting(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_SKIP_URL_PREFIXES": "env-prefix/"}):
+            self.assertEqual(get_skip_url_prefixes(), ["env-prefix/"])
 
 
 class TestGetApiKey(TestCase):
@@ -202,6 +248,13 @@ class TestGetApiKey(TestCase):
 
 
 class TestSkipUrlPrefixesFilter(TestCase):
+    def setUp(self):
+        self._orig_env = os.environ.pop("WAGTAIL_UNVEIL_SKIP_URL_PREFIXES", None)
+
+    def tearDown(self):
+        if self._orig_env is not None:
+            os.environ["WAGTAIL_UNVEIL_SKIP_URL_PREFIXES"] = self._orig_env
+
     @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["search/"])
     def test_skip_prefix_excludes_frontend_resolver_url(self):
         urls = get_frontend_urls()
@@ -234,3 +287,31 @@ class TestSkipUrlPrefixesFilter(TestCase):
         resolver_urls = [u for u in urls if u.source == "resolver"]
         search_urls = [u for u in resolver_urls if u.url.startswith("/search")]
         self.assertEqual(search_urls, [])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["events/past/"])
+    def test_skip_prefix_excludes_routable_sub_url(self):
+        from wagtail.models import Page
+
+        from sandbox.events.models import EventIndexPage
+
+        root = Page.objects.first()
+        home = root.get_children().first()
+        home.add_child(instance=EventIndexPage(title="Events", slug="events"))
+        urls = get_frontend_urls()
+        page_urls = [u for u in urls if u.source == "page"]
+        matches = [u for u in page_urls if u.url.startswith("/events/past")]
+        self.assertEqual(matches, [])
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["api-page/"])
+    def test_skip_prefix_excludes_page_source_url(self):
+        from wagtail.models import Page
+
+        from sandbox.core.models import StandardPage
+
+        root = Page.objects.first()
+        home = root.get_children().first()
+        home.add_child(instance=StandardPage(title="API Page", slug="api-page"))
+        urls = get_frontend_urls()
+        page_urls = [u for u in urls if u.source == "page"]
+        matches = [u for u in page_urls if u.url.startswith("/api-page")]
+        self.assertEqual(matches, [])
