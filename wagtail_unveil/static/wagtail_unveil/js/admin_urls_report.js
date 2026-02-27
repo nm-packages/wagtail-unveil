@@ -40,23 +40,6 @@ function toggleUntestable() {
     applyFilters();
 }
 
-var searchInput = document.querySelector(".search-input");
-var searchClear = document.querySelector(".search-clear");
-
-searchInput.addEventListener("input", function() {
-    currentSearchTerm = this.value.toLowerCase();
-    searchClear.classList.toggle("hidden", !this.value);
-    applyFilters();
-});
-
-searchClear.addEventListener("click", function() {
-    searchInput.value = "";
-    currentSearchTerm = "";
-    searchClear.classList.add("hidden");
-    applyFilters();
-});
-
-
 // Column sorting
 document.querySelectorAll("th[data-sort-col]").forEach(function(th) {
     th.addEventListener("click", function() {
@@ -306,6 +289,41 @@ class UnveilCancelButton extends HTMLElement {
     }
 }
 customElements.define('unveil-cancel-button', UnveilCancelButton);
+
+class UnveilSearchInput extends HTMLElement {
+    connectedCallback() {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'search-wrapper';
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'search-input';
+        input.placeholder = this.getAttribute('placeholder') || '';
+        var clear = document.createElement('button');
+        clear.type = 'button';
+        clear.className = 'search-clear hidden';
+        clear.setAttribute('aria-label', 'Clear search');
+        clear.textContent = '\u00d7';
+        input.addEventListener('input', function() {
+            currentSearchTerm = input.value.toLowerCase();
+            clear.classList.toggle('hidden', !input.value);
+            var banner = document.querySelector('tbody .success-banner-row');
+            if (banner) banner.remove();
+            applyFilters();
+        });
+        clear.addEventListener('click', function() {
+            input.value = '';
+            currentSearchTerm = '';
+            clear.classList.add('hidden');
+            var banner = document.querySelector('tbody .success-banner-row');
+            if (banner) banner.remove();
+            applyFilters();
+        });
+        wrapper.appendChild(input);
+        wrapper.appendChild(clear);
+        this.appendChild(wrapper);
+    }
+}
+customElements.define('unveil-search-input', UnveilSearchInput);
 
 function testUrl(btn, url) {
     btn.disabled = true;

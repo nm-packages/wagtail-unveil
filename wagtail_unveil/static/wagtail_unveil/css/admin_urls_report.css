@@ -44,6 +44,7 @@ tr:hover { background: #f9f9f9; }
 .pause-btn:hover { background: #c66900; }
 .cancel-btn { padding: 6px 14px; border: none; background: #c62828; color: #fff; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
 .cancel-btn:hover { background: #a31f1f; }
+unveil-search-input,
 unveil-toggle-untestable-button,
 unveil-test-all-button,
 unveil-pause-button,
