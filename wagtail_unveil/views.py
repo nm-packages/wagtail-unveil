@@ -1,22 +1,15 @@
-import os
-
 from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
 from wagtail.admin.auth import user_passes_test
 
-from wagtail_unveil.settings import get_pages_per_type
+from wagtail_unveil.settings import get_api_key, get_pages_per_type
 from wagtail_unveil.urls import get_admin_urls, get_frontend_urls
-
-
-def _get_api_key():
-    """Return API key from environment, with Django settings fallback."""
-    return os.environ.get("WAGTAIL_UNVEIL_API_KEY") or getattr(settings, "WAGTAIL_UNVEIL_API_KEY", "")
 
 
 def admin_urls_json(request):
     """Return admin URLs as JSON, protected by API key."""
-    api_key = _get_api_key()
+    api_key = get_api_key()
     if not api_key:
         return JsonResponse(
             {"error": "WAGTAIL_UNVEIL_API_KEY is not set"},
@@ -73,7 +66,7 @@ def admin_urls_report(request):
 
 def frontend_urls_json(request):
     """Return frontend URLs as JSON, protected by API key."""
-    api_key = _get_api_key()
+    api_key = get_api_key()
     if not api_key:
         return JsonResponse(
             {"error": "WAGTAIL_UNVEIL_API_KEY is not set"},

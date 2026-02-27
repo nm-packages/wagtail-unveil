@@ -169,26 +169,21 @@ class TestParameterisedURLResolution(TestCase):
         self.urls = get_admin_urls()
         self.snippet_urls = [u for u in self.urls if u.namespace.startswith("wagtailsnippets_") and u.has_parameters]
 
-    def test_snippet_edit_url_is_testable(self):
-        edit_urls = [u for u in self.snippet_urls if u.name == "edit"]
-        self.assertGreater(len(edit_urls), 0)
-        for url in edit_urls:
+    def _assert_namespace_name_testable(self, namespace_contains, name):
+        urls = [u for u in self.urls if namespace_contains in u.namespace and u.name == name]
+        self.assertGreater(len(urls), 0)
+        for url in urls:
             self.assertTrue(url.is_testable, url.route)
             self.assertTrue(url.resolved_route, url.route)
 
-    def test_snippet_copy_url_is_testable(self):
-        copy_urls = [u for u in self.snippet_urls if u.name == "copy"]
-        self.assertGreater(len(copy_urls), 0)
-        for url in copy_urls:
-            self.assertTrue(url.is_testable, url.route)
-            self.assertTrue(url.resolved_route, url.route)
-
-    def test_snippet_delete_url_is_testable(self):
-        delete_urls = [u for u in self.snippet_urls if u.name == "delete"]
-        self.assertGreater(len(delete_urls), 0)
-        for url in delete_urls:
-            self.assertTrue(url.is_testable, url.route)
-            self.assertTrue(url.resolved_route, url.route)
+    def test_snippet_action_urls_are_testable(self):
+        for action in ("edit", "copy", "delete"):
+            with self.subTest(action=action):
+                urls = [u for u in self.snippet_urls if u.name == action]
+                self.assertGreater(len(urls), 0)
+                for url in urls:
+                    self.assertTrue(url.is_testable, url.route)
+                    self.assertTrue(url.resolved_route, url.route)
 
     def test_resolved_route_contains_pk(self):
         for url in self.snippet_urls:
@@ -196,33 +191,13 @@ class TestParameterisedURLResolution(TestCase):
                 self.assertNotIn("<", url.resolved_route)
                 self.assertRegex(url.resolved_route, r"/\d+/")
 
-    def test_redirect_edit_url_is_testable(self):
-        edit_urls = [u for u in self.urls if "redirect" in u.namespace and u.name == "edit"]
-        self.assertGreater(len(edit_urls), 0)
-        for url in edit_urls:
-            self.assertTrue(url.is_testable, url.route)
-            self.assertTrue(url.resolved_route, url.route)
+    def test_redirect_urls_are_testable(self):
+        self._assert_namespace_name_testable("redirect", "edit")
+        self._assert_namespace_name_testable("redirect", "delete")
 
-    def test_redirect_delete_url_is_testable(self):
-        delete_urls = [u for u in self.urls if "redirect" in u.namespace and u.name == "delete"]
-        self.assertGreater(len(delete_urls), 0)
-        for url in delete_urls:
-            self.assertTrue(url.is_testable, url.route)
-            self.assertTrue(url.resolved_route, url.route)
-
-    def test_image_edit_url_is_testable(self):
-        edit_urls = [u for u in self.urls if "wagtailimages" in u.namespace and u.name == "edit"]
-        self.assertGreater(len(edit_urls), 0)
-        for url in edit_urls:
-            self.assertTrue(url.is_testable, url.route)
-            self.assertTrue(url.resolved_route, url.route)
-
-    def test_image_delete_url_is_testable(self):
-        delete_urls = [u for u in self.urls if "wagtailimages" in u.namespace and u.name == "delete"]
-        self.assertGreater(len(delete_urls), 0)
-        for url in delete_urls:
-            self.assertTrue(url.is_testable, url.route)
-            self.assertTrue(url.resolved_route, url.route)
+    def test_image_action_urls_are_testable(self):
+        self._assert_namespace_name_testable("wagtailimages", "edit")
+        self._assert_namespace_name_testable("wagtailimages", "delete")
 
     def test_image_url_generator_is_testable(self):
         url_gen_urls = [
@@ -236,18 +211,10 @@ class TestParameterisedURLResolution(TestCase):
             self.assertTrue(url.resolved_route, url.route)
 
     def test_document_edit_url_is_testable(self):
-        edit_urls = [u for u in self.urls if "wagtaildocs" in u.namespace and u.name == "edit"]
-        self.assertGreater(len(edit_urls), 0)
-        for url in edit_urls:
-            self.assertTrue(url.is_testable, url.route)
-            self.assertTrue(url.resolved_route, url.route)
+        self._assert_namespace_name_testable("wagtaildocs", "edit")
 
     def test_user_edit_url_is_testable(self):
-        edit_urls = [u for u in self.urls if "wagtailusers_users" in u.namespace and u.name == "edit"]
-        self.assertGreater(len(edit_urls), 0)
-        for url in edit_urls:
-            self.assertTrue(url.is_testable, url.route)
-            self.assertTrue(url.resolved_route, url.route)
+        self._assert_namespace_name_testable("wagtailusers_users", "edit")
 
     def test_resolved_route_has_no_angle_brackets(self):
         resolved = [u for u in self.urls if u.resolved_route]
@@ -262,11 +229,7 @@ class TestParameterisedURLResolution(TestCase):
             self.assertEqual(url.skip_reason, "URL requires parameters")
 
     def test_searchpick_edit_url_is_testable(self):
-        edit_urls = [u for u in self.urls if "searchpromotions" in u.namespace and u.name == "edit"]
-        self.assertGreater(len(edit_urls), 0)
-        for url in edit_urls:
-            self.assertTrue(url.is_testable, url.route)
-            self.assertTrue(url.resolved_route, url.route)
+        self._assert_namespace_name_testable("searchpromotions", "edit")
 
     def test_unresolvable_parameterised_urls_are_untestable(self):
         unresolvable = [u for u in self.urls if u.has_parameters and not u.resolved_route]
@@ -301,24 +264,17 @@ class TestModeladminURLDiscovery(TestCase):
         self.assertTrue(create[0].is_testable)
         self.assertFalse(create[0].has_parameters)
 
-    def test_edit_is_testable_with_resolved_route(self):
-        edit = [u for u in self.modeladmin_urls if u.name.endswith("_edit")]
-        self.assertEqual(len(edit), 1)
-        self.assertTrue(edit[0].is_testable)
-        self.assertTrue(edit[0].resolved_route)
-        self.assertNotIn("<", edit[0].resolved_route)
+    def _get_modeladmin_url(self, suffix):
+        urls = [u for u in self.modeladmin_urls if u.name.endswith(suffix)]
+        self.assertEqual(len(urls), 1)
+        return urls[0]
 
-    def test_delete_is_testable_with_resolved_route(self):
-        delete = [u for u in self.modeladmin_urls if u.name.endswith("_delete")]
-        self.assertEqual(len(delete), 1)
-        self.assertTrue(delete[0].is_testable)
-        self.assertTrue(delete[0].resolved_route)
-
-    def test_history_is_testable_with_resolved_route(self):
-        history = [u for u in self.modeladmin_urls if u.name.endswith("_history")]
-        self.assertEqual(len(history), 1)
-        self.assertTrue(history[0].is_testable)
-        self.assertTrue(history[0].resolved_route)
+    def test_parameterized_urls_are_testable_with_resolved_route(self):
+        for suffix in ("_edit", "_delete", "_history"):
+            with self.subTest(suffix=suffix):
+                url = self._get_modeladmin_url(suffix)
+                self.assertTrue(url.is_testable)
+                self.assertTrue(url.resolved_route)
 
     def test_routes_have_no_regex_anchors(self):
         for url in self.modeladmin_urls:

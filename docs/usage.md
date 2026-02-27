@@ -67,6 +67,10 @@ WAGTAIL_UNVEIL_API_KEY = "your-secret-key"
 Values are normalized to a non-negative integer. Invalid or negative values default to `1`.
 Use `0` explicitly for no limit.
 
+`WAGTAIL_UNVEIL_SKIP_URL_PREFIXES` defaults to `[]` (no exclusions) when omitted.
+Applies to both frontend resolver and admin URL discovery. Leading slashes are stripped,
+so `"/__debug__/"` and `"__debug__/"` are equivalent. Invalid values are silently ignored.
+
 ### Admin URLs API
 
 ```bash

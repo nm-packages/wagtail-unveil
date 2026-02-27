@@ -138,6 +138,22 @@ Default behavior is `1` page per type when the setting is omitted.
 Values are normalized to a non-negative integer. Invalid or negative values default to `1`.
 Use `0` explicitly for no limit.
 
+### `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES`
+
+A list of URL path prefixes to exclude from URL discovery. Useful when third-party packages register routes (e.g. `django-debug-toolbar`, `django-silk`) that you don't want to appear in the reports.
+
+```python
+# settings.py
+
+# Exclude django-debug-toolbar routes
+WAGTAIL_UNVEIL_SKIP_URL_PREFIXES = ["__debug__/"]
+
+# Leading slashes are also accepted
+WAGTAIL_UNVEIL_SKIP_URL_PREFIXES = ["/__debug__/", "/silk/"]
+```
+
+The setting applies to both the frontend resolver source and the admin URL discovery. Leading slashes are stripped internally, so `"/__debug__/"` and `"__debug__/"` are equivalent. Default is `[]` (no exclusions). Invalid values (non-list, non-string items) are silently ignored.
+
 ## Compatibility
 
 | Python                        | Django              | Wagtail    |
