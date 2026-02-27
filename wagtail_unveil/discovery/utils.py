@@ -1,9 +1,6 @@
-import logging
 import re
 
 from django.urls import URLPattern, URLResolver
-
-logger = logging.getLogger(__name__)
 
 
 def walk_patterns(patterns, prefix="", namespace=""):

@@ -1,4 +1,3 @@
-import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from urllib.parse import urlparse
@@ -7,8 +6,6 @@ from django.urls import get_resolver
 
 from wagtail_unveil.discovery.utils import clean_regex_route, walk_patterns
 from wagtail_unveil.settings import get_pages_per_type, get_skip_url_prefixes
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

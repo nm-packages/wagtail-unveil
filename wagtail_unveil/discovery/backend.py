@@ -1,4 +1,3 @@
-import logging
 import re
 from dataclasses import dataclass
 from functools import cached_property
@@ -9,8 +8,6 @@ from django.utils.functional import cached_property as django_cached_property
 
 from wagtail_unveil.discovery.utils import clean_regex_route, walk_patterns
 from wagtail_unveil.settings import get_skip_url_prefixes
-
-logger = logging.getLogger(__name__)
 
 
 def _is_url_registered(url_name):
@@ -246,7 +243,6 @@ def _resolve_parameterised_url(namespace, name, callback, route=""):
         url = reverse(url_name, args=[instance.pk])
         return url.lstrip("/")
     except Exception:
-        logger.debug("Failed to reverse %s:%s", namespace, name, exc_info=True)
         return None
 
 
