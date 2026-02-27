@@ -25,10 +25,10 @@
                 <input type="text" class="search-input" placeholder="{% block search_placeholder %}{% endblock %}">
                 <button type="button" class="search-clear hidden" aria-label="Clear search">&times;</button>
             </div>
-            <button class="toggle-untestable-btn" onclick="toggleUntestable()">Hide Untestable</button>
-            <button class="test-all-btn" onclick="testAll()">Test All</button>
-            <button class="pause-btn hidden">Pause</button>
-            <button class="cancel-btn hidden" onclick="cancelTests()">Cancel</button>
+            <unveil-toggle-untestable-button></unveil-toggle-untestable-button>
+            <unveil-test-all-button></unveil-test-all-button>
+            <unveil-pause-button></unveil-pause-button>
+            <unveil-cancel-button></unveil-cancel-button>
             <unveil-help-button></unveil-help-button>
             <unveil-reset-button></unveil-reset-button>
         </div>

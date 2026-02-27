@@ -120,8 +120,7 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
 
     def test_report_has_test_all_button(self):
         response = self.client.get("/unveil-report/admin-urls/")
-        self.assertContains(response, "test-all-btn")
-        self.assertContains(response, "Test All")
+        self.assertContains(response, "unveil-test-all-button")
 
     def test_report_shows_all_rows_by_default(self):
         response = self.client.get("/unveil-report/admin-urls/")
@@ -162,8 +161,7 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
 
     def test_report_has_toggle_untestable_button(self):
         response = self.client.get("/unveil-report/admin-urls/")
-        self.assertContains(response, "toggle-untestable-btn")
-        self.assertContains(response, "Hide Untestable")
+        self.assertContains(response, "unveil-toggle-untestable-button")
 
     def test_report_contains_testable_counts(self):
         response = self.client.get("/unveil-report/admin-urls/")

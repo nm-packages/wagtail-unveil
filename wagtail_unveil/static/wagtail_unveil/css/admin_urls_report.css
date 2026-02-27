@@ -44,6 +44,11 @@ tr:hover { background: #f9f9f9; }
 .pause-btn:hover { background: #c66900; }
 .cancel-btn { padding: 6px 14px; border: none; background: #c62828; color: #fff; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
 .cancel-btn:hover { background: #a31f1f; }
+unveil-toggle-untestable-button,
+unveil-test-all-button,
+unveil-pause-button,
+unveil-cancel-button,
+unveil-help-button { display: contents; }
 unveil-reset-button { margin-left: auto; display: flex; }
 .reset-btn { padding: 6px 14px; border: none; background: #e0e0e0; color: #333; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
 .reset-btn:hover { background: #bdbdbd; }

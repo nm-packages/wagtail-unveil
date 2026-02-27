@@ -56,15 +56,6 @@ searchClear.addEventListener("click", function() {
     applyFilters();
 });
 
-// Initialize toggle button state from cookie
-(function() {
-    var btn = document.querySelector(".toggle-untestable-btn");
-    if (btn && hideUntestable) {
-        btn.textContent = "Show Untestable";
-        btn.classList.add("active");
-        applyFilters();
-    }
-})();
 
 // Column sorting
 document.querySelectorAll("th[data-sort-col]").forEach(function(th) {
@@ -268,6 +259,53 @@ class UnveilHelpButton extends HTMLElement {
     }
 }
 customElements.define('unveil-help-button', UnveilHelpButton);
+
+class UnveilToggleUntestableButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'toggle-untestable-btn';
+        btn.textContent = hideUntestable ? 'Show Untestable' : 'Hide Untestable';
+        if (hideUntestable) {
+            btn.classList.add('active');
+            applyFilters();
+        }
+        btn.addEventListener('click', toggleUntestable);
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-toggle-untestable-button', UnveilToggleUntestableButton);
+
+class UnveilTestAllButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'test-all-btn';
+        btn.textContent = 'Test All';
+        btn.addEventListener('click', testAll);
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-test-all-button', UnveilTestAllButton);
+
+class UnveilPauseButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'pause-btn hidden';
+        btn.textContent = 'Pause';
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-pause-button', UnveilPauseButton);
+
+class UnveilCancelButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'cancel-btn hidden';
+        btn.textContent = 'Cancel';
+        btn.addEventListener('click', cancelTests);
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-cancel-button', UnveilCancelButton);
 
 function testUrl(btn, url) {
     btn.disabled = true;
