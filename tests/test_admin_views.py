@@ -10,11 +10,11 @@ from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
 class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
-    api_url = "/unveil-api/admin-urls/"
+    api_url = "/unveil/api/admin-urls/"
 
     def test_filter_static(self):
         response = self.client.get(
-            "/unveil-api/admin-urls/?filter=static",
+            "/unveil/api/admin-urls/?filter=static",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
@@ -23,7 +23,7 @@ class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
 
     def test_filter_parameterized(self):
         response = self.client.get(
-            "/unveil-api/admin-urls/?filter=parameterized",
+            "/unveil/api/admin-urls/?filter=parameterized",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
@@ -33,31 +33,31 @@ class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
 
 @override_settings(DEBUG=True)
 class TestAdminUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, TestCase):
-    report_url = "/unveil-report/admin-urls/"
+    report_url = "/unveil/report/admin-urls/"
     report_title = "Admin URLs Report"
 
     def setUp(self):
         self.login()
 
     def test_report_contains_known_url(self):
-        response = self.client.get("/unveil-report/admin-urls/")
+        response = self.client.get("/unveil/report/admin-urls/")
         self.assertContains(response, "wagtailadmin_home")
 
     def test_report_disables_test_for_non_testable(self):
-        response = self.client.get("/unveil-report/admin-urls/")
+        response = self.client.get("/unveil/report/admin-urls/")
         self.assertContains(response, "disabled")
         self.assertContains(response, "POST-only view")
         self.assertContains(response, "Intentional error endpoint")
 
     def test_report_shows_all_rows_by_default(self):
-        response = self.client.get("/unveil-report/admin-urls/")
+        response = self.client.get("/unveil/report/admin-urls/")
         content = response.content.decode()
         self.assertIn('data-has-parameters="true"', content)
         self.assertIn('data-has-parameters="false"', content)
         self.assertNotIn('class="hidden"', content.split("<tbody>")[1].split("</tbody>")[0])
 
     def test_report_has_help_button(self):
-        response = self.client.get("/unveil-report/admin-urls/")
+        response = self.client.get("/unveil/report/admin-urls/")
         self.assertContains(response, "unveil-help-button")
 
 
@@ -77,7 +77,7 @@ class TestDashboardPanel(TestCase):
     def test_panel_visible_for_superuser(self):
         html = self._render(self.superuser)
         self.assertIn("View Admin URLs Report", html)
-        self.assertIn("/unveil-report/admin-urls/", html)
+        self.assertIn("/unveil/report/admin-urls/", html)
         self.assertIn("w-panel w-panel--dashboard", html)
 
     def test_panel_hidden_for_non_superuser(self):

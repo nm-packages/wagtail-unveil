@@ -4,8 +4,9 @@ from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 
+from wagtail_unveil.discovery.backend import get_admin_urls
+from wagtail_unveil.discovery.frontend import get_frontend_urls
 from wagtail_unveil.settings import get_api_key, get_pages_per_type, get_skip_url_prefixes
-from wagtail_unveil.urls import get_admin_urls, get_frontend_urls
 
 
 class TestGetPagesPerType(TestCase):

@@ -3,8 +3,9 @@ from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
 from wagtail.admin.auth import user_passes_test
 
+from wagtail_unveil.discovery.backend import get_admin_urls
+from wagtail_unveil.discovery.frontend import get_frontend_urls
 from wagtail_unveil.settings import get_api_key, get_pages_per_type
-from wagtail_unveil.urls import get_admin_urls, get_frontend_urls
 
 
 def admin_urls_json(request):

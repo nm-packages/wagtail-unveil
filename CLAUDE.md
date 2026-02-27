@@ -76,11 +76,15 @@ uv run tox -- tests.test_admin_urls
 
 ## Architecture
 
-### URL Discovery Engine (`wagtail_unveil/urls.py`)
+### URL Discovery Engine (`wagtail_unveil/discovery/`)
 
-The core of the package. Two parallel discovery systems that produce dataclass instances (no database models):
+The core of the package, split into a subpackage. Two parallel discovery systems that produce dataclass instances (no database models).
 
-**Admin URLs** — `get_admin_urls()` walks Django's URL resolver tree via `_walk_patterns()`, filtering to `admin/` routes. Each URL is classified as static or parameterized. Parameterized URLs go through a multi-tier model extraction fallback:
+- `discovery/utils.py` — Shared utilities: `walk_patterns()`, `clean_regex_route()`
+- `discovery/backend.py` — Admin URL discovery: `BackendURL` dataclass + `get_admin_urls()`
+- `discovery/frontend.py` — Frontend URL discovery: `FrontendURL` dataclass + `get_frontend_urls()`
+
+**Admin URLs** — `get_admin_urls()` walks Django's URL resolver tree via `walk_patterns()`, filtering to `admin/` routes. Each URL is classified as static or parameterized. Parameterized URLs go through a multi-tier model extraction fallback:
 1. View `initkwargs` (ModelViewSet pattern)
 2. Class `model` attribute
 3. Cached property `model` attribute
@@ -90,7 +94,7 @@ Once a model is found, the first real DB instance is fetched and the URL is reve
 
 **Frontend URLs** — `get_frontend_urls()` combines two sources:
 - **Page source:** `Page.objects.live().specific()` → `.url` → path-only. Special handling for `FormMixin` (adds POST landing page entry) and `RoutablePageMixin` (discovers `@path()` sub-routes via `_get_routable_sub_urls()`)
-- **Resolver source:** Non-admin Django routes via `_walk_patterns()`, excluding `admin/`, `django-admin/`, and unveil's own namespaces
+- **Resolver source:** Non-admin Django routes via `walk_patterns()`, excluding `admin/`, `django-admin/`, and unveil's own namespaces
 
 ### Delivery Layer
 
@@ -113,8 +117,7 @@ Single `admin_urls_report.js` shared by both report templates. Uses `data-sort-c
 Add to `INSTALLED_APPS`: `"wagtail_unveil"`. Then include both URL configs in `urls.py`:
 
 ```python
-path("unveil-api/", include("wagtail_unveil.api_urls")),
-path("unveil-report/", include("wagtail_unveil.report_urls")),
+path("unveil/", include("wagtail_unveil.urls")),
 ```
 
 ### Sandbox Apps

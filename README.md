@@ -48,11 +48,11 @@ Add the HTML reports to your `urls.py` and browse them interactively:
 ```python
 urlpatterns = [
     # ...
-    path("unveil-report/", include("wagtail_unveil.report_urls")),
+    path("unveil/", include("wagtail_unveil.urls")),
 ]
 ```
 
-Then visit `/unveil-report/admin-urls/` or `/unveil-report/frontend-urls/` while logged in as a superuser (requires `DEBUG=True`).
+Then visit `/unveil/report/admin-urls/` or `/unveil/report/frontend-urls/` while logged in as a superuser (requires `DEBUG=True`).
 
 ## Usage
 
@@ -60,26 +60,19 @@ Then visit `/unveil-report/admin-urls/` or `/unveil-report/frontend-urls/` while
 
 Interactive browser-based reports with one-click URL testing. Requires superuser login and `DEBUG=True`.
 
-- **Admin URLs Report** — `/unveil-report/admin-urls/`
-- **Frontend URLs Report** — `/unveil-report/frontend-urls/`
+- **Admin URLs Report** — `/unveil/report/admin-urls/`
+- **Frontend URLs Report** — `/unveil/report/frontend-urls/`
 
 ### JSON API
 
-Add the API endpoints to your `urls.py`:
-
-```python
-urlpatterns = [
-    # ...
-    path("unveil-api/", include("wagtail_unveil.api_urls")),
-]
-```
+The API endpoints are included automatically when you add `wagtail_unveil.urls` (see Quick Start above).
 
 Set `WAGTAIL_UNVEIL_API_KEY` via environment variable (recommended) or Django settings, then query with a Bearer token.
 If both are set, the environment variable takes precedence.
 
 ```bash
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil-api/admin-urls/
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil-api/frontend-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/admin-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/frontend-urls/
 ```
 
 Filter with `?filter=static`, `?filter=parameterized`, `?filter=pages`, or `?filter=resolver`.

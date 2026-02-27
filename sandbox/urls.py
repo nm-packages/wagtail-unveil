@@ -14,8 +14,7 @@ urlpatterns = [
     path("documents/", include(wagtaildocs_urls)),
     path("images/", include(wagtailimages_urls)),
     path("search/", search_views.search, name="search"),
-    path("unveil-api/", include("wagtail_unveil.api_urls")),
-    path("unveil-report/", include("wagtail_unveil.report_urls")),
+    path("unveil/", include("wagtail_unveil.urls")),
 ]
 
 

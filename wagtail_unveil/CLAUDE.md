@@ -43,5 +43,5 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 - This app is registered as `"wagtail_unveil"` in INSTALLED_APPS
 - Migrations live in `migrations/` and are created via `uv run --env-file .env django-admin makemigrations wagtail_unveil`
 - API endpoints are authenticated via `WAGTAIL_UNVEIL_API_KEY` environment variable (Bearer token)
-- API URL config is in `api_urls.py` — consuming projects include it in their own `urls.py`
-- Report URL config is in `report_urls.py` — HTML report requires superuser login and `DEBUG=True`
+- URL config is in `urls.py` — consuming projects include it in their own `urls.py` with `path("unveil/", include("wagtail_unveil.urls"))`
+- HTML reports require superuser login and `DEBUG=True`

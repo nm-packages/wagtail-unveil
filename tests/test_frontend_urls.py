@@ -2,10 +2,7 @@ from django.test import TestCase
 from wagtail.models import Page
 
 from sandbox.events.models import EventIndexPage
-from wagtail_unveil.urls import (
-    FrontendURL,
-    get_frontend_urls,
-)
+from wagtail_unveil.discovery.frontend import FrontendURL, get_frontend_urls
 
 
 class TestGetFrontendUrls(TestCase):

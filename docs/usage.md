@@ -6,12 +6,12 @@ Detailed reference documentation for wagtail-unveil. For a quick overview, see t
 
 ### Setup
 
-1. Add the API URLs to your project's `urls.py`:
+1. Add the URLs to your project's `urls.py`:
 
 ```python
 urlpatterns = [
     # ... your other URLs ...
-    path("unveil-api/", include("wagtail_unveil.api_urls")),
+    path("unveil/", include("wagtail_unveil.urls")),
 ]
 ```
 
@@ -43,13 +43,13 @@ so `"/__debug__/"` and `"__debug__/"` are equivalent. Invalid values are silentl
 
 ```bash
 # All admin URLs
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil-api/admin-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/admin-urls/
 
 # Static URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-api/admin-urls/?filter=static"
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/admin-urls/?filter=static"
 
 # Parameterized URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-api/admin-urls/?filter=parameterized"
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/admin-urls/?filter=parameterized"
 ```
 
 **Response:**
@@ -73,13 +73,13 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-ap
 
 ```bash
 # All frontend URLs
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil-api/frontend-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/frontend-urls/
 
 # Page URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-api/frontend-urls/?filter=pages"
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/frontend-urls/?filter=pages"
 
 # Resolver URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-api/frontend-urls/?filter=resolver"
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/frontend-urls/?filter=resolver"
 ```
 
 ### Authentication
@@ -92,20 +92,13 @@ If no key is configured in either place, the endpoint returns `500`.
 
 ### Setup
 
-Add the report URLs to your project's `urls.py`:
-
-```python
-urlpatterns = [
-    # ... your other URLs ...
-    path("unveil-report/", include("wagtail_unveil.report_urls")),
-]
-```
+The report URLs are included automatically when you add `wagtail_unveil.urls` (see JSON API → Setup above).
 
 Reports require **superuser login** and **`DEBUG=True`**.
 
 ### Admin URLs Report
 
-Visit `/unveil-report/admin-urls/` while logged into the Wagtail admin.
+Visit `/unveil/report/admin-urls/` while logged into the Wagtail admin.
 
 **Features:**
 
@@ -119,7 +112,7 @@ Visit `/unveil-report/admin-urls/` while logged into the Wagtail admin.
 
 ### Frontend URLs Report
 
-Visit `/unveil-report/frontend-urls/` while logged into the Wagtail admin.
+Visit `/unveil/report/frontend-urls/` while logged into the Wagtail admin.
 
 **Features:**
 
