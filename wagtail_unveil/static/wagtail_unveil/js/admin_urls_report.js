@@ -255,6 +255,20 @@ class UnveilResetButton extends HTMLElement {
 }
 customElements.define('unveil-reset-button', UnveilResetButton);
 
+class UnveilHelpButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'help-btn';
+        btn.textContent = 'Help';
+        btn.addEventListener('click', function() {
+            btn.classList.toggle('active');
+            document.querySelector('.help-panel').classList.toggle('hidden');
+        });
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-help-button', UnveilHelpButton);
+
 function testUrl(btn, url) {
     btn.disabled = true;
     btn.textContent = "\u2026";

@@ -115,7 +115,7 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
 
     def test_report_has_reset_button(self):
         response = self.client.get("/unveil-report/admin-urls/")
-        self.assertContains(response, "reset-btn")
+        self.assertContains(response, "unveil-reset-button")
         self.assertContains(response, "Reset")
 
     def test_report_has_test_all_button(self):
@@ -152,7 +152,7 @@ class TestAdminUrlsReportView(WagtailTestUtils, TestCase):
 
     def test_report_has_help_button(self):
         response = self.client.get("/unveil-report/admin-urls/")
-        self.assertContains(response, "help-btn")
+        self.assertContains(response, "unveil-help-button")
 
     def test_report_has_help_panel(self):
         response = self.client.get("/unveil-report/admin-urls/")

@@ -105,7 +105,7 @@ class TestFrontendUrlsReportView(WagtailTestUtils, TestCase):
 
     def test_report_has_reset_button(self):
         response = self.client.get("/unveil-report/frontend-urls/")
-        self.assertContains(response, "reset-btn")
+        self.assertContains(response, "unveil-reset-button")
 
     def test_report_has_test_all_button(self):
         response = self.client.get("/unveil-report/frontend-urls/")
