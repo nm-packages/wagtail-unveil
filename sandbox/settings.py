@@ -218,3 +218,4 @@ WAGTAILDOCS_EXTENSIONS = ["csv", "docx", "key", "odt", "pdf", "pptx", "rtf", "tx
 
 
 WAGTAIL_UNVEIL_PAGES_PER_TYPE = 1
+WAGTAIL_UNVEIL_API_KEY = "test"

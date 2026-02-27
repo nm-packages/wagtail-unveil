@@ -99,7 +99,8 @@ urlpatterns = [
 ]
 ```
 
-Set the `WAGTAIL_UNVEIL_API_KEY` environment variable and query with a Bearer token:
+Set `WAGTAIL_UNVEIL_API_KEY` via environment variable (recommended) or Django settings, then query with a Bearer token.  
+If both are set, the environment variable takes precedence.
 
 ```bash
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil-api/admin-urls/

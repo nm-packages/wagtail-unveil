@@ -47,11 +47,19 @@ urlpatterns = [
 ]
 ```
 
-2. Set the `WAGTAIL_UNVEIL_API_KEY` environment variable:
+2. Set `WAGTAIL_UNVEIL_API_KEY` (environment variable recommended):
 
 ```bash
 export WAGTAIL_UNVEIL_API_KEY=your-secret-key
 ```
+
+   Alternatively, set it in Django settings:
+
+```python
+WAGTAIL_UNVEIL_API_KEY = "your-secret-key"
+```
+
+   If both are set, the environment variable takes precedence.
 
 ### Admin URLs API
 
@@ -98,7 +106,9 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-ap
 
 ### Authentication
 
-The API requires a Bearer token matching the `WAGTAIL_UNVEIL_API_KEY` environment variable. Requests without a valid key receive a `403` response. If the environment variable is not set, the endpoint returns `500`.
+The API requires a Bearer token matching `WAGTAIL_UNVEIL_API_KEY` (from environment or Django settings).  
+If both are set, environment is used. Requests without a valid key receive a `403` response.  
+If no key is configured in either place, the endpoint returns `500`.
 
 ## HTML Reports
 

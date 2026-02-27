@@ -34,11 +34,21 @@ class TestFrontendUrlsAPIView(TestCase):
 
     def test_returns_500_when_no_env_var(self):
         with patch.dict("os.environ", {}, clear=True):
-            response = self.client.get(
-                "/unveil-api/frontend-urls/",
-                HTTP_AUTHORIZATION="Bearer test-secret",
-            )
-            self.assertEqual(response.status_code, 500)
+            with self.settings(WAGTAIL_UNVEIL_API_KEY=""):
+                response = self.client.get(
+                    "/unveil-api/frontend-urls/",
+                    HTTP_AUTHORIZATION="Bearer test-secret",
+                )
+                self.assertEqual(response.status_code, 500)
+
+    def test_uses_settings_fallback_when_env_missing(self):
+        with patch.dict("os.environ", {}, clear=True):
+            with self.settings(WAGTAIL_UNVEIL_API_KEY="test-from-settings"):
+                response = self.client.get(
+                    "/unveil-api/frontend-urls/",
+                    HTTP_AUTHORIZATION="Bearer test-from-settings",
+                )
+                self.assertEqual(response.status_code, 200)
 
     def test_filter_pages(self):
         response = self.client.get(
