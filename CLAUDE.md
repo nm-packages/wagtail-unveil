@@ -126,7 +126,7 @@ Single `admin_urls_report.js` shared by both report templates. Uses `data-sort-c
 
 ### Configuration
 
-- `WAGTAIL_UNVEIL_PAGES_PER_TYPE` Django setting (default `0` = all pages; positive int = limit per page type)
+- `WAGTAIL_UNVEIL_PAGES_PER_TYPE` Django setting (default `1` page per type when omitted; positive int = limit per page type; `0` = no limit; invalid/negative values fall back to `1`)
 - `WAGTAIL_UNVEIL_API_KEY` env var for API authentication (absent → 500; invalid → 403)
 
 ### Consuming Project Setup

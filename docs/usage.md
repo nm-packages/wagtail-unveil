@@ -61,6 +61,12 @@ WAGTAIL_UNVEIL_API_KEY = "your-secret-key"
 
    If both are set, the environment variable takes precedence.
 
+### Configuration Notes
+
+`WAGTAIL_UNVEIL_PAGES_PER_TYPE` defaults to `1` when omitted.
+Values are normalized to a non-negative integer. Invalid or negative values default to `1`.
+Use `0` explicitly for no limit.
+
 ### Admin URLs API
 
 ```bash
@@ -106,8 +112,8 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil-ap
 
 ### Authentication
 
-The API requires a Bearer token matching `WAGTAIL_UNVEIL_API_KEY` (from environment or Django settings).  
-If both are set, environment is used. Requests without a valid key receive a `403` response.  
+The API requires a Bearer token matching `WAGTAIL_UNVEIL_API_KEY` (from environment or Django settings).
+If both are set, environment is used. Requests without a valid key receive a `403` response.
 If no key is configured in either place, the endpoint returns `500`.
 
 ## HTML Reports

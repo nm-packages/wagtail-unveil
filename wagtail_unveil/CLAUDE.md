@@ -14,7 +14,7 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 
 - `apps.py` — Django app config (`WagtailUnveilConfig`)
 - `models.py` — Package models
-- `settings.py` — Settings helpers; `get_pages_per_type()` reads `WAGTAIL_UNVEIL_PAGES_PER_TYPE` (default 0 = all pages, positive int = limit per page type)
+- `settings.py` — Settings helpers; `get_pages_per_type()` reads `WAGTAIL_UNVEIL_PAGES_PER_TYPE` (default `1` page per type when omitted; positive int = limit per page type; `0` = no limit; invalid/negative values fall back to `1`)
 - `urls.py` — URL discovery logic:
   - `get_admin_urls()` returns list of `AdminURL` dataclasses; `_resolve_parameterised_url()` generically resolves parameterised admin URLs (snippets, redirects, images, documents, users, groups, modeladmin, wagtailforms) by extracting the model from view callbacks and using real DB instances, populating `AdminURL.resolved_route`. For `wagtailforms` namespace URLs (form submissions), falls back to `_get_form_page_instance()` which finds a live `FormMixin` page since the plain-function views don't expose a model attribute. `wagtailsettings` namespace URLs (`admin/settings/...`) are resolved via `_resolve_settings_url()` which iterates registered setting models from `wagtail.contrib.settings.registry` and reverses with kwargs (app_name, model_name, pk)
   - `_clean_regex_route()` strips regex anchors (`^`, `$`) and converts named groups (`(?P<name>...)`) to path-style `<name>` — applied to all routes so `re_path()` patterns (e.g. from wagtail-modeladmin) are handled correctly

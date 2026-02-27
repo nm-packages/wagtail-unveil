@@ -99,7 +99,7 @@ urlpatterns = [
 ]
 ```
 
-Set `WAGTAIL_UNVEIL_API_KEY` via environment variable (recommended) or Django settings, then query with a Bearer token.  
+Set `WAGTAIL_UNVEIL_API_KEY` via environment variable (recommended) or Django settings, then query with a Bearer token.
 If both are set, the environment variable takes precedence.
 
 ```bash
@@ -130,9 +130,13 @@ WAGTAIL_UNVEIL_PAGES_PER_TYPE = 1
 # Test up to 3 pages per type
 WAGTAIL_UNVEIL_PAGES_PER_TYPE = 3
 
-# Test all pages (default behaviour)
+# Test all pages (no limit)
 WAGTAIL_UNVEIL_PAGES_PER_TYPE = 0
 ```
+
+Default behavior is `1` page per type when the setting is omitted.
+Values are normalized to a non-negative integer. Invalid or negative values default to `1`.
+Use `0` explicitly for no limit.
 
 ## Compatibility
 

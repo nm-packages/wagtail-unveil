@@ -40,32 +40,6 @@ function toggleUntestable() {
     applyFilters();
 }
 
-var searchInput = document.querySelector(".search-input");
-var searchClear = document.querySelector(".search-clear");
-
-searchInput.addEventListener("input", function() {
-    currentSearchTerm = this.value.toLowerCase();
-    searchClear.classList.toggle("hidden", !this.value);
-    applyFilters();
-});
-
-searchClear.addEventListener("click", function() {
-    searchInput.value = "";
-    currentSearchTerm = "";
-    searchClear.classList.add("hidden");
-    applyFilters();
-});
-
-// Initialize toggle button state from cookie
-(function() {
-    var btn = document.querySelector(".toggle-untestable-btn");
-    if (btn && hideUntestable) {
-        btn.textContent = "Show Untestable";
-        btn.classList.add("active");
-        applyFilters();
-    }
-})();
-
 // Column sorting
 document.querySelectorAll("th[data-sort-col]").forEach(function(th) {
     th.addEventListener("click", function() {
@@ -125,15 +99,29 @@ function cancelTests() {
 
 function finishTests() {
     var s = testState;
+    var passed = s.passed;
+    var failed = s.failed;
+    var total = s.total;
+    var cancelled = s.cancelled;
     var testAllBtn = document.querySelector(".test-all-btn");
     var pauseBtn = document.querySelector(".pause-btn");
     var cancelBtn = document.querySelector(".cancel-btn");
     testAllBtn.classList.remove("hidden");
     pauseBtn.classList.add("hidden");
     cancelBtn.classList.add("hidden");
-    var suffix = s.cancelled ? " (cancelled)" : "";
-    s.summaryEl.innerHTML = "Results: <span class='pass'>" + s.passed + " passed</span>, <span class='fail'>" + s.failed + " failed</span> out of " + s.done + "/" + s.total + suffix;
+    var suffix = cancelled ? " (cancelled)" : "";
+    s.summaryEl.innerHTML = "Results: <span class='pass'>" + passed + " passed</span>, <span class='fail'>" + failed + " failed</span> out of " + s.done + "/" + total + suffix;
     testState = null;
+    if (!cancelled && failed === 0 && total > 0) {
+        var tbody = document.querySelector("tbody");
+        var banner = document.createElement("tr");
+        banner.className = "success-banner-row";
+        var td = document.createElement("td");
+        td.setAttribute("colspan", "100");
+        td.innerHTML = "&#10003; All " + total + " URLs returned 2xx \u2014 no errors found.";
+        banner.appendChild(td);
+        tbody.prepend(banner);
+    }
 }
 
 function testAll() {
@@ -150,6 +138,10 @@ function testAll() {
     pauseBtn.onclick = pauseTests;
     cancelBtn.classList.add("hidden");
     summaryEl.classList.remove("hidden");
+
+    // Remove any existing success banner before starting
+    var existingBanner = document.querySelector("tbody .success-banner-row");
+    if (existingBanner) existingBanner.remove();
 
     testState = {
         total: buttons.length,
@@ -225,6 +217,113 @@ function testAll() {
     updateSummary();
     runNext(0);
 }
+
+class UnveilResetButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'reset-btn';
+        btn.textContent = 'Reset';
+        btn.addEventListener('click', function() { location.reload(); });
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-reset-button', UnveilResetButton);
+
+class UnveilHelpButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'help-btn';
+        btn.textContent = 'Help';
+        btn.addEventListener('click', function() {
+            btn.classList.toggle('active');
+            document.querySelector('.help-panel').classList.toggle('hidden');
+        });
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-help-button', UnveilHelpButton);
+
+class UnveilToggleUntestableButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'toggle-untestable-btn';
+        btn.textContent = hideUntestable ? 'Show Untestable' : 'Hide Untestable';
+        if (hideUntestable) {
+            btn.classList.add('active');
+            applyFilters();
+        }
+        btn.addEventListener('click', toggleUntestable);
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-toggle-untestable-button', UnveilToggleUntestableButton);
+
+class UnveilTestAllButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'test-all-btn';
+        btn.textContent = 'Test All';
+        btn.addEventListener('click', testAll);
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-test-all-button', UnveilTestAllButton);
+
+class UnveilPauseButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'pause-btn hidden';
+        btn.textContent = 'Pause';
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-pause-button', UnveilPauseButton);
+
+class UnveilCancelButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'cancel-btn hidden';
+        btn.textContent = 'Cancel';
+        btn.addEventListener('click', cancelTests);
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-cancel-button', UnveilCancelButton);
+
+class UnveilSearchInput extends HTMLElement {
+    connectedCallback() {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'search-wrapper';
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'search-input';
+        input.placeholder = this.getAttribute('placeholder') || '';
+        var clear = document.createElement('button');
+        clear.type = 'button';
+        clear.className = 'search-clear hidden';
+        clear.setAttribute('aria-label', 'Clear search');
+        clear.textContent = '\u00d7';
+        input.addEventListener('input', function() {
+            currentSearchTerm = input.value.toLowerCase();
+            clear.classList.toggle('hidden', !input.value);
+            var banner = document.querySelector('tbody .success-banner-row');
+            if (banner) banner.remove();
+            applyFilters();
+        });
+        clear.addEventListener('click', function() {
+            input.value = '';
+            currentSearchTerm = '';
+            clear.classList.add('hidden');
+            var banner = document.querySelector('tbody .success-banner-row');
+            if (banner) banner.remove();
+            applyFilters();
+        });
+        wrapper.appendChild(input);
+        wrapper.appendChild(clear);
+        this.appendChild(wrapper);
+    }
+}
+customElements.define('unveil-search-input', UnveilSearchInput);
 
 function testUrl(btn, url) {
     btn.disabled = true;
