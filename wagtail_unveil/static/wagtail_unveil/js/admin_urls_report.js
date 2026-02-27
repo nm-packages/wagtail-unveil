@@ -125,15 +125,29 @@ function cancelTests() {
 
 function finishTests() {
     var s = testState;
+    var passed = s.passed;
+    var failed = s.failed;
+    var total = s.total;
+    var cancelled = s.cancelled;
     var testAllBtn = document.querySelector(".test-all-btn");
     var pauseBtn = document.querySelector(".pause-btn");
     var cancelBtn = document.querySelector(".cancel-btn");
     testAllBtn.classList.remove("hidden");
     pauseBtn.classList.add("hidden");
     cancelBtn.classList.add("hidden");
-    var suffix = s.cancelled ? " (cancelled)" : "";
-    s.summaryEl.innerHTML = "Results: <span class='pass'>" + s.passed + " passed</span>, <span class='fail'>" + s.failed + " failed</span> out of " + s.done + "/" + s.total + suffix;
+    var suffix = cancelled ? " (cancelled)" : "";
+    s.summaryEl.innerHTML = "Results: <span class='pass'>" + passed + " passed</span>, <span class='fail'>" + failed + " failed</span> out of " + s.done + "/" + total + suffix;
     testState = null;
+    if (!cancelled && failed === 0 && total > 0) {
+        var tbody = document.querySelector("tbody");
+        var banner = document.createElement("tr");
+        banner.className = "success-banner-row";
+        var td = document.createElement("td");
+        td.setAttribute("colspan", "100");
+        td.innerHTML = "&#10003; All " + total + " URLs returned 2xx \u2014 no errors found.";
+        banner.appendChild(td);
+        tbody.prepend(banner);
+    }
 }
 
 function testAll() {
@@ -150,6 +164,10 @@ function testAll() {
     pauseBtn.onclick = pauseTests;
     cancelBtn.classList.add("hidden");
     summaryEl.classList.remove("hidden");
+
+    // Remove any existing success banner before starting
+    var existingBanner = document.querySelector("tbody .success-banner-row");
+    if (existingBanner) existingBanner.remove();
 
     testState = {
         total: buttons.length,
