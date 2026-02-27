@@ -50,3 +50,20 @@ def get_skip_url_prefixes():
         if isinstance(item, str):
             result.append(item.lstrip("/"))
     return result
+
+
+def get_api_key():
+    """Return WAGTAIL_UNVEIL_API_KEY as a non-empty string, or '' if absent/invalid.
+
+    Accepted inputs:
+    - environment variable WAGTAIL_UNVEIL_API_KEY (checked first)
+    - Django setting WAGTAIL_UNVEIL_API_KEY (fallback)
+
+    Invalid, non-string, or empty values return ''.
+    """
+    import os
+
+    value = os.environ.get("WAGTAIL_UNVEIL_API_KEY") or getattr(settings, "WAGTAIL_UNVEIL_API_KEY", "")
+    if not isinstance(value, str):
+        return ""
+    return value.strip()

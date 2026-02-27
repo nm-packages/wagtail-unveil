@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 
-from wagtail_unveil.settings import get_pages_per_type, get_skip_url_prefixes
+from wagtail_unveil.settings import get_api_key, get_pages_per_type, get_skip_url_prefixes
 from wagtail_unveil.urls import get_admin_urls, get_frontend_urls
 
 
@@ -154,6 +154,51 @@ class TestGetSkipUrlPrefixes(TestCase):
     @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["valid/", 42, None, "/also-valid/"])
     def test_mixed_valid_and_invalid_items(self):
         self.assertEqual(get_skip_url_prefixes(), ["valid/", "also-valid/"])
+
+
+class TestGetApiKey(TestCase):
+    def test_missing_env_and_missing_setting_returns_empty_string(self):
+        with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
+            with patch.dict("os.environ", {}, clear=True):
+                self.assertEqual(get_api_key(), "")
+
+    def test_env_var_non_empty_string_returned(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "mysecretkey"}):
+            self.assertEqual(get_api_key(), "mysecretkey")
+
+    def test_env_var_strips_whitespace(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "  mykey  "}):
+            self.assertEqual(get_api_key(), "mykey")
+
+    def test_env_var_empty_string_returns_empty_string(self):
+        with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
+            with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": ""}):
+                self.assertEqual(get_api_key(), "")
+
+    @override_settings(WAGTAIL_UNVEIL_API_KEY="django-setting-key")
+    def test_django_setting_fallback_when_env_var_absent(self):
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(get_api_key(), "django-setting-key")
+
+    @override_settings(WAGTAIL_UNVEIL_API_KEY=None)
+    def test_django_setting_none_returns_empty_string(self):
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(get_api_key(), "")
+
+    @override_settings(WAGTAIL_UNVEIL_API_KEY=True)
+    def test_django_setting_bool_returns_empty_string(self):
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(get_api_key(), "")
+
+    @override_settings(WAGTAIL_UNVEIL_API_KEY=42)
+    def test_django_setting_int_returns_empty_string(self):
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(get_api_key(), "")
+
+    @override_settings(WAGTAIL_UNVEIL_API_KEY="django-key")
+    def test_env_var_wins_over_django_setting(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "env-key"}):
+            self.assertEqual(get_api_key(), "env-key")
 
 
 class TestSkipUrlPrefixesFilter(TestCase):
