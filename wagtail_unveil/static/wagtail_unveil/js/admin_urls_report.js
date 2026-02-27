@@ -244,6 +244,17 @@ function testAll() {
     runNext(0);
 }
 
+class UnveilResetButton extends HTMLElement {
+    connectedCallback() {
+        var btn = document.createElement('button');
+        btn.className = 'reset-btn';
+        btn.textContent = 'Reset';
+        btn.addEventListener('click', function() { location.reload(); });
+        this.appendChild(btn);
+    }
+}
+customElements.define('unveil-reset-button', UnveilResetButton);
+
 function testUrl(btn, url) {
     btn.disabled = true;
     btn.textContent = "\u2026";
