@@ -13,28 +13,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `tests/` — Root-level test package, split by feature area (not inside the distributable package)
 - `.env.example` — Template for `.env`; copy to `.env` before developing (`cp .env.example .env`)
 
-## Makefile
-
-A `Makefile` provides shortcuts for common development tasks:
-
-```bash
-make setup          # Full dev setup: env, install, migrate, superuser, sample-data
-make runserver      # Start the sandbox dev server (alias: make run)
-make test           # Run package tests
-make tox            # Run tests across all Python/Django/Wagtail versions
-make lint           # Run ruff check
-make lint-fix       # Run ruff check --fix
-make pre-commit     # Run pre-commit hooks on all files
-make coverage       # Run tests with coverage and show terminal report
-make coverage-html  # Generate HTML coverage report and open it
-make makemigrations # Create package migrations
-make sample-data    # Create sample data
-make clean          # Remove db.sqlite3 and .env
-```
-
 ## Development Commands
 
-The full commands (also used by the Makefile):
+A `Makefile` wraps all common tasks (`make setup`, `make test`, `make lint`, `make tox`, etc.). Full commands:
 
 ```bash
 # Install dependencies (uses uv)
@@ -158,7 +139,23 @@ Tests in `tests/` mirror the delivery layer:
 
 ## Conventions
 
-See [CONVENTIONS.md](CONVENTIONS.md) for all coding conventions. Follow these strictly.
+See [CONVENTIONS.md](CONVENTIONS.md) for all coding conventions. Follow these strictly. Key points:
+
+- **Strings:** Double quotes everywhere (enforced by ruff, line length 120)
+- **URLs:** Use `path()` not `re_path()`, use `app_name` namespacing
+- **Views:** Use Wagtail `ViewSet`/`register_admin_viewset` hook — no legacy `ModelAdmin`
+- **Models:** `BigAutoField` as default auto field
+- **Package boundary:** `wagtail_unveil/` must never import from `sandbox/`
+- **No new top-level apps** unless explicitly discussed
+- **Tests:** Base class `django.test.TestCase` (or `WagtailTestUtils` mixin for admin views); use `setUp()` not pytest fixtures
+- **After each piece of work:** Update the relevant CLAUDE.md files and README.md to reflect new features, files, or changes
+
+## Sub-directory CLAUDE.md Files
+
+More detailed guidance lives in:
+
+- [`wagtail_unveil/CLAUDE.md`](wagtail_unveil/CLAUDE.md) — key files, dataclass schemas, view/URL config details, settings helpers
+- [`sandbox/CLAUDE.md`](sandbox/CLAUDE.md) — sandbox app purposes, management commands, URL config
 
 ## Tech Stack
 
