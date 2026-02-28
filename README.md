@@ -18,7 +18,6 @@ Wagtail sites accumulate hundreds of URLs — admin views, page routes, routable
 - **Full URL discovery** — walks Django's URL resolver tree and Wagtail's page tree to find every admin and frontend route, including `RoutablePageMixin` sub-paths
 - **Smart parameterized URL resolution** — automatically resolves URLs with parameters (snippets, images, documents, users) using real database instances so they become testable
 - **Interactive HTML reports** — browser-based tables with one-click testing, Test All with progress tracking, search, sort, and a Hide Untestable toggle
-- **Management commands** — `show_admin_urls` and `show_frontend_urls` for terminal output with filtering options
 - **JSON API** — bearer-token-authenticated endpoints for CI/CD integration and external monitoring tools
 - **Dashboard widget** — links to both reports directly from the Wagtail admin home page
 
@@ -44,17 +43,7 @@ Run migrations:
 python manage.py migrate
 ```
 
-Discover your URLs:
-
-```bash
-# List all admin URLs
-python manage.py show_admin_urls
-
-# List all frontend URLs
-python manage.py show_frontend_urls
-```
-
-Or add the HTML reports to your `urls.py` and browse them interactively:
+Add the HTML reports to your `urls.py` and browse them interactively:
 
 ```python
 urlpatterns = [
@@ -66,20 +55,6 @@ urlpatterns = [
 Then visit `/unveil-report/admin-urls/` or `/unveil-report/frontend-urls/` while logged in as a superuser (requires `DEBUG=True`).
 
 ## Usage
-
-### Management Commands
-
-```bash
-# Admin URLs — all, static only, or parameterized only
-python manage.py show_admin_urls
-python manage.py show_admin_urls --static
-python manage.py show_admin_urls --parameterized
-
-# Frontend URLs — all, pages only, or resolver only
-python manage.py show_frontend_urls
-python manage.py show_frontend_urls --pages
-python manage.py show_frontend_urls --resolver
-```
 
 ### HTML Reports
 

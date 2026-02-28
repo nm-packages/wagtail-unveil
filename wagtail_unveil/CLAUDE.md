@@ -37,8 +37,6 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 - `wagtail_hooks.py` — Wagtail hooks (dashboard panel linking to both reports, superuser + DEBUG only)
 - `admin.py` — Wagtail admin integration
 - Tests live in the root-level `tests/` package (run with `uv run --env-file .env django-admin test tests`)
-- `management/commands/show_admin_urls.py` — Management command to list admin URLs
-- `management/commands/show_frontend_urls.py` — Management command to list frontend URLs (`--pages` / `--resolver` filters)
 
 ### Conventions
 

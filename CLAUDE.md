@@ -94,9 +94,6 @@ Once a model is found, the first real DB instance is fetched and the URL is reve
 
 ### Delivery Layer
 
-- **Management commands** (`show_admin_urls`, `show_frontend_urls`) — terminal output
-  - `show_admin_urls --static` / `--parameterized` — filter to static or parameterized routes only
-  - `show_frontend_urls --pages` / `--resolver` — filter to page-source or resolver-source URLs only
 - **JSON API** (`wagtail_unveil/api_urls.py`, namespace `wagtail_unveil_api`) — bearer token auth via `WAGTAIL_UNVEIL_API_KEY` env var; `?filter=static|parameterized` / `?filter=pages|resolver` query params supported
 - **HTML reports** (`wagtail_unveil/report_urls.py`, namespace `wagtail_unveil_report`) — superuser + `DEBUG=True` only; client-side fetch testing with search, sort, Test All, and Hide Untestable (cookie-persisted)
 - **Dashboard widget** (`wagtail_hooks.py`) — registers panel linking to both reports, superuser + `DEBUG=True` only
