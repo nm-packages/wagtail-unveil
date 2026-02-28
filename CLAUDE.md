@@ -145,7 +145,42 @@ See [CONVENTIONS.md](CONVENTIONS.md) for all coding conventions. Follow these st
 - **Package boundary:** `wagtail_unveil/` must never import from `sandbox/`
 - **No new top-level apps** unless explicitly discussed
 - **Tests:** Base class `django.test.TestCase` (or `WagtailTestUtils` mixin for admin views); use `setUp()` not pytest fixtures
-- **After each piece of work:** Update the relevant CLAUDE.md files and README.md to reflect new features, files, or changes
+- **After each piece of work:** Run lint and coverage checks, then update the relevant CLAUDE.md files and README.md (see [Post-Change Workflow](#post-change-workflow) below)
+
+## Post-Change Workflow
+
+After making any code changes to `wagtail_unveil/` or `tests/`, run these steps in order before marking the work complete:
+
+**1. Lint**
+
+```bash
+make lint
+```
+
+If ruff reports errors, fix them and confirm clean:
+
+```bash
+make lint-fix
+make lint
+```
+
+Do not leave lint errors unfixed.
+
+**2. Tests and Coverage**
+
+```bash
+make coverage
+```
+
+Runs the full test suite and prints a coverage report for `wagtail_unveil/` with missing lines (`show_missing = true` is set in `pyproject.toml`).
+
+**3. Inspect Coverage for Touched Files**
+
+Check the "Miss" column for every file you modified or created in `wagtail_unveil/`. If any of those files show uncovered lines, add tests before finishing. Pre-existing uncovered lines in files you did not touch do not require action in the current task. Re-run `make coverage` to confirm new lines are covered.
+
+**4. Update Docs**
+
+Update the relevant CLAUDE.md files and README.md to reflect new features, files, or changes.
 
 ## Sub-directory CLAUDE.md Files
 

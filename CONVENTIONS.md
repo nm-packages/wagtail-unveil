@@ -32,6 +32,6 @@
 ## Documentation
 
 - **Pre-commit hooks** are configured in `.pre-commit-config.yaml` — run `make pre-commit` to check all files, or `uv run pre-commit install` to enable automatic checks on each commit
-- **After each piece of work**, update the relevant CLAUDE.md files and README.md to reflect new features, files, or changes
+- **After each piece of work**, run lint and coverage checks (see Post-Change Workflow in root CLAUDE.md), then update the relevant CLAUDE.md files and README.md to reflect new features, files, or changes
 - **README.md** is user-facing documentation — document features, usage, and configuration
 - **CLAUDE.md files** are for Claude Code context — document key files, structure, and conventions
