@@ -1,8 +1,6 @@
-from io import StringIO
 from unittest import mock
 
 from django.contrib.auth.models import Group, User
-from django.core.management import call_command
 from django.test import TestCase
 from wagtail.documents.models import Document
 from wagtail.images.models import Image
@@ -78,33 +76,6 @@ class TestGetAdminUrls(TestCase):
         self.assertEqual(len(home), 1)
         self.assertTrue(home[0].is_testable)
         self.assertEqual(home[0].skip_reason, "")
-
-
-class TestShowAdminUrlsCommand(TestCase):
-    def _call(self, *args):
-        out = StringIO()
-        call_command("show_admin_urls", *args, stdout=out)
-        return out.getvalue()
-
-    def test_command_runs(self):
-        output = self._call()
-        self.assertIn("Total:", output)
-
-    def test_output_contains_urls(self):
-        output = self._call()
-        self.assertIn("wagtailadmin_home", output)
-
-    def test_static_filter(self):
-        output = self._call("--static")
-        for line in output.splitlines():
-            if line.startswith("admin/"):
-                self.assertNotIn("<", line)
-
-    def test_parameterized_filter(self):
-        output = self._call("--parameterized")
-        for line in output.splitlines():
-            if line.startswith("admin/"):
-                self.assertTrue("<" in line or "(" in line, line)
 
 
 class TestCleanRegexRoute(TestCase):

@@ -2,38 +2,6 @@
 
 Detailed reference documentation for wagtail-unveil. For a quick overview, see the [README](../README.md).
 
-## Management Commands
-
-### `show_admin_urls`
-
-List all admin URLs in the terminal.
-
-```bash
-# All admin URLs
-django-admin show_admin_urls
-
-# Static URLs only (no path parameters)
-django-admin show_admin_urls --static
-
-# Parameterized URLs only
-django-admin show_admin_urls --parameterized
-```
-
-### `show_frontend_urls`
-
-List all frontend URLs — both Wagtail page URLs and Django resolver routes.
-
-```bash
-# All frontend URLs
-django-admin show_frontend_urls
-
-# Page URLs only
-django-admin show_frontend_urls --pages
-
-# Resolver URLs only
-django-admin show_frontend_urls --resolver
-```
-
 ## JSON API
 
 ### Setup

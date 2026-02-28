@@ -13,28 +13,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `tests/` — Root-level test package, split by feature area (not inside the distributable package)
 - `.env.example` — Template for `.env`; copy to `.env` before developing (`cp .env.example .env`)
 
-## Makefile
-
-A `Makefile` provides shortcuts for common development tasks:
-
-```bash
-make setup          # Full dev setup: env, install, migrate, superuser, sample-data
-make runserver      # Start the sandbox dev server (alias: make run)
-make test           # Run package tests
-make tox            # Run tests across all Python/Django/Wagtail versions
-make lint           # Run ruff check
-make lint-fix       # Run ruff check --fix
-make pre-commit     # Run pre-commit hooks on all files
-make coverage       # Run tests with coverage and show terminal report
-make coverage-html  # Generate HTML coverage report and open it
-make makemigrations # Create package migrations
-make sample-data    # Create sample data
-make clean          # Remove db.sqlite3 and .env
-```
-
 ## Development Commands
 
-The full commands (also used by the Makefile):
+A `Makefile` wraps all common tasks (`make setup`, `make test`, `make lint`, `make tox`, etc.). Full commands:
 
 ```bash
 # Install dependencies (uses uv)
@@ -113,9 +94,6 @@ Once a model is found, the first real DB instance is fetched and the URL is reve
 
 ### Delivery Layer
 
-- **Management commands** (`show_admin_urls`, `show_frontend_urls`) — terminal output
-  - `show_admin_urls --static` / `--parameterized` — filter to static or parameterized routes only
-  - `show_frontend_urls --pages` / `--resolver` — filter to page-source or resolver-source URLs only
 - **JSON API** (`wagtail_unveil/api_urls.py`, namespace `wagtail_unveil_api`) — bearer token auth via `WAGTAIL_UNVEIL_API_KEY` env var; `?filter=static|parameterized` / `?filter=pages|resolver` query params supported
 - **HTML reports** (`wagtail_unveil/report_urls.py`, namespace `wagtail_unveil_report`) — superuser + `DEBUG=True` only; client-side fetch testing with search, sort, Test All, and Hide Untestable (cookie-persisted)
 - **Dashboard widget** (`wagtail_hooks.py`) — registers panel linking to both reports, superuser + `DEBUG=True` only
@@ -158,7 +136,58 @@ Tests in `tests/` mirror the delivery layer:
 
 ## Conventions
 
-See [CONVENTIONS.md](CONVENTIONS.md) for all coding conventions. Follow these strictly.
+See [CONVENTIONS.md](CONVENTIONS.md) for all coding conventions. Follow these strictly. Key points:
+
+- **Strings:** Double quotes everywhere (enforced by ruff, line length 120)
+- **URLs:** Use `path()` not `re_path()`, use `app_name` namespacing
+- **Views:** Use Wagtail `ViewSet`/`register_admin_viewset` hook — no legacy `ModelAdmin`
+- **Models:** `BigAutoField` as default auto field
+- **Package boundary:** `wagtail_unveil/` must never import from `sandbox/`
+- **No new top-level apps** unless explicitly discussed
+- **Tests:** Base class `django.test.TestCase` (or `WagtailTestUtils` mixin for admin views); use `setUp()` not pytest fixtures
+- **After each piece of work:** Run lint and coverage checks, then update the relevant CLAUDE.md files and README.md (see [Post-Change Workflow](#post-change-workflow) below)
+
+## Post-Change Workflow
+
+After making any code changes to `wagtail_unveil/` or `tests/`, run these steps in order before marking the work complete:
+
+**1. Lint**
+
+```bash
+make lint
+```
+
+If ruff reports errors, fix them and confirm clean:
+
+```bash
+make lint-fix
+make lint
+```
+
+Do not leave lint errors unfixed.
+
+**2. Tests and Coverage**
+
+```bash
+make coverage
+```
+
+Runs the full test suite and prints a coverage report for `wagtail_unveil/` with missing lines (`show_missing = true` is set in `pyproject.toml`).
+
+**3. Inspect Coverage for Touched Files**
+
+Check the "Miss" column for every file you modified or created in `wagtail_unveil/`. If any of those files show uncovered lines, add tests before finishing. Pre-existing uncovered lines in files you did not touch do not require action in the current task. Re-run `make coverage` to confirm new lines are covered.
+
+**4. Update Docs**
+
+Update the relevant CLAUDE.md files and README.md to reflect new features, files, or changes.
+
+## Sub-directory CLAUDE.md Files
+
+More detailed guidance lives in:
+
+- [`wagtail_unveil/CLAUDE.md`](wagtail_unveil/CLAUDE.md) — key files, dataclass schemas, view/URL config details, settings helpers
+- [`sandbox/CLAUDE.md`](sandbox/CLAUDE.md) — sandbox app purposes, management commands, URL config
 
 ## Tech Stack
 

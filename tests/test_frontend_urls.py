@@ -1,6 +1,3 @@
-from io import StringIO
-
-from django.core.management import call_command
 from django.test import TestCase
 from wagtail.models import Page
 
@@ -136,26 +133,3 @@ class TestRoutableSubUrls(TestCase):
             self.assertEqual(url.page_type, self.page_type)
             self.assertEqual(url.page_title, "Events")
             self.assertTrue(url.name)
-
-
-class TestShowFrontendUrlsCommand(TestCase):
-    def _call(self, *args):
-        out = StringIO()
-        call_command("show_frontend_urls", *args, stdout=out)
-        return out.getvalue()
-
-    def test_command_runs(self):
-        output = self._call()
-        self.assertIn("Total:", output)
-
-    def test_pages_filter(self):
-        output = self._call("--pages")
-        for line in output.splitlines():
-            if line.startswith("/"):
-                self.assertIn("page", line)
-
-    def test_resolver_filter(self):
-        output = self._call("--resolver")
-        for line in output.splitlines():
-            if line.startswith("/"):
-                self.assertIn("resolver", line)
