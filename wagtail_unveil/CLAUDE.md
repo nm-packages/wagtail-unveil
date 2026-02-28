@@ -14,7 +14,7 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
 
 - `apps.py` — Django app config (`WagtailUnveilConfig`)
 - `models.py` — Package models
-- `settings.py` — Settings helpers; `get_pages_per_type()` reads `WAGTAIL_UNVEIL_PAGES_PER_TYPE` (default `1` page per type when omitted; positive int = limit per page type; `0` = no limit; invalid/negative values fall back to `1`); `get_skip_url_prefixes()` reads `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES` (default `[]`; list of URL path prefixes to exclude from discovery; leading slashes stripped)
+- `settings.py` — Settings helpers; `get_pages_per_type()` reads `WAGTAIL_UNVEIL_PAGES_PER_TYPE` (default `1` page per type when omitted; positive int = limit per page type; `0` = no limit; invalid/negative values fall back to `1`); `get_skip_url_prefixes()` reads `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES` (default `[]`; list of URL path prefixes to exclude from discovery; leading slashes stripped); `get_api_key()` reads `WAGTAIL_UNVEIL_API_KEY` from env var first then Django setting fallback, returns `''` if absent, non-string, or empty — used by both JSON view endpoints for Bearer token auth
 - `urls.py` — URL discovery logic:
   - `get_admin_urls()` returns list of `AdminURL` dataclasses; `_resolve_parameterised_url()` generically resolves parameterised admin URLs (snippets, redirects, images, documents, users, groups, modeladmin, wagtailforms) by extracting the model from view callbacks and using real DB instances, populating `AdminURL.resolved_route`. For `wagtailforms` namespace URLs (form submissions), falls back to `_get_form_page_instance()` which finds a live `FormMixin` page since the plain-function views don't expose a model attribute. `wagtailsettings` namespace URLs (`admin/settings/...`) are resolved via `_resolve_settings_url()` which iterates registered setting models from `wagtail.contrib.settings.registry` and reverses with kwargs (app_name, model_name, pk)
   - `_clean_regex_route()` strips regex anchors (`^`, `$`) and converts named groups (`(?P<name>...)`) to path-style `<name>` — applied to all routes so `re_path()` patterns (e.g. from wagtail-modeladmin) are handled correctly
@@ -28,8 +28,10 @@ Discover all URLs in a Wagtail site (hardcoded routes, Wagtail page URLs, admin 
   - All report views require superuser + DEBUG=True; JSON views require API key
 - `api_urls.py` — API URL configuration (`app_name = "wagtail_unveil_api"`): `admin-urls/` and `frontend-urls/`
 - `report_urls.py` — Report URL configuration (`app_name = "wagtail_unveil_report"`): `admin-urls/` and `frontend-urls/`
+- `templates/wagtail_unveil/base_report.html` — Shared parent template extended by both report templates; provides common HTML structure, nav bar, filter controls, and CSS/JS loading
 - `templates/wagtail_unveil/admin_urls_report.html` — Admin URLs HTML report template
 - `templates/wagtail_unveil/frontend_urls_report.html` — Frontend URLs HTML report template
+- `templates/wagtail_unveil/dashboard_panel.html` — Wagtail admin homepage panel template used by `UnveilReportPanel` in `wagtail_hooks.py`
 - `static/wagtail_unveil/css/admin_urls_report.css` — Shared report page styles
 - `static/wagtail_unveil/js/admin_urls_report.js` — Shared report page JavaScript (search, sort, test buttons, move-failed-to-top, hide/show untestable toggle with cookie persistence)
 - `wagtail_hooks.py` — Wagtail hooks (dashboard panel linking to both reports, superuser + DEBUG only)
