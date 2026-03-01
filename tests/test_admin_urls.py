@@ -7,11 +7,8 @@ from wagtail.images.models import Image
 from wagtail.images.tests.utils import get_test_image_file
 from wagtail.models import Site
 
-from wagtail_unveil.urls import (
-    AdminURL,
-    _clean_regex_route,
-    get_admin_urls,
-)
+from wagtail_unveil.discovery.backend import BackendURL, get_admin_urls
+from wagtail_unveil.discovery.utils import clean_regex_route
 
 
 class TestGetAdminUrls(TestCase):
@@ -27,7 +24,7 @@ class TestGetAdminUrls(TestCase):
 
     def test_url_has_expected_fields(self):
         url = self.urls[0]
-        self.assertIsInstance(url, AdminURL)
+        self.assertIsInstance(url, BackendURL)
         self.assertIsInstance(url.route, str)
         self.assertIsInstance(url.name, str)
         self.assertIsInstance(url.namespace, str)
@@ -79,29 +76,29 @@ class TestGetAdminUrls(TestCase):
 
 
 class TestCleanRegexRoute(TestCase):
-    """Test the _clean_regex_route() helper."""
+    """Test the clean_regex_route() helper."""
 
     def test_strips_caret(self):
-        self.assertEqual(_clean_regex_route("^foo/bar/"), "foo/bar/")
+        self.assertEqual(clean_regex_route("^foo/bar/"), "foo/bar/")
 
     def test_strips_dollar(self):
-        self.assertEqual(_clean_regex_route("foo/bar/$"), "foo/bar/")
+        self.assertEqual(clean_regex_route("foo/bar/$"), "foo/bar/")
 
     def test_strips_both_anchors(self):
-        self.assertEqual(_clean_regex_route("^foo/bar/$"), "foo/bar/")
+        self.assertEqual(clean_regex_route("^foo/bar/$"), "foo/bar/")
 
     def test_converts_named_group(self):
         self.assertEqual(
-            _clean_regex_route("^edit/(?P<instance_pk>[-\\w]+)/$"),
+            clean_regex_route("^edit/(?P<instance_pk>[-\\w]+)/$"),
             "edit/<instance_pk>/",
         )
 
     def test_passthrough_normal_route(self):
-        self.assertEqual(_clean_regex_route("admin/home/"), "admin/home/")
+        self.assertEqual(clean_regex_route("admin/home/"), "admin/home/")
 
     def test_multiple_named_groups(self):
         self.assertEqual(
-            _clean_regex_route("^a/(?P<pk>[0-9]+)/b/(?P<slug>[-\\w]+)/$"),
+            clean_regex_route("^a/(?P<pk>[0-9]+)/b/(?P<slug>[-\\w]+)/$"),
             "a/<pk>/b/<slug>/",
         )
 
@@ -353,7 +350,7 @@ class TestMissingServeUrls(TestCase):
 
     def _get_admin_urls_without(self, *missing_names):
         with mock.patch(
-            "wagtail_unveil.urls._is_url_registered",
+            "wagtail_unveil.discovery.backend._is_url_registered",
             side_effect=lambda name: name not in missing_names,
         ):
             return get_admin_urls()
