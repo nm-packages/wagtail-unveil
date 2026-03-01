@@ -140,7 +140,7 @@ make coverage   # Run tests with coverage report
 make pre-commit # Run pre-commit hooks on all files
 ```
 
-See [CLAUDE.md](CLAUDE.md) for the full list of development commands.
+See [AGENTS.md](AGENTS.md) for the full list of development commands and agent-facing project guidance.
 
 ## License
 
