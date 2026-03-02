@@ -49,7 +49,9 @@ unveil-toggle-untestable-button,
 unveil-test-all-button,
 unveil-pause-button,
 unveil-cancel-button,
-unveil-help-button { display: contents; }
+unveil-help-button,
+unveil-test-button,
+unveil-open-button { display: contents; }
 unveil-reset-button { margin-left: auto; display: flex; }
 .reset-btn { padding: 6px 14px; border: none; background: #e0e0e0; color: #333; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
 .reset-btn:hover { background: #bdbdbd; }

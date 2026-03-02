@@ -83,7 +83,20 @@ class BaseReportViewTestMixin:
 
     def test_report_has_test_buttons(self):
         response = self.client.get(self.report_url)
-        self.assertContains(response, "test-btn")
+        self.assertContains(response, "unveil-test-button")
+
+    def test_report_has_open_buttons(self):
+        response = self.client.get(self.report_url)
+        self.assertContains(response, "unveil-open-button")
+
+    def test_report_uses_data_attributes_for_test_targets(self):
+        response = self.client.get(self.report_url)
+        content = response.content.decode()
+        self.assertIn('data-url="', content)
+
+    def test_report_does_not_use_inline_onclick_handlers(self):
+        response = self.client.get(self.report_url)
+        self.assertNotContains(response, "onclick=")
 
     def test_report_has_reset_button(self):
         response = self.client.get(self.report_url)
@@ -109,9 +122,26 @@ class BaseReportViewTestMixin:
         response = self.client.get(self.report_url)
         self.assertContains(response, "wagtail_unveil/css/admin_urls_report.css")
 
-    def test_report_loads_static_js(self):
+    def test_report_loads_static_js_modules(self):
         response = self.client.get(self.report_url)
-        self.assertContains(response, "wagtail_unveil/js/admin_urls_report.js")
+        content = response.content.decode()
+        script_paths = [
+            "wagtail_unveil/js/report_core.js",
+            "wagtail_unveil/js/report_filters.js",
+            "wagtail_unveil/js/report_sorting.js",
+            "wagtail_unveil/js/report_row_actions.js",
+            "wagtail_unveil/js/report_batch_runner.js",
+            "wagtail_unveil/js/report_components.js",
+            "wagtail_unveil/js/report_bootstrap.js",
+        ]
+
+        last_index = -1
+        for script_path in script_paths:
+            with self.subTest(script_path=script_path):
+                self.assertIn(script_path, content)
+                current_index = content.index(script_path)
+                self.assertGreater(current_index, last_index)
+                last_index = current_index
 
     def test_report_has_help_panel(self):
         response = self.client.get(self.report_url)

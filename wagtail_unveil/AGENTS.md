@@ -20,7 +20,8 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 - `discovery/frontend.py` — frontend URL discovery
 - `discovery/utils.py` — shared resolver utilities
 - `templates/wagtail_unveil/` — report and dashboard templates
-- `static/wagtail_unveil/` — shared report CSS and JavaScript
+- `static/wagtail_unveil/css/` — shared report styles
+- `static/wagtail_unveil/js/` — ordered, no-build report JavaScript modules plus bootstrap
 
 ## Package Interfaces
 
