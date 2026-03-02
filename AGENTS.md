@@ -84,7 +84,7 @@ The sandbox project mounts the package at `/unveil/` and serves Wagtail pages fr
 
 ## Coding Conventions
 
-See [CONVENTIONS.md](/Volumes/PACKAGES/wagtail-unveil/CONVENTIONS.md) for the full project conventions. Important rules:
+See [CONVENTIONS.md](CONVENTIONS.md) for the full project conventions. Important rules:
 
 - Use double quotes consistently
 - Use `path()` and namespaced URLs
@@ -105,8 +105,8 @@ After changing code in `wagtail_unveil/` or `tests/`:
 
 More focused guidance lives in:
 
-- [wagtail_unveil/AGENTS.md](/Volumes/PACKAGES/wagtail-unveil/wagtail_unveil/AGENTS.md) — package-specific architecture and constraints
-- [sandbox/AGENTS.md](/Volumes/PACKAGES/wagtail-unveil/sandbox/AGENTS.md) — sandbox-specific structure and sample-data notes
+- [wagtail_unveil/AGENTS.md](wagtail_unveil/AGENTS.md) — package-specific architecture and constraints
+- [sandbox/AGENTS.md](sandbox/AGENTS.md) — sandbox-specific structure and sample-data notes
 
 ## Documentation Contract
 
