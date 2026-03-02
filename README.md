@@ -13,7 +13,7 @@
 
 Wagtail sites accumulate hundreds of URLs — admin views, page routes, routable sub-paths, API endpoints. Broken routes hide in plain sight until a user hits a 500 error. **wagtail-unveil** automatically discovers every URL in your site and lets you verify they all return 200 OK.
 
-It exposes that discovery through JSON API endpoints, interactive HTML reports in Wagtail admin, and a dashboard panel linking to both reports.
+It exposes that discovery through JSON API endpoints, and (for superusers when `DEBUG=True`; see [Dashboard widget](#dashboard-widget) below) interactive HTML reports in Wagtail admin plus a dashboard panel linking to both reports.
 
 ## Features
 
