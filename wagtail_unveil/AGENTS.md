@@ -6,6 +6,8 @@ This file contains package-specific guidance for `wagtail_unveil/`.
 
 `wagtail_unveil` is the reusable package. Code in this directory must work when installed into any Wagtail project and must not depend on `sandbox/`.
 
+The current public interface is URL-based and admin-integrated: URLconf inclusion, JSON API views, HTML report views, and the Wagtail dashboard panel. Package-level management commands are not currently provided.
+
 ## Key Files
 
 - `apps.py` — Django app config
@@ -21,6 +23,15 @@ This file contains package-specific guidance for `wagtail_unveil/`.
 - `static/wagtail_unveil/` — shared report CSS and JavaScript
 
 ## Package Interfaces
+
+`wagtail_unveil` currently exposes:
+
+- URLconf inclusion via `wagtail_unveil.urls`
+- JSON API endpoints
+- HTML report views
+- Wagtail dashboard integration
+
+Do not document or assume package management commands unless they are reintroduced in code.
 
 ### Settings
 

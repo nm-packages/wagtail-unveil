@@ -4,7 +4,7 @@ This file is the canonical guidance for coding agents working in this repository
 
 ## Project Overview
 
-**wagtail-unveil** is a reusable Wagtail package that discovers frontend and Wagtail admin URLs in a site. It provides JSON endpoints and HTML reports so developers can inspect URLs and test whether they return expected response codes.
+**wagtail-unveil** is a reusable Wagtail package that discovers frontend and Wagtail admin URLs in a site. It exposes that functionality through JSON endpoints, HTML reports, and a Wagtail dashboard panel so developers can inspect URLs and test whether they return expected response codes.
 
 ## Repository Structure
 
@@ -14,6 +14,8 @@ This file is the canonical guidance for coding agents working in this repository
 - `.env.example` — Template for local development environment variables
 
 ## Development Commands
+
+These commands are for contributors working in this repository's sandbox and test environment. They are not package-level interfaces exposed by `wagtail_unveil`.
 
 Prefer the `Makefile` targets for standard workflows:
 
@@ -82,7 +84,7 @@ The sandbox project mounts the package at `/unveil/` and serves Wagtail pages fr
 
 ## Coding Conventions
 
-See [CONVENTIONS.md](/Volumes/WAGTAIL/wagtail-unveil/CONVENTIONS.md) for the full project conventions. Important rules:
+See [CONVENTIONS.md](CONVENTIONS.md) for the full project conventions. Important rules:
 
 - Use double quotes consistently
 - Use `path()` and namespaced URLs
@@ -103,8 +105,8 @@ After changing code in `wagtail_unveil/` or `tests/`:
 
 More focused guidance lives in:
 
-- [wagtail_unveil/AGENTS.md](/Volumes/WAGTAIL/wagtail-unveil/wagtail_unveil/AGENTS.md) — package-specific architecture and constraints
-- [sandbox/AGENTS.md](/Volumes/WAGTAIL/wagtail-unveil/sandbox/AGENTS.md) — sandbox-specific structure and sample-data notes
+- [wagtail_unveil/AGENTS.md](wagtail_unveil/AGENTS.md) — package-specific architecture and constraints
+- [sandbox/AGENTS.md](sandbox/AGENTS.md) — sandbox-specific structure and sample-data notes
 
 ## Documentation Contract
 

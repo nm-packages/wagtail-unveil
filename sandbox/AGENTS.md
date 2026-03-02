@@ -6,6 +6,8 @@ This file contains sandbox-specific guidance for the example Wagtail project.
 
 `sandbox/` is a development and testing site for `wagtail_unveil`. It exists to exercise the package against a realistic Wagtail installation.
 
+Sandbox-only helpers, including management commands such as `create_sample_data`, are fixture and developer tooling for this example project. They are not part of the distributable `wagtail_unveil` package interface.
+
 ## Structure
 
 - `settings.py` — sandbox settings
