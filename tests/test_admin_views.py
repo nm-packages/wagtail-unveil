@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -5,6 +6,8 @@ from django.test import RequestFactory, TestCase, override_settings
 from wagtail.test.utils import WagtailTestUtils
 
 from tests.utils import BaseAPIViewTestMixin, BaseReportViewTestMixin
+from wagtail_unveil.discovery.backend import BackendURL
+from wagtail_unveil.views import _authenticate_api_request, _serialize_backend_url
 from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 
@@ -29,6 +32,58 @@ class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
         data = response.json()
         for url in data["urls"]:
             self.assertTrue(url["has_parameters"], url["route"])
+
+
+class TestAdminAPIViewHelpers(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
+    def test_authenticate_api_request_accepts_matching_bearer_token(self):
+        request = self.factory.get(
+            "/unveil/api/admin-urls/",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        self.assertIsNone(_authenticate_api_request(request))
+
+    @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
+    def test_authenticate_api_request_rejects_wrong_bearer_token(self):
+        request = self.factory.get(
+            "/unveil/api/admin-urls/",
+            HTTP_AUTHORIZATION="Bearer wrong-key",
+        )
+        response = _authenticate_api_request(request)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            json.loads(response.content),
+            {"error": "Invalid or missing API key"},
+        )
+
+    def test_serialize_backend_url(self):
+        url = BackendURL(
+            route="admin/pages/1/edit/",
+            name="edit",
+            namespace="wagtailadmin_pages",
+            has_parameters=True,
+            view_name="wagtail.admin.views.pages.edit.EditView",
+            is_testable=True,
+            skip_reason="",
+            resolved_route="admin/pages/1/edit/",
+        )
+
+        self.assertEqual(
+            _serialize_backend_url(url),
+            {
+                "route": "admin/pages/1/edit/",
+                "name": "edit",
+                "namespace": "wagtailadmin_pages",
+                "has_parameters": True,
+                "view_name": "wagtail.admin.views.pages.edit.EditView",
+                "is_testable": True,
+                "skip_reason": "",
+                "resolved_route": "admin/pages/1/edit/",
+            },
+        )
 
 
 @override_settings(DEBUG=True)

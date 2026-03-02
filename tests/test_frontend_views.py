@@ -5,6 +5,8 @@ from django.test import RequestFactory, TestCase, override_settings
 from wagtail.test.utils import WagtailTestUtils
 
 from tests.utils import BaseAPIViewTestMixin, BaseReportViewTestMixin
+from wagtail_unveil.discovery.frontend import FrontendURL
+from wagtail_unveil.views import _serialize_frontend_url
 from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 
@@ -29,6 +31,32 @@ class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
         data = response.json()
         for url in data["urls"]:
             self.assertEqual(url["source"], "resolver")
+
+
+class TestFrontendAPIViewHelpers(TestCase):
+    def test_serialize_frontend_url(self):
+        url = FrontendURL(
+            url="/contact/",
+            source="page",
+            page_type="core.ContactPage",
+            page_title="Contact",
+            name="",
+            is_testable=False,
+            skip_reason="Requires POST submission",
+        )
+
+        self.assertEqual(
+            _serialize_frontend_url(url),
+            {
+                "url": "/contact/",
+                "source": "page",
+                "page_type": "core.ContactPage",
+                "page_title": "Contact",
+                "name": "",
+                "is_testable": False,
+                "skip_reason": "Requires POST submission",
+            },
+        )
 
 
 @override_settings(DEBUG=True)
