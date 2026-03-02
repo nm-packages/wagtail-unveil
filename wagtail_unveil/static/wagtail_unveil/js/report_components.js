@@ -18,6 +18,7 @@
             }
 
             button = document.createElement("button");
+            button.type = "button";
             button.className = "reset-btn";
             button.textContent = "Reset";
             button.addEventListener("click", function() {
@@ -36,6 +37,7 @@
             }
 
             button = document.createElement("button");
+            button.type = "button";
             button.className = "help-btn";
             button.textContent = "Help";
             button.addEventListener("click", function() {
@@ -55,6 +57,7 @@
             }
 
             button = document.createElement("button");
+            button.type = "button";
             button.className = "toggle-untestable-btn";
             button.addEventListener("click", report.filters.toggleUntestable);
             this.appendChild(button);
@@ -70,6 +73,7 @@
             }
 
             button = document.createElement("button");
+            button.type = "button";
             button.className = "test-all-btn";
             button.textContent = "Test All";
             button.addEventListener("click", report.batchRunner.testAll);
@@ -86,6 +90,7 @@
             }
 
             button = document.createElement("button");
+            button.type = "button";
             button.className = "pause-btn hidden";
             button.textContent = "Pause";
             button.addEventListener("click", report.batchRunner.handlePauseClick);
@@ -102,6 +107,7 @@
             }
 
             button = document.createElement("button");
+            button.type = "button";
             button.className = "cancel-btn hidden";
             button.textContent = "Cancel";
             button.addEventListener("click", report.batchRunner.cancelTests);

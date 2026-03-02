@@ -34,7 +34,6 @@
     function finishTests() {
         var controls = getControls();
         var runState = state.testState;
-        var suffix;
         var tbody;
         var banner;
         var bannerCell;
@@ -45,15 +44,14 @@
 
         syncControlsForIdle();
 
-        suffix = runState.cancelled ? " (cancelled)" : "";
         runState.summaryEl.innerHTML =
             "Results: <span class=\"pass\">" + runState.passed + " passed</span>, " +
             "<span class=\"fail\">" + runState.failed + " failed</span> out of " +
-            runState.done + "/" + runState.total + suffix;
+            runState.done + "/" + runState.total;
 
         state.testState = null;
 
-        if (!runState.cancelled && runState.failed === 0 && runState.total > 0) {
+        if (runState.failed === 0 && runState.total > 0) {
             tbody = helpers.getTableBody();
             banner = document.createElement("tr");
             banner.className = "success-banner-row";
@@ -88,11 +86,6 @@
         var runState = state.testState;
 
         if (!runState) {
-            return;
-        }
-
-        if (runState.cancelled) {
-            finishTests();
             return;
         }
 
@@ -196,7 +189,6 @@
 
         state.testState = {
             buttons: buttons,
-            cancelled: false,
             done: 0,
             failed: 0,
             nextIndex: 0,
