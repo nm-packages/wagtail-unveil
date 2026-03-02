@@ -1,6 +1,9 @@
+from importlib.metadata import PackageNotFoundError, version
+
 from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
+from django.utils import timezone
 from wagtail.admin.auth import user_passes_test
 
 from wagtail_unveil.discovery.backend import get_admin_urls
@@ -53,11 +56,33 @@ def _serialize_frontend_url(url):
     }
 
 
-def _build_urls_json_response(urls, serializer):
+def _get_package_version():
+    """Return the installed wagtail-unveil package version, or an empty string."""
+    try:
+        return version("wagtail-unveil")
+    except PackageNotFoundError:
+        return ""
+
+
+def _build_urls_metadata(urls, *, applied_filter):
+    """Build metadata describing how a URL payload was produced."""
+    testable_count = sum(1 for url in urls if url.is_testable)
+    return {
+        "generated_at": timezone.now().isoformat(),
+        "applied_filter": applied_filter,
+        "total_count": len(urls),
+        "testable_count": testable_count,
+        "untestable_count": len(urls) - testable_count,
+        "package_version": _get_package_version(),
+    }
+
+
+def _build_urls_json_response(urls, serializer, *, applied_filter=None):
     """Serialize URL entries and wrap them in the standard JSON payload."""
     data = {
         "urls": [serializer(url) for url in urls],
         "count": len(urls),
+        "metadata": _build_urls_metadata(urls, applied_filter=applied_filter),
     }
     return JsonResponse(data)
 
@@ -71,12 +96,15 @@ def admin_urls_json(request):
     urls = get_admin_urls()
 
     url_filter = request.GET.get("filter")
+    applied_filter = None
     if url_filter == "static":
         urls = [u for u in urls if not u.has_parameters]
+        applied_filter = url_filter
     elif url_filter == "parameterized":
         urls = [u for u in urls if u.has_parameters]
+        applied_filter = url_filter
 
-    return _build_urls_json_response(urls, _serialize_backend_url)
+    return _build_urls_json_response(urls, _serialize_backend_url, applied_filter=applied_filter)
 
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -105,12 +133,15 @@ def frontend_urls_json(request):
     urls = get_frontend_urls()
 
     source_filter = request.GET.get("filter")
+    applied_filter = None
     if source_filter == "pages":
         urls = [u for u in urls if u.source == "page"]
+        applied_filter = source_filter
     elif source_filter == "resolver":
         urls = [u for u in urls if u.source == "resolver"]
+        applied_filter = source_filter
 
-    return _build_urls_json_response(urls, _serialize_frontend_url)
+    return _build_urls_json_response(urls, _serialize_frontend_url, applied_filter=applied_filter)
 
 
 @user_passes_test(lambda u: u.is_superuser)

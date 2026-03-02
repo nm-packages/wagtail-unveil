@@ -1,4 +1,5 @@
 import json
+from importlib.metadata import PackageNotFoundError
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -7,7 +8,7 @@ from wagtail.test.utils import WagtailTestUtils
 
 from tests.utils import BaseAPIViewTestMixin, BaseReportViewTestMixin
 from wagtail_unveil.discovery.backend import BackendURL
-from wagtail_unveil.views import _authenticate_api_request, _serialize_backend_url
+from wagtail_unveil.views import _authenticate_api_request, _get_package_version, _serialize_backend_url
 from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 
@@ -21,6 +22,8 @@ class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
+        self.assertEqual(data["metadata"]["applied_filter"], "static")
+        self.assertEqual(data["metadata"]["total_count"], data["count"])
         for url in data["urls"]:
             self.assertFalse(url["has_parameters"], url["route"])
 
@@ -30,8 +33,17 @@ class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
+        self.assertEqual(data["metadata"]["applied_filter"], "parameterized")
+        self.assertEqual(data["metadata"]["total_count"], data["count"])
         for url in data["urls"]:
             self.assertTrue(url["has_parameters"], url["route"])
+
+    def test_invalid_filter_does_not_apply_metadata_filter(self):
+        response = self.client.get(
+            "/unveil/api/admin-urls/?filter=unknown",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        self.assertIsNone(response.json()["metadata"]["applied_filter"])
 
 
 class TestAdminAPIViewHelpers(TestCase):
@@ -84,6 +96,10 @@ class TestAdminAPIViewHelpers(TestCase):
                 "resolved_route": "admin/pages/1/edit/",
             },
         )
+
+    def test_get_package_version_returns_empty_string_when_lookup_fails(self):
+        with patch("wagtail_unveil.views.version", side_effect=PackageNotFoundError):
+            self.assertEqual(_get_package_version(), "")
 
 
 @override_settings(DEBUG=True)

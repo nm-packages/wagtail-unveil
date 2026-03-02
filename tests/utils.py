@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -17,8 +18,30 @@ class BaseAPIViewTestMixin:
         data = response.json()
         self.assertIn("urls", data)
         self.assertIn("count", data)
+        self.assertIn("metadata", data)
         self.assertGreater(data["count"], 0)
         self.assertEqual(len(data["urls"]), data["count"])
+        self.assertEqual(data["metadata"]["total_count"], data["count"])
+
+    @patch("wagtail_unveil.views._get_package_version", return_value="9.9.9")
+    @patch("wagtail_unveil.views.timezone.now")
+    def test_returns_metadata(self, mock_now, _mock_version):
+        mock_now.return_value = datetime(2026, 3, 2, 12, 34, 56, tzinfo=timezone.utc)
+
+        response = self.client.get(
+            self.api_url,
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+
+        metadata = response.json()["metadata"]
+        self.assertEqual(metadata["generated_at"], "2026-03-02T12:34:56+00:00")
+        self.assertIsNone(metadata["applied_filter"])
+        self.assertEqual(metadata["package_version"], "9.9.9")
+        self.assertEqual(metadata["total_count"], response.json()["count"])
+        self.assertEqual(
+            metadata["testable_count"] + metadata["untestable_count"],
+            metadata["total_count"],
+        )
 
     def test_requires_api_key(self):
         response = self.client.get(self.api_url)

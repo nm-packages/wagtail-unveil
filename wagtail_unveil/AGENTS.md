@@ -52,6 +52,17 @@ The package exports one URL namespace:
 
 Do not document or reintroduce the old split `api_urls.py` / `report_urls.py` namespace layout unless the code changes back to that design.
 
+### JSON Response Shape
+
+JSON API endpoints preserve top-level `urls` and `count` fields and also return a `metadata` object containing:
+
+- `generated_at`
+- `applied_filter`
+- `total_count`
+- `testable_count`
+- `untestable_count`
+- `package_version`
+
 ## Discovery Notes
 
 ### Admin URLs

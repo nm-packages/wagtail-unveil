@@ -20,6 +20,8 @@ class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
+        self.assertEqual(data["metadata"]["applied_filter"], "pages")
+        self.assertEqual(data["metadata"]["total_count"], data["count"])
         for url in data["urls"]:
             self.assertEqual(url["source"], "page")
 
@@ -29,8 +31,17 @@ class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
+        self.assertEqual(data["metadata"]["applied_filter"], "resolver")
+        self.assertEqual(data["metadata"]["total_count"], data["count"])
         for url in data["urls"]:
             self.assertEqual(url["source"], "resolver")
+
+    def test_invalid_filter_does_not_apply_metadata_filter(self):
+        response = self.client.get(
+            "/unveil/api/frontend-urls/?filter=unknown",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        self.assertIsNone(response.json()["metadata"]["applied_filter"])
 
 
 class TestFrontendAPIViewHelpers(TestCase):
