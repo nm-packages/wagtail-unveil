@@ -144,6 +144,8 @@ make coverage   # Run tests with coverage report
 make pre-commit # Run pre-commit hooks on all files
 ```
 
+The report UI intentionally uses plain static JavaScript files in `wagtail_unveil/static/wagtail_unveil/js/`, loaded in template order without a build step. Keep client-side concerns split into focused files rather than reintroducing a single report script.
+
 See [AGENTS.md](AGENTS.md) for the full list of development commands and agent-facing project guidance.
 
 ## License
