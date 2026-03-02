@@ -179,7 +179,7 @@ function testAll() {
         s.nextIndex = i;
         var btn = s.buttons[i];
         var row = btn.closest("tr");
-        var url = btn.getAttribute("onclick").match(/'([^']+)'/)[1];
+        var url = btn.dataset.url;
         btn.disabled = true;
         btn.textContent = "\u2026";
         var statusCell = btn.closest("td").nextElementSibling;
@@ -325,7 +325,65 @@ class UnveilSearchInput extends HTMLElement {
 }
 customElements.define('unveil-search-input', UnveilSearchInput);
 
-function testUrl(btn, url) {
+class UnveilTestButton extends HTMLElement {
+    connectedCallback() {
+        if (this.querySelector("button")) {
+            return;
+        }
+
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "test-btn";
+        btn.textContent = "Test";
+
+        var url = this.dataset.url;
+        if (url) {
+            btn.dataset.url = url;
+            btn.addEventListener("click", function() {
+                testUrl(btn);
+            });
+        } else {
+            btn.disabled = true;
+        }
+
+        if (this.hasAttribute("disabled")) {
+            btn.disabled = true;
+        }
+
+        var title = this.getAttribute("title");
+        if (title) {
+            btn.title = title;
+        }
+
+        this.appendChild(btn);
+    }
+}
+customElements.define("unveil-test-button", UnveilTestButton);
+
+class UnveilOpenButton extends HTMLElement {
+    connectedCallback() {
+        if (this.querySelector("a")) {
+            return;
+        }
+
+        var link = document.createElement("a");
+        link.className = "open-btn";
+        link.textContent = "Open";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+
+        var href = this.getAttribute("href");
+        if (href) {
+            link.href = href;
+        }
+
+        this.appendChild(link);
+    }
+}
+customElements.define("unveil-open-button", UnveilOpenButton);
+
+function testUrl(btn) {
+    var url = btn.dataset.url;
     btn.disabled = true;
     btn.textContent = "\u2026";
     var row = btn.closest("tr");

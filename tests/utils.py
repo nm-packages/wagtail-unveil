@@ -83,7 +83,20 @@ class BaseReportViewTestMixin:
 
     def test_report_has_test_buttons(self):
         response = self.client.get(self.report_url)
-        self.assertContains(response, "test-btn")
+        self.assertContains(response, "unveil-test-button")
+
+    def test_report_has_open_buttons(self):
+        response = self.client.get(self.report_url)
+        self.assertContains(response, "unveil-open-button")
+
+    def test_report_uses_data_attributes_for_test_targets(self):
+        response = self.client.get(self.report_url)
+        content = response.content.decode()
+        self.assertIn('data-url="', content)
+
+    def test_report_does_not_use_inline_onclick_handlers(self):
+        response = self.client.get(self.report_url)
+        self.assertNotContains(response, "onclick=")
 
     def test_report_has_reset_button(self):
         response = self.client.get(self.report_url)
