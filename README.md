@@ -13,6 +13,8 @@
 
 Wagtail sites accumulate hundreds of URLs — admin views, page routes, routable sub-paths, API endpoints. Broken routes hide in plain sight until a user hits a 500 error. **wagtail-unveil** automatically discovers every URL in your site and lets you verify they all return 200 OK.
 
+It exposes that discovery through JSON API endpoints, interactive HTML reports in Wagtail admin, and a dashboard panel linking to both reports.
+
 ## Features
 
 - **Full URL discovery** — walks Django's URL resolver tree and Wagtail's page tree to find every admin and frontend route, including `RoutablePageMixin` sub-paths
@@ -129,6 +131,8 @@ The setting applies to both the frontend resolver source and the admin URL disco
 | 3.10, 3.11, 3.12, 3.13, 3.14 | 4.2, 5.1, 5.2, 6.0 | 7.0 – 7.3 |
 
 ## Development
+
+These commands are for working on this repository's sandbox and test environment. They are not part of the public interface exposed by the reusable `wagtail_unveil` package.
 
 ```bash
 make setup      # Full dev setup: env, install, migrate, superuser, sample data
