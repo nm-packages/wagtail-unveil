@@ -71,9 +71,9 @@ path("unveil/", include("wagtail_unveil.urls"))
 
 Routes provided:
 
-- `api/admin-urls/` → `wagtail_unveil:api_admin_urls`
+- `api/backend-urls/` → `wagtail_unveil:api_backend_urls`
 - `api/frontend-urls/` → `wagtail_unveil:api_frontend_urls`
-- `report/admin-urls/` → `wagtail_unveil:report_admin_urls`
+- `report/backend-urls/` → `wagtail_unveil:report_backend_urls`
 - `report/frontend-urls/` → `wagtail_unveil:report_frontend_urls`
 
 JSON endpoints use Bearer token auth via `WAGTAIL_UNVEIL_API_KEY`. HTML report views require a superuser and `DEBUG=True`.

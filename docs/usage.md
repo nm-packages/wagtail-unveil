@@ -43,13 +43,13 @@ so `"/__debug__/"` and `"__debug__/"` are equivalent. Invalid values are silentl
 
 ```bash
 # All admin URLs
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/admin-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/backend-urls/
 
 # Static URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/admin-urls/?filter=static"
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/backend-urls/?filter=static"
 
 # Parameterized URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/admin-urls/?filter=parameterized"
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/backend-urls/?filter=parameterized"
 ```
 
 **Response:**
@@ -117,7 +117,7 @@ Reports require **superuser login** and **`DEBUG=True`**.
 
 ### Admin URLs Report
 
-Visit `/unveil/report/admin-urls/` while logged into the Wagtail admin.
+Visit `/unveil/report/backend-urls/` while logged into the Wagtail admin.
 
 **Features:**
 

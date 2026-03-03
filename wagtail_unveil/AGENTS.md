@@ -46,9 +46,9 @@ Do not document or assume package management commands unless they are reintroduc
 
 The package exports one URL namespace:
 
-- `wagtail_unveil:api_admin_urls`
+- `wagtail_unveil:api_backend_urls`
 - `wagtail_unveil:api_frontend_urls`
-- `wagtail_unveil:report_admin_urls`
+- `wagtail_unveil:report_backend_urls`
 - `wagtail_unveil:report_frontend_urls`
 
 Do not document or reintroduce the old split `api_urls.py` / `report_urls.py` namespace layout unless the code changes back to that design.

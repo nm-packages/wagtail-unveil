@@ -54,7 +54,7 @@ urlpatterns = [
 ]
 ```
 
-Then visit `/unveil/report/admin-urls/` or `/unveil/report/frontend-urls/` while logged in as a superuser (requires `DEBUG=True`).
+Then visit `/unveil/report/backend-urls/` or `/unveil/report/frontend-urls/` while logged in as a superuser (requires `DEBUG=True`).
 
 ## Usage
 
@@ -62,7 +62,7 @@ Then visit `/unveil/report/admin-urls/` or `/unveil/report/frontend-urls/` while
 
 Interactive browser-based reports with one-click URL testing. Requires superuser login and `DEBUG=True`.
 
-- **Admin URLs Report** — `/unveil/report/admin-urls/`
+- **Admin URLs Report** — `/unveil/report/backend-urls/`
 - **Frontend URLs Report** — `/unveil/report/frontend-urls/`
 
 ### JSON API
@@ -73,7 +73,7 @@ Set `WAGTAIL_UNVEIL_API_KEY` via environment variable (recommended) or Django se
 If both are set, the environment variable takes precedence.
 
 ```bash
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/admin-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/backend-urls/
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/frontend-urls/
 ```
 
