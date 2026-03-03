@@ -26,7 +26,7 @@ Shared low-level helpers underpin both admin and frontend discovery:
 - `walk_patterns(patterns, prefix="", namespace="")` recursively walks Django `URLResolver` and `URLPattern` objects and yields `(route, name, namespace, callback)` tuples.
 - `clean_regex_route(route)` removes `^` and `$` anchors and converts named regex groups such as `(?P<pk>...)` into path-style placeholders such as `<pk>`.
 - `route_has_parameters(route)` identifies normalized routes that still contain `<...>` placeholders.
-- `route_contains_regex(route)` identifies normalized routes that still contain regex grouping syntax and should remain visible but untestable in frontend discovery.
+- `route_contains_regex(route)` identifies normalized routes that still contain regex constructs such as groups, character classes, escapes, or wildcard quantifiers, and should remain visible but untestable in frontend discovery.
 
 Normalization is intentionally partial. Some routes still contain regex constructs after cleanup, which means they may be discovered but remain untestable, or in the admin case may be skipped entirely if they still look unsafe for direct testing.
 

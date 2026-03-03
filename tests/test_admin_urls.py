@@ -121,6 +121,8 @@ class TestCleanRegexRoute(TestCase):
 
     def test_route_contains_regex(self):
         self.assertTrue(route_contains_regex("documents/(.*)/"))
+        self.assertTrue(route_contains_regex("year/[0-9]+/"))
+        self.assertTrue(route_contains_regex(r"year/\d+/"))
         self.assertFalse(route_contains_regex("documents/<path:path>/"))
 
 

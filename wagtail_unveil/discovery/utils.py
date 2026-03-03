@@ -2,6 +2,8 @@ import re
 
 from django.urls import URLPattern, URLResolver
 
+UNSAFE_REGEX_ROUTE_PATTERN = re.compile(r"(\\|\(|\[|[.][*+?])")
+
 
 def walk_patterns(patterns, prefix="", namespace=""):
     """Recursively walk URL patterns, yielding (route, name, namespace) tuples."""
@@ -34,4 +36,4 @@ def route_has_parameters(route):
 
 def route_contains_regex(route):
     """Return True when a normalized route still contains regex syntax."""
-    return "(" in route
+    return bool(UNSAFE_REGEX_ROUTE_PATTERN.search(route))
