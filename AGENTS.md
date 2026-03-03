@@ -50,6 +50,7 @@ The core discovery logic lives in `wagtail_unveil/discovery/`.
 - `discovery/backend.py` — `BackendURL` dataclass and `get_admin_urls()`
 - `discovery/frontend.py` — `FrontendURL` dataclass and `get_frontend_urls()`
 - `discovery/utils.py` — shared resolver walking and route normalization helpers
+- `docs/discovery-architecture.md` — canonical contributor-facing explanation of discovery, normalization, parameter resolution, and testability rules
 
 Admin URL discovery walks Django's resolver tree, filters to admin routes, and attempts to resolve parameterized URLs against real database objects where possible.
 
@@ -113,3 +114,4 @@ More focused guidance lives in:
 - `AGENTS.md` files are the canonical agent-facing project guidance
 - Root `AGENTS.md` owns repo-wide guidance
 - Nested `AGENTS.md` files own only directory-local guidance
+- `docs/discovery-architecture.md` is the canonical contributor-facing reference for discovery and resolution behavior; AGENTS files should point to it rather than duplicating detailed flow logic
