@@ -3,6 +3,7 @@ from importlib.metadata import PackageNotFoundError, version
 from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 from wagtail.admin.auth import user_passes_test
 
@@ -18,15 +19,23 @@ def _json_error(message, *, status):
 
 def _authenticate_api_request(request):
     """Validate the configured API key against the request Authorization header."""
-    api_key = get_api_key()
-    if not api_key:
-        return _json_error("WAGTAIL_UNVEIL_API_KEY is not set", status=500)
-
     auth_header = request.headers.get("Authorization", "")
-    if auth_header != f"Bearer {api_key}":
-        return _json_error("Invalid or missing API key", status=403)
 
-    return None
+    if auth_header:
+        api_key = get_api_key()
+        if not api_key:
+            return _json_error("WAGTAIL_UNVEIL_API_KEY is not set", status=500)
+
+        if auth_header != f"Bearer {api_key}":
+            return _json_error("Invalid or missing API key", status=403)
+
+        return None
+
+    user = getattr(request, "user", None)
+    if settings.DEBUG and user and user.is_authenticated and user.is_superuser:
+        return None
+
+    return _json_error("Invalid or missing API key", status=403)
 
 
 def _serialize_backend_url(url):
@@ -113,13 +122,9 @@ def admin_urls_report(request):
     if not settings.DEBUG:
         return HttpResponseNotFound()
 
-    urls = get_admin_urls()
-    testable_count = sum(1 for u in urls if u.is_testable)
     context = {
-        "urls": urls,
-        "url_count": len(urls),
-        "testable_count": testable_count,
-        "untestable_count": len(urls) - testable_count,
+        "api_url": reverse("wagtail_unveil:api_backend_urls"),
+        "report_kind": "backend",
     }
     return render(request, "wagtail_unveil/admin_urls_report.html", context)
 
@@ -150,14 +155,10 @@ def frontend_urls_report(request):
     if not settings.DEBUG:
         return HttpResponseNotFound()
 
-    urls = get_frontend_urls()
-    testable_count = sum(1 for u in urls if u.is_testable)
     pages_per_type = get_pages_per_type()
     context = {
-        "urls": urls,
-        "url_count": len(urls),
-        "testable_count": testable_count,
-        "untestable_count": len(urls) - testable_count,
+        "api_url": reverse("wagtail_unveil:api_frontend_urls"),
+        "report_kind": "frontend",
         "pages_per_type": pages_per_type,
     }
     return render(request, "wagtail_unveil/frontend_urls_report.html", context)

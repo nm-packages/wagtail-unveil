@@ -22,7 +22,7 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 - `discovery/utils.py` — shared resolver utilities
 - `templates/wagtail_unveil/` — report and dashboard templates
 - `static/wagtail_unveil/css/` — shared report styles
-- `static/wagtail_unveil/js/` — ordered, no-build report JavaScript modules plus bootstrap
+- `static/wagtail_unveil/js/` — ordered, no-build report JavaScript modules plus bootstrap/data loading
 
 ## Package Interfaces
 
@@ -42,6 +42,7 @@ Do not document or assume package management commands unless they are reintroduc
 - `WAGTAIL_UNVEIL_API_KEY`
 
 `get_api_key()` checks the environment first, then Django settings fallback.
+JSON API requests also allow superuser session auth when `DEBUG=True` and the request does not send an `Authorization` header.
 
 ### URL Names
 
@@ -64,6 +65,8 @@ JSON API endpoints preserve top-level `urls` and `count` fields and also return 
 - `testable_count`
 - `untestable_count`
 - `package_version`
+
+The HTML reports are shell views that fetch this JSON on page load rather than rendering discovery results directly in the Django template.
 
 ## Discovery Notes
 

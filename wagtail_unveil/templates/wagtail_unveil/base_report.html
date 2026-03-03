@@ -7,7 +7,7 @@
     <title>{% block title %}{% endblock %} — wagtail-unveil</title>
     <link rel="stylesheet" href="{% static 'wagtail_unveil/css/admin_urls_report.css' %}">
 </head>
-<body>
+<body data-api-url="{{ api_url|default:'' }}" data-report-kind="{{ report_kind|default:'' }}">
     <nav class="report-nav">
         <a href="/">Home</a>
         <a class="{% block admin_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil:report_backend_urls' %}">Admin URLs</a>
@@ -19,6 +19,8 @@
         <p class="summary">
             {% block summary %}{% endblock %}
         </p>
+        <p class="report-feedback" id="report-loading">Loading report data…</p>
+        <p class="report-feedback report-feedback-error hidden" id="report-error" role="alert"></p>
 
         <div class="filters">
             <unveil-search-input placeholder="{% block search_placeholder %}{% endblock %}"></unveil-search-input>
@@ -42,6 +44,7 @@
     <script src="{% static 'wagtail_unveil/js/report_row_actions.js' %}"></script>
     <script src="{% static 'wagtail_unveil/js/report_batch_runner.js' %}"></script>
     <script src="{% static 'wagtail_unveil/js/report_components.js' %}"></script>
+    <script src="{% static 'wagtail_unveil/js/report_data.js' %}"></script>
     <script src="{% static 'wagtail_unveil/js/report_bootstrap.js' %}"></script>
 </body>
 </html>

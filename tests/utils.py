@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.test import override_settings
 
 
 class BaseAPIViewTestMixin:
@@ -72,6 +73,45 @@ class BaseAPIViewTestMixin:
                 )
                 self.assertEqual(response.status_code, 200)
 
+    @override_settings(DEBUG=True)
+    def test_allows_superuser_session_without_authorization_header(self):
+        User.objects.create_superuser(username="admin", password="password")
+        self.client.login(username="admin", password="password")
+
+        response = self.client.get(self.api_url)
+
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(DEBUG=True)
+    def test_rejects_staff_session_without_authorization_header(self):
+        User.objects.create_user(username="editor", password="password", is_staff=True)
+        self.client.login(username="editor", password="password")
+
+        response = self.client.get(self.api_url)
+
+        self.assertEqual(response.status_code, 403)
+
+    @override_settings(DEBUG=False)
+    def test_rejects_superuser_session_without_authorization_header_when_not_debug(self):
+        User.objects.create_superuser(username="admin", password="password")
+        self.client.login(username="admin", password="password")
+
+        response = self.client.get(self.api_url)
+
+        self.assertEqual(response.status_code, 403)
+
+    @override_settings(DEBUG=True)
+    def test_rejects_wrong_authorization_header_even_for_superuser_session(self):
+        User.objects.create_superuser(username="admin", password="password")
+        self.client.login(username="admin", password="password")
+
+        response = self.client.get(
+            self.api_url,
+            HTTP_AUTHORIZATION="Bearer wrong-key",
+        )
+
+        self.assertEqual(response.status_code, 403)
+
 
 class BaseReportViewTestMixin:
     """Shared report view tests. Concrete class must set report_url: str and report_title: str."""
@@ -104,18 +144,16 @@ class BaseReportViewTestMixin:
         self.assertIn("Total:", content)
         self.assertIn("URLs", content)
 
-    def test_report_has_test_buttons(self):
+    def test_report_has_testing_columns(self):
         response = self.client.get(self.report_url)
-        self.assertContains(response, "unveil-test-button")
+        self.assertContains(response, "<th>Test</th>", html=True)
+        self.assertContains(response, "<th>Status</th>", html=True)
 
-    def test_report_has_open_buttons(self):
-        response = self.client.get(self.report_url)
-        self.assertContains(response, "unveil-open-button")
-
-    def test_report_uses_data_attributes_for_test_targets(self):
+    def test_report_exposes_api_configuration(self):
         response = self.client.get(self.report_url)
         content = response.content.decode()
-        self.assertIn('data-url="', content)
+        self.assertIn('data-api-url="', content)
+        self.assertIn('data-report-kind="', content)
 
     def test_report_does_not_use_inline_onclick_handlers(self):
         response = self.client.get(self.report_url)
@@ -155,6 +193,7 @@ class BaseReportViewTestMixin:
             "wagtail_unveil/js/report_row_actions.js",
             "wagtail_unveil/js/report_batch_runner.js",
             "wagtail_unveil/js/report_components.js",
+            "wagtail_unveil/js/report_data.js",
             "wagtail_unveil/js/report_bootstrap.js",
         ]
 
@@ -180,6 +219,15 @@ class BaseReportViewTestMixin:
         response = self.client.get(self.report_url)
         self.assertContains(response, "testable")
         self.assertContains(response, "untestable")
+
+    def test_report_starts_with_empty_table_body(self):
+        response = self.client.get(self.report_url)
+        content = response.content.decode()
+        self.assertIn("<tbody></tbody>", content)
+
+    def test_report_shows_loading_message(self):
+        response = self.client.get(self.report_url)
+        self.assertContains(response, "Loading report data")
 
     def test_report_returns_404_when_not_debug(self):
         with self.settings(DEBUG=False):

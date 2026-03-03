@@ -92,9 +92,12 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
 
 ### Authentication
 
-The API requires a Bearer token matching `WAGTAIL_UNVEIL_API_KEY` (from environment or Django settings).
-If both are set, environment is used. Requests without a valid key receive a `403` response.
-If no key is configured in either place, the endpoint returns `500`.
+The API accepts a Bearer token matching `WAGTAIL_UNVEIL_API_KEY` (from environment or Django settings).
+If both are set, environment is used. Requests with an invalid key receive a `403` response.
+If no key is configured in either place, Bearer-authenticated requests return `500`.
+
+When `DEBUG=True`, the built-in HTML reports fetch the same endpoints using the current logged-in superuser session.
+That session-based access is only accepted when no `Authorization` header is sent.
 
 ### Metadata
 
@@ -114,6 +117,7 @@ Both JSON endpoints include a `metadata` object alongside the existing top-level
 The report URLs are included automatically when you add `wagtail_unveil.urls` (see JSON API → Setup above).
 
 Reports require **superuser login** and **`DEBUG=True`**.
+The HTML page then fetches its data from the matching JSON endpoint using the current session.
 
 ### Admin URLs Report
 

@@ -10,8 +10,10 @@
 
         document.body.dataset.unveilReportInitialized = "true";
         report.components.defineCustomElements();
-        report.sorting.init();
-        report.filters.init();
+        report.data.loadReportData().finally(function() {
+            report.sorting.init();
+            report.filters.init();
+        });
     }
 
     if (document.readyState === "loading") {
