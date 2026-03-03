@@ -71,7 +71,7 @@ The full discovery flow, resolution fallbacks, special cases, and intentional li
 
 ### Admin URLs
 
-`get_admin_urls()` walks Django URL patterns, filters admin routes, and resolves parameterized URLs using real objects where possible. Resolution falls back through view metadata and name-based model extraction for modeladmin-style routes.
+`get_admin_urls()` walks Django URL patterns, filters admin routes, and resolves parameterized URLs using an explicit strategy order: settings, callback model inference, modeladmin name parsing, namespace-specific instance fallbacks, then reverse.
 
 ### Frontend URLs
 

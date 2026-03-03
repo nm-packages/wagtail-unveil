@@ -1,5 +1,5 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 
 from django.apps import apps
@@ -32,6 +32,20 @@ class BackendURL:
     resolved_route: str = ""
 
 
+@dataclass
+class _ParameterizedURLResolution:
+    """Internal resolution state for a parameterized admin URL."""
+
+    resolved_route: str = ""
+    resolved: bool = False
+    method: str = ""
+    detail: str = ""
+    attempts: list[str] = field(default_factory=list)
+
+    def add_attempt(self, strategy, outcome):
+        self.attempts.append(f"{strategy}:{outcome}")
+
+
 def _get_view_name(callback):
     """Return a dotted path for a view callback."""
     if hasattr(callback, "view_class"):
@@ -42,7 +56,24 @@ def _get_view_name(callback):
     return repr(callback)
 
 
-def _get_model_from_name(name):
+WORKFLOW_USAGE_NAMES = ("usage", "usage_results")
+NAMESPACE_INSTANCE_RESOLVERS = (
+    {
+        "label": "namespace:wagtailforms",
+        "predicate": lambda namespace, name: namespace == "wagtailforms",
+        "resolver": lambda: _get_form_page_instance(),
+        "override": False,
+    },
+    {
+        "label": "namespace:wagtailadmin_workflows",
+        "predicate": lambda namespace, name: namespace == "wagtailadmin_workflows" and name in WORKFLOW_USAGE_NAMES,
+        "resolver": lambda: _get_workflow_instance(),
+        "override": True,
+    },
+)
+
+
+def _get_model_from_modeladmin_name(name):
     """Extract a Django model from a modeladmin-style URL name.
 
     Modeladmin URL names follow the pattern ``{app}_{model}_modeladmin_{action}``.
@@ -56,6 +87,11 @@ def _get_model_from_name(name):
         return apps.get_model(app_label, model_name)
     except LookupError:
         return None
+
+
+def _get_model_from_name(name):
+    """Backward-compatible alias for modeladmin-style name parsing."""
+    return _get_model_from_modeladmin_name(name)
 
 
 def _get_model_from_callback(callback):
@@ -123,6 +159,46 @@ def _get_form_page_instance():
     return None
 
 
+def _get_workflow_instance():
+    """Return the first available Workflow instance."""
+    try:
+        from wagtail.models import Workflow
+
+        return Workflow.objects.first()
+    except Exception:
+        return None
+
+
+def _get_instance_for_model(model):
+    """Return a representative instance for the given model, if one exists."""
+    queryset = model.objects.all()
+    if hasattr(model, "depth"):
+        queryset = queryset.exclude(depth=1)
+    return queryset.first()
+
+
+def _build_url_name(namespace, name):
+    """Return the fully namespaced URL name for reversal."""
+    return f"{namespace}:{name}" if namespace else name
+
+
+def _reverse_with_instance(namespace, name, instance):
+    """Reverse a parameterized URL using a single positional PK argument."""
+    result = _ParameterizedURLResolution(method="reverse")
+    try:
+        url = reverse(_build_url_name(namespace, name), args=[instance.pk])
+    except Exception as exc:
+        result.add_attempt("reverse", "failed")
+        result.detail = str(exc) or exc.__class__.__name__
+        return result
+
+    result.add_attempt("reverse", "resolved")
+    result.resolved = True
+    result.resolved_route = url.lstrip("/")
+    result.detail = f"Reversed {_build_url_name(namespace, name)} with pk={instance.pk}"
+    return result
+
+
 def _resolve_settings_url(name, route):
     """Resolve a wagtailsettings URL using registered setting models.
 
@@ -140,18 +216,24 @@ def _resolve_settings_url(name, route):
     - Remove the try/except on PreviewableMixin import
     - Always use BaseSiteSetting (no fallback needed)
 
-    Returns the resolved path (without leading '/') or None.
+    Returns an internal resolution result.
     """
+    result = _ParameterizedURLResolution(method="settings")
     try:
         from wagtail.contrib.settings.registry import registry
     except ImportError:
-        return None
+        result.add_attempt("settings", "registry-unavailable")
+        result.detail = "Wagtail settings registry is unavailable"
+        return result
 
     has_pk = "<int:pk>" in route
+    matched_model = False
+    found_instance = False
     for model in registry:
         app_name = model._meta.app_label
         model_name = model._meta.model_name
         kwargs = {"app_name": app_name, "model_name": model_name}
+        matched_model = True
 
         # preview_on_edit is only meaningful for previewable settings models
         # This URL was added in Wagtail 7.1. In 7.0, it doesn't exist in URL patterns.
@@ -170,6 +252,7 @@ def _resolve_settings_url(name, route):
             instance = model.objects.first()
             if not instance:
                 continue
+            found_instance = True
             # Wagtail 7.0+: The <int:pk> parameter means different things by model type.
             # BaseSiteSetting: pk in URL = site pk (not settings row pk)
             # BaseGenericSetting: pk in URL = settings row pk
@@ -185,65 +268,126 @@ def _resolve_settings_url(name, route):
                 # Fallback: assume BaseGenericSetting (unlikely in modern Wagtail)
                 kwargs["pk"] = instance.pk
         try:
-            url = reverse(f"wagtailsettings:{name}", kwargs=kwargs)
-            return url.lstrip("/")
-        except Exception:
+            url = reverse("wagtailsettings:%s" % name, kwargs=kwargs)
+        except Exception as exc:
+            result.detail = str(exc) or exc.__class__.__name__
             continue
-    return None
+
+        result.add_attempt("settings", "resolved")
+        result.resolved = True
+        result.resolved_route = url.lstrip("/")
+        result.detail = f"Resolved wagtailsettings:{name} via {app_name}.{model_name}"
+        return result
+
+    if has_pk and matched_model and not found_instance:
+        result.add_attempt("settings", "no-model-instance")
+        result.detail = "No settings instances exist for the registered settings models"
+    else:
+        result.add_attempt("settings", "reverse-failed")
+        if not result.detail:
+            result.detail = "Could not reverse wagtailsettings URL for any registered settings model"
+    return result
 
 
-def _resolve_parameterised_url(namespace, name, callback, route=""):
-    """Attempt to resolve a parameterised URL using a real model instance.
+def _get_namespace_specific_instance(namespace, name, current_instance):
+    """Return a namespace-specific instance override when one applies."""
+    selected_method = ""
+    selected_instance = current_instance
+    attempts = []
 
-    Extracts the model from the view callback, fetches the first instance,
-    and reverses the URL with that instance's PK. For treebeard models
-    (e.g. Collection), skips the root node (depth=1) which Wagtail protects.
+    for rule in NAMESPACE_INSTANCE_RESOLVERS:
+        if not rule["predicate"](namespace, name):
+            continue
+        if current_instance is not None and not rule["override"]:
+            attempts.append(f"{rule['label']}:skipped")
+            continue
 
-    Falls back to parsing the URL name for modeladmin-style patterns when
-    the callback doesn't expose a model directly. For ``wagtailforms``
-    namespace URLs, falls back to finding a live form page instance. For
-    ``wagtailsettings`` namespace URLs, uses registered setting models
-    with kwargs-based reversal.
+        instance = rule["resolver"]()
+        if instance is None:
+            attempts.append(f"{rule['label']}:no-instance")
+            continue
 
-    Returns the resolved path (without leading '/') or None.
-    """
-    # Settings URLs use kwargs, not positional args
+        attempts.append(f"{rule['label']}:instance-found")
+        selected_method = rule["label"]
+        selected_instance = instance
+        current_instance = instance
+
+    return selected_method, selected_instance, attempts
+
+
+def _resolve_parameterized_url(namespace, name, callback, route=""):
+    """Attempt to resolve a parameterized admin URL using an explicit strategy order."""
     if namespace == "wagtailsettings":
         return _resolve_settings_url(name, route)
 
+    result = _ParameterizedURLResolution()
+
+    selected_method = ""
+    selected_instance = None
+
     model = _get_model_from_callback(callback)
-    if model is None:
-        model = _get_model_from_name(name)
-
-    instance = None
     if model is not None:
-        queryset = model.objects.all()
-        if hasattr(model, "depth"):
-            queryset = queryset.exclude(depth=1)
-        instance = queryset.first()
+        result.add_attempt("callback-model", "model-found")
+        selected_instance = _get_instance_for_model(model)
+        if selected_instance is not None:
+            selected_method = "callback-model"
+            result.add_attempt("callback-model", "instance-found")
+        else:
+            result.add_attempt("callback-model", "no-instance")
+    else:
+        result.add_attempt("callback-model", "no-model")
 
-    # Fallback: wagtailforms views use page_id but don't expose a model
-    if instance is None and namespace == "wagtailforms":
-        instance = _get_form_page_instance()
+    if selected_instance is None:
+        model = _get_model_from_modeladmin_name(name)
+        if model is not None:
+            result.add_attempt("modeladmin-name", "model-found")
+            selected_instance = _get_instance_for_model(model)
+            if selected_instance is not None:
+                selected_method = "modeladmin-name"
+                result.add_attempt("modeladmin-name", "instance-found")
+            else:
+                result.add_attempt("modeladmin-name", "no-instance")
+        else:
+            result.add_attempt("modeladmin-name", "no-model")
+    else:
+        result.add_attempt("modeladmin-name", "skipped")
 
-    # Fallback: workflow usage views inherit model=Page from PageListingMixin
-    # but actually look up a Workflow instance by pk
-    if namespace == "wagtailadmin_workflows" and name in ("usage", "usage_results"):
-        try:
-            from wagtail.models import Workflow
+    namespace_method, namespace_instance, namespace_attempts = _get_namespace_specific_instance(
+        namespace,
+        name,
+        selected_instance,
+    )
+    result.attempts.extend(namespace_attempts)
+    if namespace_method:
+        selected_method = namespace_method
+        selected_instance = namespace_instance
 
-            instance = Workflow.objects.first()
-        except Exception:
-            instance = None
+    if selected_instance is None:
+        result.detail = "No model-backed instance was available for URL parameters"
+        return result
 
-    if instance is None:
-        return None
-    try:
-        url_name = f"{namespace}:{name}" if namespace else name
-        url = reverse(url_name, args=[instance.pk])
-        return url.lstrip("/")
-    except Exception:
-        return None
+    reverse_result = _reverse_with_instance(namespace, name, selected_instance)
+    result.attempts.extend(reverse_result.attempts)
+    if reverse_result.resolved:
+        result.resolved = True
+        result.method = selected_method or "reverse"
+        result.resolved_route = reverse_result.resolved_route
+        result.detail = (
+            f"{result.method} resolved {_build_url_name(namespace, name)} to {reverse_result.resolved_route}"
+        )
+        return result
+
+    result.method = selected_method or "reverse"
+    result.detail = (
+        f"{result.method} found an instance for {_build_url_name(namespace, name)} "
+        f"but reverse failed: {reverse_result.detail}"
+    )
+    return result
+
+
+def _resolve_parameterised_url(namespace, name, callback, route=""):
+    """Backward-compatible alias for the American-English helper name."""
+    return _resolve_parameterized_url(namespace, name, callback, route)
 
 
 def get_admin_urls():
@@ -309,10 +453,10 @@ def get_admin_urls():
             is_testable = False
             skip_reason = 'Requires path("images/", include(wagtailimages_urls)) in URLconf'
         elif has_parameters:
-            resolved = _resolve_parameterised_url(namespace, name, callback, route)
-            if resolved:
+            resolution = _resolve_parameterized_url(namespace, name, callback, route)
+            if resolution.resolved:
                 is_testable = True
-                resolved_route = resolved
+                resolved_route = resolution.resolved_route
             else:
                 is_testable = False
                 skip_reason = "URL requires parameters"

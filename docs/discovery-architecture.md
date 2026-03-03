@@ -52,20 +52,23 @@ There are also namespace-specific readiness checks:
 
 ## Parameter Resolution Strategy
 
-`_resolve_parameterised_url()` attempts to turn a parameterized admin route into a real path that can be tested. It does this in priority order:
+`_resolve_parameterized_url()` attempts to turn a parameterized admin route into a real path that can be tested. It now follows an explicit strategy pipeline:
 
-1. If the namespace is `wagtailsettings`, delegate to `_resolve_settings_url()`.
-2. Try to infer a model from callback init kwargs such as `initkwargs["model"]` or `view_initkwargs["model"]`.
-3. Inspect `view_class.model` as a plain class attribute.
-4. Inspect `view_class.model` when it is a cached property.
-5. Walk the view class MRO and repeat the class attribute / cached property checks on parent classes.
-6. Fall back to parsing modeladmin-style URL names such as `{app}_{model}_modeladmin_{action}`.
-7. For `wagtailforms` URLs, fall back to the first live form page instance.
-8. For `wagtailadmin_workflows` usage views, fall back to the first `Workflow` instance.
+1. If the namespace is `wagtailsettings`, delegate to `_resolve_settings_url()` and stop there.
+2. Try to infer a model from callback metadata via `_get_model_from_callback()`.
+3. If a callback model is found, select a representative instance with `_get_instance_for_model()`.
+4. If no callback-backed instance is available, fall back to parsing modeladmin-style URL names such as `{app}_{model}_modeladmin_{action}` and again select an instance with `_get_instance_for_model()`.
+5. Apply namespace-specific instance rules from `_get_namespace_specific_instance()`:
+   - `wagtailforms` falls back to the first live form page instance when no earlier instance exists
+   - `wagtailadmin_workflows` usage views override earlier model-derived instances with the first `Workflow` instance
+6. Reverse the URL with `_reverse_with_instance()` using the selected instance.
+7. If no instance can be selected, keep the route visible but untestable.
 
-If a model is found, the resolver usually takes the first available instance and reverses the URL with that instance's primary key. For treebeard-backed models, the query excludes the root node (`depth=1`) before selecting an instance.
+`_get_model_from_callback()` still checks callback init kwargs first, then `view_class.model`, then cached-property and MRO-based variants of `model`. For treebeard-backed models, `_get_instance_for_model()` excludes the root node (`depth=1`) before selecting the first instance.
 
-Resolved URLs are stored in `resolved_route`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters`.
+Internal resolution returns a `_ParameterizedURLResolution` object with `resolved_route`, `resolved`, `method`, `detail`, and `attempts`. This metadata is internal only. It exists to make the fallback order and failure path easier to debug and test. Public JSON responses still expose only the existing `BackendURL` fields.
+
+Resolved URLs are stored in `resolved_route` on `BackendURL`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters`.
 
 ### Settings Resolution Nuances
 
@@ -77,6 +80,7 @@ Resolved URLs are stored in `resolved_route`. If reversal fails or no suitable i
   - `BaseSiteSetting` URLs use `instance.site_id`
   - `BaseGenericSetting` URLs use `instance.pk`
 - `preview_on_edit` is only considered when previewable settings support is available and the model subclasses `PreviewableMixin`.
+- It records whether resolution failed because no settings instances existed or because reversal failed for every registered model.
 
 This logic exists to support the currently targeted Wagtail versions, including differences around previewable settings URLs and how the `pk` parameter is interpreted.
 
