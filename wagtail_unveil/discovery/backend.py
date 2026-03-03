@@ -89,11 +89,6 @@ def _get_model_from_modeladmin_name(name):
         return None
 
 
-def _get_model_from_name(name):
-    """Backward-compatible alias for modeladmin-style name parsing."""
-    return _get_model_from_modeladmin_name(name)
-
-
 def _get_model_from_callback(callback):
     """Extract a Django model class from a view callback.
 
@@ -305,6 +300,11 @@ def _get_namespace_specific_instance(namespace, name, current_instance):
         instance = rule["resolver"]()
         if instance is None:
             attempts.append(f"{rule['label']}:no-instance")
+            if rule["override"]:
+                selected_method = rule["label"]
+                selected_instance = None
+                current_instance = None
+                break
             continue
 
         attempts.append(f"{rule['label']}:instance-found")
@@ -363,7 +363,11 @@ def _resolve_parameterized_url(namespace, name, callback, route=""):
         selected_instance = namespace_instance
 
     if selected_instance is None:
-        result.detail = "No model-backed instance was available for URL parameters"
+        result.method = selected_method
+        if selected_method:
+            result.detail = f"{selected_method} did not provide a compatible instance for URL parameters"
+        else:
+            result.detail = "No model-backed instance was available for URL parameters"
         return result
 
     reverse_result = _reverse_with_instance(namespace, name, selected_instance)
@@ -383,11 +387,6 @@ def _resolve_parameterized_url(namespace, name, callback, route=""):
         f"but reverse failed: {reverse_result.detail}"
     )
     return result
-
-
-def _resolve_parameterised_url(namespace, name, callback, route=""):
-    """Backward-compatible alias for the American-English helper name."""
-    return _resolve_parameterized_url(namespace, name, callback, route)
 
 
 def get_admin_urls():

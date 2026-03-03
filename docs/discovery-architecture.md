@@ -60,7 +60,7 @@ There are also namespace-specific readiness checks:
 4. If no callback-backed instance is available, fall back to parsing modeladmin-style URL names such as `{app}_{model}_modeladmin_{action}` and again select an instance with `_get_instance_for_model()`.
 5. Apply namespace-specific instance rules from `_get_namespace_specific_instance()`:
    - `wagtailforms` falls back to the first live form page instance when no earlier instance exists
-   - `wagtailadmin_workflows` usage views override earlier model-derived instances with the first `Workflow` instance
+   - `wagtailadmin_workflows` usage views override earlier model-derived instances with the first `Workflow` instance, and fail closed if no workflow exists
 6. Reverse the URL with `_reverse_with_instance()` using the selected instance.
 7. If no instance can be selected, keep the route visible but untestable.
 
@@ -68,7 +68,7 @@ There are also namespace-specific readiness checks:
 
 Internal resolution returns a `_ParameterizedURLResolution` object with `resolved_route`, `resolved`, `method`, `detail`, and `attempts`. This metadata is internal only. It exists to make the fallback order and failure path easier to debug and test. Public JSON responses still expose only the existing `BackendURL` fields.
 
-Resolved URLs are stored in `resolved_route` on `BackendURL`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters`.
+Resolved URLs are stored in `resolved_route` on `BackendURL`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters`. Namespace-specific overrides can invalidate an earlier candidate instance when the route requires a different model type.
 
 ### Settings Resolution Nuances
 

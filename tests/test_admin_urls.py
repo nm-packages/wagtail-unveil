@@ -11,9 +11,7 @@ from wagtail_unveil.discovery.backend import (
     BackendURL,
     _get_instance_for_model,
     _get_model_from_modeladmin_name,
-    _get_model_from_name,
     _get_namespace_specific_instance,
-    _resolve_parameterised_url,
     _resolve_parameterized_url,
     _resolve_settings_url,
     get_admin_urls,
@@ -352,6 +350,39 @@ class TestParameterizedResolutionStrategies(TestCase):
             ],
         )
 
+    def test_workflow_namespace_fails_closed_without_workflow_instance(self):
+        callback_instance = mock.Mock(pk=1)
+        with mock.patch("wagtail_unveil.discovery.backend._get_model_from_callback", return_value=User):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend._get_instance_for_model",
+                return_value=callback_instance,
+            ):
+                with mock.patch(
+                    "wagtail_unveil.discovery.backend._get_workflow_instance",
+                    return_value=None,
+                ):
+                    with mock.patch("wagtail_unveil.discovery.backend.reverse") as reverse_mock:
+                        result = _resolve_parameterized_url(
+                            "wagtailadmin_workflows",
+                            "usage",
+                            callback=object(),
+                            route="admin/workflows/usage/<int:pk>/",
+                        )
+
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.method, "namespace:wagtailadmin_workflows")
+        reverse_mock.assert_not_called()
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:model-found",
+                "callback-model:instance-found",
+                "modeladmin-name:skipped",
+                "namespace:wagtailadmin_workflows:no-instance",
+            ],
+        )
+        self.assertIn("did not provide a compatible instance", result.detail)
+
     def test_treebeard_models_skip_root_nodes(self):
         first_instance = mock.Mock()
         queryset = mock.Mock()
@@ -444,23 +475,6 @@ class TestParameterizedResolutionStrategies(TestCase):
 
     def test_modeladmin_name_helpers_return_none_for_unknown_models(self):
         self.assertIsNone(_get_model_from_modeladmin_name("not_a_modeladmin_route"))
-        self.assertIsNone(_get_model_from_name("missing_model_modeladmin_edit"))
-
-    def test_parameterised_alias_calls_parameterized_helper(self):
-        callback = object()
-        with mock.patch(
-            "wagtail_unveil.discovery.backend._resolve_parameterized_url",
-            return_value=mock.Mock(resolved=False),
-        ) as resolve_parameterized:
-            result = _resolve_parameterised_url(
-                "namespace",
-                "name",
-                callback=callback,
-                route="admin/example/<int:pk>/",
-            )
-
-        resolve_parameterized.assert_called_once_with("namespace", "name", callback, "admin/example/<int:pk>/")
-        self.assertFalse(result.resolved)
 
 
 class TestModeladminURLDiscovery(TestCase):

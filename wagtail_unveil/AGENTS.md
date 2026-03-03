@@ -72,6 +72,7 @@ The full discovery flow, resolution fallbacks, special cases, and intentional li
 ### Admin URLs
 
 `get_admin_urls()` walks Django URL patterns, filters admin routes, and resolves parameterized URLs using an explicit strategy order: settings, callback model inference, modeladmin name parsing, namespace-specific instance fallbacks, then reverse.
+Namespace-specific rules may replace an earlier instance choice or invalidate it entirely when the route requires a different model type, such as workflow usage URLs.
 
 ### Frontend URLs
 
