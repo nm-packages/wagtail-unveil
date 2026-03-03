@@ -10,7 +10,7 @@
 <body>
     <nav class="report-nav">
         <a href="/">Home</a>
-        <a class="{% block admin_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil:report_admin_urls' %}">Admin URLs</a>
+        <a class="{% block admin_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil:report_backend_urls' %}">Admin URLs</a>
         <a class="{% block frontend_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil:report_frontend_urls' %}">Frontend URLs</a>
         <a href="{% url 'wagtailadmin_home' %}">Wagtail Admin</a>
     </nav>
