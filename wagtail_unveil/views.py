@@ -1,6 +1,9 @@
+from importlib.metadata import PackageNotFoundError, version
+
 from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
+from django.utils import timezone
 from wagtail.admin.auth import user_passes_test
 
 from wagtail_unveil.discovery.backend import get_admin_urls
@@ -8,44 +11,100 @@ from wagtail_unveil.discovery.frontend import get_frontend_urls
 from wagtail_unveil.settings import get_api_key, get_pages_per_type
 
 
-def admin_urls_json(request):
-    """Return admin URLs as JSON, protected by API key."""
+def _json_error(message, *, status):
+    """Return a JSON error response with a consistent shape."""
+    return JsonResponse({"error": message}, status=status)
+
+
+def _authenticate_api_request(request):
+    """Validate the configured API key against the request Authorization header."""
     api_key = get_api_key()
     if not api_key:
-        return JsonResponse(
-            {"error": "WAGTAIL_UNVEIL_API_KEY is not set"},
-            status=500,
-        )
+        return _json_error("WAGTAIL_UNVEIL_API_KEY is not set", status=500)
 
     auth_header = request.headers.get("Authorization", "")
     if auth_header != f"Bearer {api_key}":
-        return JsonResponse({"error": "Invalid or missing API key"}, status=403)
+        return _json_error("Invalid or missing API key", status=403)
+
+    return None
+
+
+def _serialize_backend_url(url):
+    """Serialize a BackendURL dataclass for JSON responses."""
+    return {
+        "route": url.route,
+        "name": url.name,
+        "namespace": url.namespace,
+        "has_parameters": url.has_parameters,
+        "view_name": url.view_name,
+        "is_testable": url.is_testable,
+        "skip_reason": url.skip_reason,
+        "resolved_route": url.resolved_route,
+    }
+
+
+def _serialize_frontend_url(url):
+    """Serialize a FrontendURL dataclass for JSON responses."""
+    return {
+        "url": url.url,
+        "source": url.source,
+        "page_type": url.page_type,
+        "page_title": url.page_title,
+        "name": url.name,
+        "is_testable": url.is_testable,
+        "skip_reason": url.skip_reason,
+    }
+
+
+def _get_package_version():
+    """Return the installed wagtail-unveil package version, or an empty string."""
+    try:
+        return version("wagtail-unveil")
+    except PackageNotFoundError:
+        return ""
+
+
+def _build_urls_metadata(urls, *, applied_filter):
+    """Build metadata describing how a URL payload was produced."""
+    testable_count = sum(1 for url in urls if url.is_testable)
+    return {
+        "generated_at": timezone.now().isoformat(),
+        "applied_filter": applied_filter,
+        "total_count": len(urls),
+        "testable_count": testable_count,
+        "untestable_count": len(urls) - testable_count,
+        "package_version": _get_package_version(),
+    }
+
+
+def _build_urls_json_response(urls, serializer, *, applied_filter=None):
+    """Serialize URL entries and wrap them in the standard JSON payload."""
+    data = {
+        "urls": [serializer(url) for url in urls],
+        "count": len(urls),
+        "metadata": _build_urls_metadata(urls, applied_filter=applied_filter),
+    }
+    return JsonResponse(data)
+
+
+def admin_urls_json(request):
+    """Return admin URLs as JSON, protected by API key."""
+    auth_error = _authenticate_api_request(request)
+    if auth_error is not None:
+        return auth_error
 
     urls = get_admin_urls()
 
     url_filter = request.GET.get("filter")
+    applied_filter = None
     if url_filter == "static":
         urls = [u for u in urls if not u.has_parameters]
+        applied_filter = url_filter
     elif url_filter == "parameterized":
         urls = [u for u in urls if u.has_parameters]
+        applied_filter = url_filter
 
-    data = {
-        "urls": [
-            {
-                "route": u.route,
-                "name": u.name,
-                "namespace": u.namespace,
-                "has_parameters": u.has_parameters,
-                "view_name": u.view_name,
-                "is_testable": u.is_testable,
-                "skip_reason": u.skip_reason,
-                "resolved_route": u.resolved_route,
-            }
-            for u in urls
-        ],
-        "count": len(urls),
-    }
-    return JsonResponse(data)
+    return _build_urls_json_response(urls, _serialize_backend_url, applied_filter=applied_filter)
 
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -67,41 +126,22 @@ def admin_urls_report(request):
 
 def frontend_urls_json(request):
     """Return frontend URLs as JSON, protected by API key."""
-    api_key = get_api_key()
-    if not api_key:
-        return JsonResponse(
-            {"error": "WAGTAIL_UNVEIL_API_KEY is not set"},
-            status=500,
-        )
-
-    auth_header = request.headers.get("Authorization", "")
-    if auth_header != f"Bearer {api_key}":
-        return JsonResponse({"error": "Invalid or missing API key"}, status=403)
+    auth_error = _authenticate_api_request(request)
+    if auth_error is not None:
+        return auth_error
 
     urls = get_frontend_urls()
 
     source_filter = request.GET.get("filter")
+    applied_filter = None
     if source_filter == "pages":
         urls = [u for u in urls if u.source == "page"]
+        applied_filter = source_filter
     elif source_filter == "resolver":
         urls = [u for u in urls if u.source == "resolver"]
+        applied_filter = source_filter
 
-    data = {
-        "urls": [
-            {
-                "url": u.url,
-                "source": u.source,
-                "page_type": u.page_type,
-                "page_title": u.page_title,
-                "name": u.name,
-                "is_testable": u.is_testable,
-                "skip_reason": u.skip_reason,
-            }
-            for u in urls
-        ],
-        "count": len(urls),
-    }
-    return JsonResponse(data)
+    return _build_urls_json_response(urls, _serialize_frontend_url, applied_filter=applied_filter)
 
 
 @user_passes_test(lambda u: u.is_superuser)

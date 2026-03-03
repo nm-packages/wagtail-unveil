@@ -65,7 +65,15 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
       "view_name": "wagtail.admin.views.home.HomeView"
     }
   ],
-  "count": 190
+  "count": 190,
+  "metadata": {
+    "generated_at": "2026-03-02T12:34:56+00:00",
+    "applied_filter": null,
+    "total_count": 190,
+    "testable_count": 150,
+    "untestable_count": 40,
+    "package_version": "0.1.0"
+  }
 }
 ```
 
@@ -87,6 +95,17 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
 The API requires a Bearer token matching `WAGTAIL_UNVEIL_API_KEY` (from environment or Django settings).
 If both are set, environment is used. Requests without a valid key receive a `403` response.
 If no key is configured in either place, the endpoint returns `500`.
+
+### Metadata
+
+Both JSON endpoints include a `metadata` object alongside the existing top-level `urls` and `count` fields.
+
+- `generated_at` — ISO 8601 timestamp for when the response was generated
+- `applied_filter` — the recognised `filter` value that was applied, or `null`
+- `total_count` — total URLs returned in the response
+- `testable_count` — number of URLs marked testable
+- `untestable_count` — number of URLs marked untestable
+- `package_version` — installed `wagtail-unveil` package version
 
 ## HTML Reports
 

@@ -5,6 +5,8 @@ from django.test import RequestFactory, TestCase, override_settings
 from wagtail.test.utils import WagtailTestUtils
 
 from tests.utils import BaseAPIViewTestMixin, BaseReportViewTestMixin
+from wagtail_unveil.discovery.frontend import FrontendURL
+from wagtail_unveil.views import _serialize_frontend_url
 from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 
@@ -18,6 +20,8 @@ class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
+        self.assertEqual(data["metadata"]["applied_filter"], "pages")
+        self.assertEqual(data["metadata"]["total_count"], data["count"])
         for url in data["urls"]:
             self.assertEqual(url["source"], "page")
 
@@ -27,8 +31,43 @@ class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
+        self.assertEqual(data["metadata"]["applied_filter"], "resolver")
+        self.assertEqual(data["metadata"]["total_count"], data["count"])
         for url in data["urls"]:
             self.assertEqual(url["source"], "resolver")
+
+    def test_invalid_filter_does_not_apply_metadata_filter(self):
+        response = self.client.get(
+            "/unveil/api/frontend-urls/?filter=unknown",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        self.assertIsNone(response.json()["metadata"]["applied_filter"])
+
+
+class TestFrontendAPIViewHelpers(TestCase):
+    def test_serialize_frontend_url(self):
+        url = FrontendURL(
+            url="/contact/",
+            source="page",
+            page_type="core.ContactPage",
+            page_title="Contact",
+            name="",
+            is_testable=False,
+            skip_reason="Requires POST submission",
+        )
+
+        self.assertEqual(
+            _serialize_frontend_url(url),
+            {
+                "url": "/contact/",
+                "source": "page",
+                "page_type": "core.ContactPage",
+                "page_title": "Contact",
+                "name": "",
+                "is_testable": False,
+                "skip_reason": "Requires POST submission",
+            },
+        )
 
 
 @override_settings(DEBUG=True)

@@ -78,6 +78,14 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 ```
 
 Filter with `?filter=static`, `?filter=parameterized`, `?filter=pages`, or `?filter=resolver`.
+Responses keep the existing top-level `urls` and `count` fields and also include a `metadata` object with:
+
+- `generated_at`
+- `applied_filter`
+- `total_count`
+- `testable_count`
+- `untestable_count`
+- `package_version`
 
 For full API response examples and detailed feature documentation, see [docs/usage.md](docs/usage.md).
 
