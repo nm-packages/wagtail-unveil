@@ -25,3 +25,13 @@ def clean_regex_route(route):
     route = route.replace("^", "").replace("$", "")
     route = re.sub(r"\(\?P<(\w+)>[^)]+\)", r"<\1>", route)
     return route
+
+
+def route_has_parameters(route):
+    """Return True when a normalized route still contains path parameters."""
+    return "<" in route
+
+
+def route_contains_regex(route):
+    """Return True when a normalized route still contains regex syntax."""
+    return "(" in route

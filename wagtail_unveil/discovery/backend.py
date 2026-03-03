@@ -6,7 +6,7 @@ from django.apps import apps
 from django.urls import get_resolver, reverse
 from django.utils.functional import cached_property as django_cached_property
 
-from wagtail_unveil.discovery.utils import clean_regex_route, walk_patterns
+from wagtail_unveil.discovery.utils import clean_regex_route, route_has_parameters, walk_patterns
 from wagtail_unveil.settings import get_skip_url_prefixes
 
 
@@ -30,6 +30,31 @@ class BackendURL:
     is_testable: bool = True
     skip_reason: str = ""
     resolved_route: str = ""
+
+
+@dataclass
+class _DiscoveredAdminRoute:
+    raw_route: str
+    name: str
+    namespace: str
+    callback: object
+
+
+@dataclass
+class _NormalizedAdminRoute:
+    route: str
+    name: str
+    namespace: str
+    callback: object
+    has_parameters: bool
+    view_name: str
+
+
+@dataclass
+class _AdminClassification:
+    is_testable: bool = True
+    skip_reason: str = ""
+    should_resolve: bool = False
 
 
 @dataclass
@@ -57,6 +82,24 @@ def _get_view_name(callback):
 
 
 WORKFLOW_USAGE_NAMES = ("usage", "usage_results")
+NON_TESTABLE_NAMES = {
+    "wagtailadmin_logout": "POST-only view",
+    "wagtailadmin_error_test": "Intentional error endpoint",
+    "process_import": "POST-only view",
+    "wagtailadmin_block_preview": "POST-only view",
+    "lock": "POST-only view",
+    "unlock": "POST-only view",
+    "find": "Requires query parameters",
+}
+DOCS_SERVE_NAMESPACES = {
+    "wagtaildocs",
+    "wagtaildocs_chooser",
+    "wagtailadmin_api:documents",
+}
+IMAGE_GENERATOR_NAMES = {
+    "url_generator",
+    "url_generator_output",
+}
 NAMESPACE_INSTANCE_RESOLVERS = (
     {
         "label": "namespace:wagtailforms",
@@ -192,6 +235,102 @@ def _reverse_with_instance(namespace, name, instance):
     result.resolved_route = url.lstrip("/")
     result.detail = f"Reversed {_build_url_name(namespace, name)} with pk={instance.pk}"
     return result
+
+
+def _discover_admin_routes():
+    """Return raw admin routes discovered from the resolver."""
+    resolver = get_resolver()
+    results = []
+    for route, name, namespace, callback in walk_patterns(resolver.url_patterns):
+        if route.startswith("admin/"):
+            results.append(
+                _DiscoveredAdminRoute(
+                    raw_route=route,
+                    name=name,
+                    namespace=namespace,
+                    callback=callback,
+                )
+            )
+    return results
+
+
+def _has_unsafe_admin_regex(route):
+    """Return True when a cleaned admin route still contains unsafe regex syntax."""
+    return bool(re.search(r"[.][*+?]|\(", route))
+
+
+def _normalize_admin_route(discovered_route, skip_prefixes):
+    """Normalize a raw admin route and filter unsupported patterns."""
+    route = clean_regex_route(discovered_route.raw_route)
+    if _has_unsafe_admin_regex(route):
+        return None
+    if skip_prefixes and any(route.startswith(prefix) for prefix in skip_prefixes):
+        return None
+    return _NormalizedAdminRoute(
+        route=route,
+        name=discovered_route.name,
+        namespace=discovered_route.namespace,
+        callback=discovered_route.callback,
+        has_parameters=route_has_parameters(route),
+        view_name=_get_view_name(discovered_route.callback),
+    )
+
+
+def _classify_admin_route(normalized_route, docs_serve_available, images_serve_available):
+    """Classify a normalized admin route before parameter resolution."""
+    if normalized_route.name in NON_TESTABLE_NAMES:
+        return _AdminClassification(
+            is_testable=False,
+            skip_reason=NON_TESTABLE_NAMES[normalized_route.name],
+        )
+    if not docs_serve_available and normalized_route.namespace in DOCS_SERVE_NAMESPACES:
+        return _AdminClassification(
+            is_testable=False,
+            skip_reason='Requires path("documents/", include(wagtaildocs_urls)) in URLconf',
+        )
+    if (
+        not images_serve_available
+        and normalized_route.namespace == "wagtailimages"
+        and normalized_route.name in IMAGE_GENERATOR_NAMES
+    ):
+        return _AdminClassification(
+            is_testable=False,
+            skip_reason='Requires path("images/", include(wagtailimages_urls)) in URLconf',
+        )
+    if normalized_route.has_parameters:
+        return _AdminClassification(should_resolve=True)
+    return _AdminClassification()
+
+
+def _finalize_admin_route(normalized_route, classification):
+    """Emit the final BackendURL from normalized and classified state."""
+    resolved_route = ""
+    is_testable = classification.is_testable
+    skip_reason = classification.skip_reason
+
+    if classification.should_resolve:
+        resolution = _resolve_parameterized_url(
+            normalized_route.namespace,
+            normalized_route.name,
+            normalized_route.callback,
+            normalized_route.route,
+        )
+        if resolution.resolved:
+            resolved_route = resolution.resolved_route
+        else:
+            is_testable = False
+            skip_reason = "URL requires parameters"
+
+    return BackendURL(
+        route=normalized_route.route,
+        name=normalized_route.name,
+        namespace=normalized_route.namespace,
+        has_parameters=normalized_route.has_parameters,
+        view_name=normalized_route.view_name,
+        is_testable=is_testable,
+        skip_reason=skip_reason,
+        resolved_route=resolved_route,
+    )
 
 
 def _resolve_settings_url(name, route):
@@ -395,80 +534,18 @@ def get_admin_urls():
     Returns a list of BackendURL dataclass instances for every URL pattern
     under the admin/ prefix.
     """
-    # URL names that are known to be non-testable via GET.
-    NON_TESTABLE_NAMES = {
-        "wagtailadmin_logout": "POST-only view",
-        "wagtailadmin_error_test": "Intentional error endpoint",
-        "process_import": "POST-only view",
-        "wagtailadmin_block_preview": "POST-only view",
-        "lock": "POST-only view",
-        "unlock": "POST-only view",
-        "find": "Requires query parameters",
-    }
-
     images_serve_available = _is_url_registered("wagtailimages_serve")
     docs_serve_available = _is_url_registered("wagtaildocs_serve")
-
-    resolver = get_resolver()
     skip_prefixes = get_skip_url_prefixes()
     results = []
-    for route, name, namespace, callback in walk_patterns(resolver.url_patterns):
-        if not route.startswith("admin/"):
+    for discovered_route in _discover_admin_routes():
+        normalized_route = _normalize_admin_route(discovered_route, skip_prefixes)
+        if normalized_route is None:
             continue
-        route = clean_regex_route(route)
-
-        # Skip routes that still contain regex metacharacters after cleaning
-        # (e.g. Wagtail's catch-all `.*/$` pattern)
-        if re.search(r"[.][*+?]|\(", route):
-            continue
-
-        # User-configured prefix exclusions
-        if skip_prefixes and any(route.startswith(p) for p in skip_prefixes):
-            continue
-
-        has_parameters = "<" in route
-        is_testable = True
-        skip_reason = ""
-        resolved_route = ""
-        if name in NON_TESTABLE_NAMES:
-            is_testable = False
-            skip_reason = NON_TESTABLE_NAMES[name]
-        elif not docs_serve_available and namespace in {
-            "wagtaildocs",
-            "wagtaildocs_chooser",
-            "wagtailadmin_api:documents",
-        }:
-            is_testable = False
-            skip_reason = 'Requires path("documents/", include(wagtaildocs_urls)) in URLconf'
-        elif (
-            not images_serve_available
-            and namespace == "wagtailimages"
-            and name
-            in {
-                "url_generator",
-                "url_generator_output",
-            }
-        ):
-            is_testable = False
-            skip_reason = 'Requires path("images/", include(wagtailimages_urls)) in URLconf'
-        elif has_parameters:
-            resolution = _resolve_parameterized_url(namespace, name, callback, route)
-            if resolution.resolved:
-                is_testable = True
-                resolved_route = resolution.resolved_route
-            else:
-                is_testable = False
-                skip_reason = "URL requires parameters"
-        results.append(
-            BackendURL(
-                route=route,
-                name=name,
-                namespace=namespace,
-                has_parameters=has_parameters,
-                view_name=_get_view_name(callback),
-                is_testable=is_testable,
-                skip_reason=skip_reason,
-                resolved_route=resolved_route,
-            )
+        classification = _classify_admin_route(
+            normalized_route,
+            docs_serve_available=docs_serve_available,
+            images_serve_available=images_serve_available,
         )
+        results.append(_finalize_admin_route(normalized_route, classification))
     return results

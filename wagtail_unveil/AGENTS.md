@@ -71,7 +71,7 @@ The full discovery flow, resolution fallbacks, special cases, and intentional li
 
 ### Admin URLs
 
-`get_admin_urls()` walks Django URL patterns, filters admin routes, and resolves parameterized URLs using an explicit strategy order: settings, callback model inference, modeladmin name parsing, namespace-specific instance fallbacks, then reverse.
+`get_admin_urls()` follows explicit phases: discover admin candidates, normalize route metadata, classify testability, resolve supported parameterized URLs, then emit `BackendURL` objects.
 Namespace-specific rules may replace an earlier instance choice or invalidate it entirely when the route requires a different model type, such as workflow usage URLs.
 
 ### Frontend URLs
@@ -82,7 +82,7 @@ Namespace-specific rules may replace an earlier instance choice or invalidate it
 - additional page-derived routes for forms and `RoutablePageMixin`
 - non-admin resolver routes
 
-Parameterized routable sub-routes are discovered but marked non-testable.
+Frontend discovery also follows explicit phases: discover candidates, normalize route metadata, classify testability, then emit `FrontendURL` objects. Parameterized routable sub-routes are discovered but marked non-testable during classification.
 
 ## Constraints
 
