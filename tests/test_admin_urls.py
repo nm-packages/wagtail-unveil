@@ -9,14 +9,19 @@ from wagtail.models import Site
 
 from wagtail_unveil.discovery.backend import (
     BackendURL,
+    _AdminClassification,
+    _classify_admin_route,
+    _DiscoveredAdminRoute,
+    _finalize_admin_route,
     _get_instance_for_model,
     _get_model_from_modeladmin_name,
     _get_namespace_specific_instance,
+    _normalize_admin_route,
     _resolve_parameterized_url,
     _resolve_settings_url,
     get_admin_urls,
 )
-from wagtail_unveil.discovery.utils import clean_regex_route
+from wagtail_unveil.discovery.utils import clean_regex_route, route_contains_regex, route_has_parameters
 
 
 class TestGetAdminUrls(TestCase):
@@ -109,6 +114,131 @@ class TestCleanRegexRoute(TestCase):
             clean_regex_route("^a/(?P<pk>[0-9]+)/b/(?P<slug>[-\\w]+)/$"),
             "a/<pk>/b/<slug>/",
         )
+
+    def test_route_has_parameters(self):
+        self.assertTrue(route_has_parameters("admin/images/<int:image_id>/"))
+        self.assertFalse(route_has_parameters("admin/images/"))
+
+    def test_route_contains_regex(self):
+        self.assertTrue(route_contains_regex("documents/(.*)/"))
+        self.assertFalse(route_contains_regex("documents/<path:path>/"))
+
+
+class TestAdminDiscoveryPhases(TestCase):
+    def test_normalization_cleans_route_and_sets_metadata(self):
+        def callback(request):
+            return None
+
+        discovered = _DiscoveredAdminRoute(
+            raw_route="^admin/example/(?P<pk>[0-9]+)/$",
+            name="example_edit",
+            namespace="example",
+            callback=callback,
+        )
+
+        normalized = _normalize_admin_route(discovered, skip_prefixes=[])
+
+        self.assertIsNotNone(normalized)
+        self.assertEqual(normalized.route, "admin/example/<pk>/")
+        self.assertTrue(normalized.has_parameters)
+        self.assertTrue(normalized.view_name.endswith(".callback"))
+
+    def test_normalization_drops_routes_with_unsafe_regex(self):
+        discovered = _DiscoveredAdminRoute(
+            raw_route="admin/catch-all/.*/",
+            name="unsafe",
+            namespace="",
+            callback=lambda request: None,
+        )
+
+        normalized = _normalize_admin_route(discovered, skip_prefixes=[])
+
+        self.assertIsNone(normalized)
+
+    def test_classification_marks_known_non_testable_name(self):
+        normalized = _normalize_admin_route(
+            _DiscoveredAdminRoute(
+                raw_route="admin/logout/",
+                name="wagtailadmin_logout",
+                namespace="wagtailadmin",
+                callback=lambda request: None,
+            ),
+            skip_prefixes=[],
+        )
+
+        classification = _classify_admin_route(
+            normalized,
+            docs_serve_available=True,
+            images_serve_available=True,
+        )
+
+        self.assertFalse(classification.is_testable)
+        self.assertEqual(classification.skip_reason, "POST-only view")
+        self.assertFalse(classification.should_resolve)
+
+    def test_classification_marks_missing_docs_dependency(self):
+        normalized = _normalize_admin_route(
+            _DiscoveredAdminRoute(
+                raw_route="admin/documents/<int:document_id>/edit/",
+                name="edit",
+                namespace="wagtaildocs",
+                callback=lambda request: None,
+            ),
+            skip_prefixes=[],
+        )
+
+        classification = _classify_admin_route(
+            normalized,
+            docs_serve_available=False,
+            images_serve_available=True,
+        )
+
+        self.assertFalse(classification.is_testable)
+        self.assertIn("wagtaildocs_urls", classification.skip_reason)
+        self.assertFalse(classification.should_resolve)
+
+    def test_parameterized_routes_require_resolution_before_skip_reason(self):
+        normalized = _normalize_admin_route(
+            _DiscoveredAdminRoute(
+                raw_route="admin/images/<int:image_id>/edit/",
+                name="edit",
+                namespace="wagtailimages",
+                callback=lambda request: None,
+            ),
+            skip_prefixes=[],
+        )
+
+        classification = _classify_admin_route(
+            normalized,
+            docs_serve_available=True,
+            images_serve_available=True,
+        )
+
+        self.assertTrue(classification.is_testable)
+        self.assertTrue(classification.should_resolve)
+        self.assertEqual(classification.skip_reason, "")
+
+    def test_finalization_assigns_parameter_skip_reason_after_failed_resolution(self):
+        normalized = _normalize_admin_route(
+            _DiscoveredAdminRoute(
+                raw_route="admin/images/<int:image_id>/edit/",
+                name="edit",
+                namespace="wagtailimages",
+                callback=lambda request: None,
+            ),
+            skip_prefixes=[],
+        )
+        classification = _AdminClassification(should_resolve=True)
+
+        with mock.patch(
+            "wagtail_unveil.discovery.backend._resolve_parameterized_url",
+            return_value=mock.Mock(resolved=False, resolved_route=""),
+        ):
+            result = _finalize_admin_route(normalized, classification)
+
+        self.assertFalse(result.is_testable)
+        self.assertEqual(result.skip_reason, "URL requires parameters")
+        self.assertEqual(result.resolved_route, "")
 
 
 class TestParameterisedURLResolution(TestCase):

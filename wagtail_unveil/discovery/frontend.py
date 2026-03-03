@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 from django.urls import get_resolver
 
-from wagtail_unveil.discovery.utils import clean_regex_route, walk_patterns
+from wagtail_unveil.discovery.utils import clean_regex_route, route_contains_regex, route_has_parameters, walk_patterns
 from wagtail_unveil.settings import get_pages_per_type, get_skip_url_prefixes
 
 
@@ -19,15 +19,31 @@ class FrontendURL:
     skip_reason: str = ""
 
 
-def _get_page_urls():
-    """Discover frontend URLs from live Wagtail pages.
+@dataclass
+class _FrontendCandidate:
+    url: str
+    source: str
+    page_type: str
+    page_title: str
+    name: str
+    has_parameters: bool = False
+    contains_regex: bool = False
+    requires_post: bool = False
 
-    Uses Page.objects.live().specific() to get all live pages, returning
-    their .url property. Skips the root Page model and pages without a URL.
-    Form pages (FormMixin subclasses) also get a second non-testable entry
-    for the landing page (POST response). RoutablePageMixin pages also get
-    entries for each sub-route defined via @path() decorators.
-    """
+
+@dataclass
+class _FrontendClassification:
+    is_testable: bool = True
+    skip_reason: str = ""
+
+
+def _should_skip_frontend_url(url, skip_prefixes):
+    """Return True when a frontend URL matches configured skip prefixes."""
+    return bool(skip_prefixes and any(url.lstrip("/").startswith(prefix) for prefix in skip_prefixes))
+
+
+def _discover_page_candidates():
+    """Discover frontend page candidates before classification."""
     try:
         from wagtail.contrib.forms.models import FormMixin
     except ImportError:
@@ -44,7 +60,6 @@ def _get_page_urls():
     results = []
     pages = Page.objects.live().specific()
     for page in pages:
-        # Skip the base Page model (depth 1 is the abstract root)
         if type(page) is Page:
             continue
         try:
@@ -53,14 +68,13 @@ def _get_page_urls():
             url = None
         if not url:
             continue
-        # Strip to path-only for multi-site support
         parsed = urlparse(url)
         path = parsed.path
-        if skip_prefixes and any(path.lstrip("/").startswith(p) for p in skip_prefixes):
+        if _should_skip_frontend_url(path, skip_prefixes):
             continue
         page_type = f"{page._meta.app_label}.{type(page).__name__}"
         results.append(
-            FrontendURL(
+            _FrontendCandidate(
                 url=path,
                 source="page",
                 page_type=page_type,
@@ -70,50 +84,25 @@ def _get_page_urls():
         )
         if FormMixin is not None and isinstance(page, FormMixin):
             results.append(
-                FrontendURL(
+                _FrontendCandidate(
                     url=path,
                     source="page",
                     page_type=page_type,
                     page_title=page.title,
                     name="landing_page",
-                    is_testable=False,
-                    skip_reason="Requires POST submission",
+                    requires_post=True,
                 )
             )
-        # Discover sub-routes from RoutablePageMixin pages
         if RoutablePageMixin is not None and isinstance(page, RoutablePageMixin):
-            for sub_url_entry in _get_routable_sub_urls(page, path, page_type, skip_prefixes):
-                results.append(sub_url_entry)
+            results.extend(_discover_routable_page_candidates(page, path, page_type, skip_prefixes))
 
-    limit = get_pages_per_type()
-    if limit:
-        # Group URLs by page (type + title), then limit to N pages per type.
-        # Each page may have multiple URL entries (sub-routes, landing pages).
-        page_urls = defaultdict(list)
-        for frontend_url in results:
-            key = (frontend_url.page_type, frontend_url.page_title)
-            page_urls[key].append(frontend_url)
-        # Group pages by type and take up to `limit` pages per type
-        type_pages = defaultdict(list)
-        for (page_type, _title), urls in page_urls.items():
-            type_pages[page_type].append(urls)
-        results = []
-        for pages_in_type in type_pages.values():
-            for page_entries in pages_in_type[:limit]:
-                results.extend(page_entries)
-
-    return results
+    return _apply_page_limit(results)
 
 
-def _get_routable_sub_urls(page, page_path, page_type, skip_prefixes=()):
-    """Discover sub-route URLs from a RoutablePageMixin page.
-
-    Inspects the page class's subpage_urls to find @path() decorated routes,
-    and builds FrontendURL entries for each non-index sub-route.
-    """
+def _discover_routable_page_candidates(page, page_path, page_type, skip_prefixes=()):
+    """Discover routable page candidates before classification."""
     results = []
     for pattern in type(page).get_subpage_urls():
-        # Extract the route string from the URL pattern
         if hasattr(pattern.pattern, "_route"):
             sub_route = pattern.pattern._route
         elif hasattr(pattern.pattern, "_regex"):
@@ -121,87 +110,109 @@ def _get_routable_sub_urls(page, page_path, page_type, skip_prefixes=()):
         else:
             continue
 
-        # Skip the index route (empty string) — already covered by base page URL
         if not sub_route:
             continue
 
         full_url = page_path.rstrip("/") + "/" + sub_route.lstrip("/")
-        if skip_prefixes and any(full_url.lstrip("/").startswith(p) for p in skip_prefixes):
+        if _should_skip_frontend_url(full_url, skip_prefixes):
             continue
-        has_parameters = "<" in sub_route
-        if has_parameters:
-            results.append(
-                FrontendURL(
-                    url=full_url,
-                    source="page",
-                    page_type=page_type,
-                    page_title=page.title,
-                    name=pattern.name or "",
-                    is_testable=False,
-                    skip_reason="URL requires parameters",
-                )
+        results.append(
+            _FrontendCandidate(
+                url=full_url,
+                source="page",
+                page_type=page_type,
+                page_title=page.title,
+                name=pattern.name or "",
+                has_parameters=route_has_parameters(sub_route),
             )
-        else:
-            results.append(
-                FrontendURL(
-                    url=full_url,
-                    source="page",
-                    page_type=page_type,
-                    page_title=page.title,
-                    name=pattern.name or "",
-                )
-            )
+        )
     return results
 
 
-def _get_resolver_frontend_urls():
-    """Discover frontend URLs from Django's URL resolver (non-admin routes).
+def _apply_page_limit(candidates):
+    """Apply the configured per-page-type limit while keeping page entries together."""
+    limit = get_pages_per_type()
+    if not limit:
+        return candidates
 
-    Reuses walk_patterns() but excludes admin/ routes and unveil's own
-    namespaces. Parameterized and regex URLs are marked as non-testable.
-    """
+    page_urls = defaultdict(list)
+    for candidate in candidates:
+        key = (candidate.page_type, candidate.page_title)
+        page_urls[key].append(candidate)
+
+    type_pages = defaultdict(list)
+    for (page_type, _title), urls in page_urls.items():
+        type_pages[page_type].append(urls)
+
+    limited = []
+    for pages_in_type in type_pages.values():
+        for page_entries in pages_in_type[:limit]:
+            limited.extend(page_entries)
+    return limited
+
+
+def _discover_resolver_candidates():
+    """Discover resolver-backed frontend candidates before classification."""
     resolver = get_resolver()
     skip_prefixes = get_skip_url_prefixes()
     results = []
     for route, name, namespace, _callback in walk_patterns(resolver.url_patterns):
-        # Exclude admin routes
         if route.startswith("admin/"):
             continue
-        # Exclude Django admin
         if route.startswith("django-admin/"):
             continue
-        # Exclude unveil's own namespaces
         if namespace == "wagtail_unveil":
             continue
-        # User-configured prefix exclusions
-        if skip_prefixes and any(route.startswith(p) for p in skip_prefixes):
+        if skip_prefixes and any(route.startswith(prefix) for prefix in skip_prefixes):
             continue
 
-        route = clean_regex_route(route)
-        is_testable = True
-        skip_reason = ""
-
-        # Parameterized URLs are not directly testable
-        if "<" in route:
-            is_testable = False
-            skip_reason = "URL requires parameters"
-        elif "(" in route:
-            is_testable = False
-            skip_reason = "URL contains regex patterns"
-
-        url = f"/{route}" if not route.startswith("/") else route
+        normalized_route = clean_regex_route(route)
+        url = normalized_route if normalized_route.startswith("/") else f"/{normalized_route}"
         results.append(
-            FrontendURL(
+            _FrontendCandidate(
                 url=url,
                 source="resolver",
                 page_type="",
                 page_title="",
                 name=name,
-                is_testable=is_testable,
-                skip_reason=skip_reason,
+                has_parameters=route_has_parameters(normalized_route),
+                contains_regex=route_contains_regex(normalized_route),
             )
         )
     return results
+
+
+def _classify_frontend_candidate(candidate):
+    """Classify a frontend candidate and assign any skip reason."""
+    if candidate.requires_post:
+        return _FrontendClassification(
+            is_testable=False,
+            skip_reason="Requires POST submission",
+        )
+    if candidate.has_parameters:
+        return _FrontendClassification(
+            is_testable=False,
+            skip_reason="URL requires parameters",
+        )
+    if candidate.contains_regex:
+        return _FrontendClassification(
+            is_testable=False,
+            skip_reason="URL contains regex patterns",
+        )
+    return _FrontendClassification()
+
+
+def _build_frontend_url(candidate, classification):
+    """Emit a FrontendURL from candidate and classification state."""
+    return FrontendURL(
+        url=candidate.url,
+        source=candidate.source,
+        page_type=candidate.page_type,
+        page_title=candidate.page_title,
+        name=candidate.name,
+        is_testable=classification.is_testable,
+        skip_reason=classification.skip_reason,
+    )
 
 
 def get_frontend_urls():
@@ -210,4 +221,9 @@ def get_frontend_urls():
     Returns a list of FrontendURL dataclass instances combining page URLs
     and non-admin resolver URLs.
     """
-    return _get_page_urls() + _get_resolver_frontend_urls()
+    results = []
+    candidates = _discover_page_candidates() + _discover_resolver_candidates()
+    for candidate in candidates:
+        classification = _classify_frontend_candidate(candidate)
+        results.append(_build_frontend_url(candidate, classification))
+    return results
