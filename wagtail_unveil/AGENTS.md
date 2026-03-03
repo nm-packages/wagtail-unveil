@@ -12,6 +12,7 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 
 - `apps.py` — Django app config
 - `models.py` — package models
+- `../docs/discovery-architecture.md` — contributor reference for discovery internals, fallbacks, and limitations
 - `settings.py` — settings helpers for page limits, skip prefixes, and API key lookup
 - `urls.py` — package URL config with app name `wagtail_unveil`
 - `views.py` — JSON and HTML report views
@@ -65,6 +66,8 @@ JSON API endpoints preserve top-level `urls` and `count` fields and also return 
 - `package_version`
 
 ## Discovery Notes
+
+The full discovery flow, resolution fallbacks, special cases, and intentional limitations are documented in `../docs/discovery-architecture.md`. Keep that document as the canonical explanation of discovery internals and use the notes below as a brief orientation only.
 
 ### Admin URLs
 
