@@ -361,13 +361,12 @@ def _resolve_settings_url(name, route):
         return result
 
     has_pk = "<int:pk>" in route
-    matched_model = False
+    eligible_model_seen = False
     found_instance = False
     for model in registry:
         app_name = model._meta.app_label
         model_name = model._meta.model_name
         kwargs = {"app_name": app_name, "model_name": model_name}
-        matched_model = True
 
         # preview_on_edit is only meaningful for previewable settings models
         # This URL was added in Wagtail 7.1. In 7.0, it doesn't exist in URL patterns.
@@ -381,6 +380,8 @@ def _resolve_settings_url(name, route):
             except ImportError:
                 # Wagtail <7.1: PreviewableMixin doesn't exist; skip this URL
                 continue
+
+        eligible_model_seen = True
 
         if has_pk:
             instance = model.objects.first()
@@ -413,7 +414,7 @@ def _resolve_settings_url(name, route):
         result.detail = f"Resolved wagtailsettings:{name} via {app_name}.{model_name}"
         return result
 
-    if has_pk and matched_model and not found_instance:
+    if has_pk and eligible_model_seen and not found_instance:
         result.add_attempt("settings", "no-model-instance")
         result.detail = "No settings instances exist for the registered settings models"
     else:

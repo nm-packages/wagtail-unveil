@@ -594,6 +594,53 @@ class TestParameterizedResolutionStrategies(TestCase):
         self.assertEqual(result.attempts, ["settings:reverse-failed"])
         self.assertIn("cannot reverse", result.detail)
 
+    def test_settings_preview_resolution_skips_ineligible_models(self):
+        class PreviewableMixin:
+            pass
+
+        class PlainSettings:
+            _meta = type("Meta", (), {"app_label": "core", "model_name": "plainsettings"})()
+            objects = mock.Mock()
+
+        PlainSettings.objects.first.return_value = mock.Mock(pk=7, site_id=7)
+
+        with mock.patch("wagtail.contrib.settings.registry.registry", [PlainSettings]):
+            with mock.patch("wagtail.models.PreviewableMixin", PreviewableMixin, create=True):
+                result = _resolve_settings_url(
+                    "preview_on_edit",
+                    "admin/settings/core/plainsettings/<int:pk>/",
+                )
+
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.method, "settings")
+        self.assertEqual(result.attempts, ["settings:reverse-failed"])
+        self.assertEqual(
+            result.detail,
+            "Could not reverse wagtailsettings URL for any registered settings model",
+        )
+
+    def test_settings_preview_resolution_reports_missing_instances_for_eligible_models(self):
+        class PreviewableMixin:
+            pass
+
+        class PreviewableSettings(PreviewableMixin):
+            _meta = type("Meta", (), {"app_label": "core", "model_name": "previewablesettings"})()
+            objects = mock.Mock()
+
+        PreviewableSettings.objects.first.return_value = None
+
+        with mock.patch("wagtail.contrib.settings.registry.registry", [PreviewableSettings]):
+            with mock.patch("wagtail.models.PreviewableMixin", PreviewableMixin, create=True):
+                result = _resolve_settings_url(
+                    "preview_on_edit",
+                    "admin/settings/core/previewablesettings/<int:pk>/",
+                )
+
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.method, "settings")
+        self.assertEqual(result.attempts, ["settings:no-model-instance"])
+        self.assertEqual(result.detail, "No settings instances exist for the registered settings models")
+
     def test_namespace_specific_forms_rule_skips_when_instance_already_exists(self):
         instance = mock.Mock(pk=1)
 
