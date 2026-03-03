@@ -1,12 +1,12 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 
 from django.apps import apps
 from django.urls import get_resolver, reverse
 from django.utils.functional import cached_property as django_cached_property
 
-from wagtail_unveil.discovery.utils import clean_regex_route, walk_patterns
+from wagtail_unveil.discovery.utils import clean_regex_route, route_has_parameters, walk_patterns
 from wagtail_unveil.settings import get_skip_url_prefixes
 
 
@@ -32,6 +32,45 @@ class BackendURL:
     resolved_route: str = ""
 
 
+@dataclass
+class _DiscoveredAdminRoute:
+    raw_route: str
+    name: str
+    namespace: str
+    callback: object
+
+
+@dataclass
+class _NormalizedAdminRoute:
+    route: str
+    name: str
+    namespace: str
+    callback: object
+    has_parameters: bool
+    view_name: str
+
+
+@dataclass
+class _AdminClassification:
+    is_testable: bool = True
+    skip_reason: str = ""
+    should_resolve: bool = False
+
+
+@dataclass
+class _ParameterizedURLResolution:
+    """Internal resolution state for a parameterized admin URL."""
+
+    resolved_route: str = ""
+    resolved: bool = False
+    method: str = ""
+    detail: str = ""
+    attempts: list[str] = field(default_factory=list)
+
+    def add_attempt(self, strategy, outcome):
+        self.attempts.append(f"{strategy}:{outcome}")
+
+
 def _get_view_name(callback):
     """Return a dotted path for a view callback."""
     if hasattr(callback, "view_class"):
@@ -42,7 +81,42 @@ def _get_view_name(callback):
     return repr(callback)
 
 
-def _get_model_from_name(name):
+WORKFLOW_USAGE_NAMES = ("usage", "usage_results")
+NON_TESTABLE_NAMES = {
+    "wagtailadmin_logout": "POST-only view",
+    "wagtailadmin_error_test": "Intentional error endpoint",
+    "process_import": "POST-only view",
+    "wagtailadmin_block_preview": "POST-only view",
+    "lock": "POST-only view",
+    "unlock": "POST-only view",
+    "find": "Requires query parameters",
+}
+DOCS_SERVE_NAMESPACES = {
+    "wagtaildocs",
+    "wagtaildocs_chooser",
+    "wagtailadmin_api:documents",
+}
+IMAGE_GENERATOR_NAMES = {
+    "url_generator",
+    "url_generator_output",
+}
+NAMESPACE_INSTANCE_RESOLVERS = (
+    {
+        "label": "namespace:wagtailforms",
+        "predicate": lambda namespace, name: namespace == "wagtailforms",
+        "resolver": lambda: _get_form_page_instance(),
+        "override": False,
+    },
+    {
+        "label": "namespace:wagtailadmin_workflows",
+        "predicate": lambda namespace, name: namespace == "wagtailadmin_workflows" and name in WORKFLOW_USAGE_NAMES,
+        "resolver": lambda: _get_workflow_instance(),
+        "override": True,
+    },
+)
+
+
+def _get_model_from_modeladmin_name(name):
     """Extract a Django model from a modeladmin-style URL name.
 
     Modeladmin URL names follow the pattern ``{app}_{model}_modeladmin_{action}``.
@@ -123,6 +197,142 @@ def _get_form_page_instance():
     return None
 
 
+def _get_workflow_instance():
+    """Return the first available Workflow instance."""
+    try:
+        from wagtail.models import Workflow
+
+        return Workflow.objects.first()
+    except Exception:
+        return None
+
+
+def _get_instance_for_model(model):
+    """Return a representative instance for the given model, if one exists."""
+    queryset = model.objects.all()
+    if hasattr(model, "depth"):
+        queryset = queryset.exclude(depth=1)
+    return queryset.first()
+
+
+def _build_url_name(namespace, name):
+    """Return the fully namespaced URL name for reversal."""
+    return f"{namespace}:{name}" if namespace else name
+
+
+def _reverse_with_instance(namespace, name, instance):
+    """Reverse a parameterized URL using a single positional PK argument."""
+    result = _ParameterizedURLResolution(method="reverse")
+    try:
+        url = reverse(_build_url_name(namespace, name), args=[instance.pk])
+    except Exception as exc:
+        result.add_attempt("reverse", "failed")
+        result.detail = str(exc) or exc.__class__.__name__
+        return result
+
+    result.add_attempt("reverse", "resolved")
+    result.resolved = True
+    result.resolved_route = url.lstrip("/")
+    result.detail = f"Reversed {_build_url_name(namespace, name)} with pk={instance.pk}"
+    return result
+
+
+def _discover_admin_routes():
+    """Return raw admin routes discovered from the resolver."""
+    resolver = get_resolver()
+    results = []
+    for route, name, namespace, callback in walk_patterns(resolver.url_patterns):
+        if route.startswith("admin/"):
+            results.append(
+                _DiscoveredAdminRoute(
+                    raw_route=route,
+                    name=name,
+                    namespace=namespace,
+                    callback=callback,
+                )
+            )
+    return results
+
+
+def _has_unsafe_admin_regex(route):
+    """Return True when a cleaned admin route still contains unsafe regex syntax."""
+    return bool(re.search(r"[.][*+?]|\(", route))
+
+
+def _normalize_admin_route(discovered_route, skip_prefixes):
+    """Normalize a raw admin route and filter unsupported patterns."""
+    route = clean_regex_route(discovered_route.raw_route)
+    if _has_unsafe_admin_regex(route):
+        return None
+    if skip_prefixes and any(route.startswith(prefix) for prefix in skip_prefixes):
+        return None
+    return _NormalizedAdminRoute(
+        route=route,
+        name=discovered_route.name,
+        namespace=discovered_route.namespace,
+        callback=discovered_route.callback,
+        has_parameters=route_has_parameters(route),
+        view_name=_get_view_name(discovered_route.callback),
+    )
+
+
+def _classify_admin_route(normalized_route, docs_serve_available, images_serve_available):
+    """Classify a normalized admin route before parameter resolution."""
+    if normalized_route.name in NON_TESTABLE_NAMES:
+        return _AdminClassification(
+            is_testable=False,
+            skip_reason=NON_TESTABLE_NAMES[normalized_route.name],
+        )
+    if not docs_serve_available and normalized_route.namespace in DOCS_SERVE_NAMESPACES:
+        return _AdminClassification(
+            is_testable=False,
+            skip_reason='Requires path("documents/", include(wagtaildocs_urls)) in URLconf',
+        )
+    if (
+        not images_serve_available
+        and normalized_route.namespace == "wagtailimages"
+        and normalized_route.name in IMAGE_GENERATOR_NAMES
+    ):
+        return _AdminClassification(
+            is_testable=False,
+            skip_reason='Requires path("images/", include(wagtailimages_urls)) in URLconf',
+        )
+    if normalized_route.has_parameters:
+        return _AdminClassification(should_resolve=True)
+    return _AdminClassification()
+
+
+def _finalize_admin_route(normalized_route, classification):
+    """Emit the final BackendURL from normalized and classified state."""
+    resolved_route = ""
+    is_testable = classification.is_testable
+    skip_reason = classification.skip_reason
+
+    if classification.should_resolve:
+        resolution = _resolve_parameterized_url(
+            normalized_route.namespace,
+            normalized_route.name,
+            normalized_route.callback,
+            normalized_route.route,
+        )
+        if resolution.resolved:
+            resolved_route = resolution.resolved_route
+        else:
+            is_testable = False
+            skip_reason = "URL requires parameters"
+
+    return BackendURL(
+        route=normalized_route.route,
+        name=normalized_route.name,
+        namespace=normalized_route.namespace,
+        has_parameters=normalized_route.has_parameters,
+        view_name=normalized_route.view_name,
+        is_testable=is_testable,
+        skip_reason=skip_reason,
+        resolved_route=resolved_route,
+    )
+
+
 def _resolve_settings_url(name, route):
     """Resolve a wagtailsettings URL using registered setting models.
 
@@ -140,14 +350,19 @@ def _resolve_settings_url(name, route):
     - Remove the try/except on PreviewableMixin import
     - Always use BaseSiteSetting (no fallback needed)
 
-    Returns the resolved path (without leading '/') or None.
+    Returns an internal resolution result.
     """
+    result = _ParameterizedURLResolution(method="settings")
     try:
         from wagtail.contrib.settings.registry import registry
     except ImportError:
-        return None
+        result.add_attempt("settings", "registry-unavailable")
+        result.detail = "Wagtail settings registry is unavailable"
+        return result
 
     has_pk = "<int:pk>" in route
+    eligible_model_seen = False
+    found_instance = False
     for model in registry:
         app_name = model._meta.app_label
         model_name = model._meta.model_name
@@ -166,10 +381,13 @@ def _resolve_settings_url(name, route):
                 # Wagtail <7.1: PreviewableMixin doesn't exist; skip this URL
                 continue
 
+        eligible_model_seen = True
+
         if has_pk:
             instance = model.objects.first()
             if not instance:
                 continue
+            found_instance = True
             # Wagtail 7.0+: The <int:pk> parameter means different things by model type.
             # BaseSiteSetting: pk in URL = site pk (not settings row pk)
             # BaseGenericSetting: pk in URL = settings row pk
@@ -185,65 +403,130 @@ def _resolve_settings_url(name, route):
                 # Fallback: assume BaseGenericSetting (unlikely in modern Wagtail)
                 kwargs["pk"] = instance.pk
         try:
-            url = reverse(f"wagtailsettings:{name}", kwargs=kwargs)
-            return url.lstrip("/")
-        except Exception:
+            url = reverse("wagtailsettings:%s" % name, kwargs=kwargs)
+        except Exception as exc:
+            result.detail = str(exc) or exc.__class__.__name__
             continue
-    return None
+
+        result.add_attempt("settings", "resolved")
+        result.resolved = True
+        result.resolved_route = url.lstrip("/")
+        result.detail = f"Resolved wagtailsettings:{name} via {app_name}.{model_name}"
+        return result
+
+    if has_pk and eligible_model_seen and not found_instance:
+        result.add_attempt("settings", "no-model-instance")
+        result.detail = "No settings instances exist for the registered settings models"
+    else:
+        result.add_attempt("settings", "reverse-failed")
+        if not result.detail:
+            result.detail = "Could not reverse wagtailsettings URL for any registered settings model"
+    return result
 
 
-def _resolve_parameterised_url(namespace, name, callback, route=""):
-    """Attempt to resolve a parameterised URL using a real model instance.
+def _get_namespace_specific_instance(namespace, name, current_instance):
+    """Return a namespace-specific instance override when one applies."""
+    selected_method = ""
+    selected_instance = current_instance
+    attempts = []
 
-    Extracts the model from the view callback, fetches the first instance,
-    and reverses the URL with that instance's PK. For treebeard models
-    (e.g. Collection), skips the root node (depth=1) which Wagtail protects.
+    for rule in NAMESPACE_INSTANCE_RESOLVERS:
+        if not rule["predicate"](namespace, name):
+            continue
+        if current_instance is not None and not rule["override"]:
+            attempts.append(f"{rule['label']}:skipped")
+            continue
 
-    Falls back to parsing the URL name for modeladmin-style patterns when
-    the callback doesn't expose a model directly. For ``wagtailforms``
-    namespace URLs, falls back to finding a live form page instance. For
-    ``wagtailsettings`` namespace URLs, uses registered setting models
-    with kwargs-based reversal.
+        instance = rule["resolver"]()
+        if instance is None:
+            attempts.append(f"{rule['label']}:no-instance")
+            if rule["override"]:
+                selected_method = rule["label"]
+                selected_instance = None
+                current_instance = None
+                break
+            continue
 
-    Returns the resolved path (without leading '/') or None.
-    """
-    # Settings URLs use kwargs, not positional args
+        attempts.append(f"{rule['label']}:instance-found")
+        selected_method = rule["label"]
+        selected_instance = instance
+        current_instance = instance
+
+    return selected_method, selected_instance, attempts
+
+
+def _resolve_parameterized_url(namespace, name, callback, route=""):
+    """Attempt to resolve a parameterized admin URL using an explicit strategy order."""
     if namespace == "wagtailsettings":
         return _resolve_settings_url(name, route)
 
+    result = _ParameterizedURLResolution()
+
+    selected_method = ""
+    selected_instance = None
+
     model = _get_model_from_callback(callback)
-    if model is None:
-        model = _get_model_from_name(name)
-
-    instance = None
     if model is not None:
-        queryset = model.objects.all()
-        if hasattr(model, "depth"):
-            queryset = queryset.exclude(depth=1)
-        instance = queryset.first()
+        result.add_attempt("callback-model", "model-found")
+        selected_instance = _get_instance_for_model(model)
+        if selected_instance is not None:
+            selected_method = "callback-model"
+            result.add_attempt("callback-model", "instance-found")
+        else:
+            result.add_attempt("callback-model", "no-instance")
+    else:
+        result.add_attempt("callback-model", "no-model")
 
-    # Fallback: wagtailforms views use page_id but don't expose a model
-    if instance is None and namespace == "wagtailforms":
-        instance = _get_form_page_instance()
+    if selected_instance is None:
+        model = _get_model_from_modeladmin_name(name)
+        if model is not None:
+            result.add_attempt("modeladmin-name", "model-found")
+            selected_instance = _get_instance_for_model(model)
+            if selected_instance is not None:
+                selected_method = "modeladmin-name"
+                result.add_attempt("modeladmin-name", "instance-found")
+            else:
+                result.add_attempt("modeladmin-name", "no-instance")
+        else:
+            result.add_attempt("modeladmin-name", "no-model")
+    else:
+        result.add_attempt("modeladmin-name", "skipped")
 
-    # Fallback: workflow usage views inherit model=Page from PageListingMixin
-    # but actually look up a Workflow instance by pk
-    if namespace == "wagtailadmin_workflows" and name in ("usage", "usage_results"):
-        try:
-            from wagtail.models import Workflow
+    namespace_method, namespace_instance, namespace_attempts = _get_namespace_specific_instance(
+        namespace,
+        name,
+        selected_instance,
+    )
+    result.attempts.extend(namespace_attempts)
+    if namespace_method:
+        selected_method = namespace_method
+        selected_instance = namespace_instance
 
-            instance = Workflow.objects.first()
-        except Exception:
-            instance = None
+    if selected_instance is None:
+        result.method = selected_method
+        if selected_method:
+            result.detail = f"{selected_method} did not provide a compatible instance for URL parameters"
+        else:
+            result.detail = "No model-backed instance was available for URL parameters"
+        return result
 
-    if instance is None:
-        return None
-    try:
-        url_name = f"{namespace}:{name}" if namespace else name
-        url = reverse(url_name, args=[instance.pk])
-        return url.lstrip("/")
-    except Exception:
-        return None
+    reverse_result = _reverse_with_instance(namespace, name, selected_instance)
+    result.attempts.extend(reverse_result.attempts)
+    if reverse_result.resolved:
+        result.resolved = True
+        result.method = selected_method or "reverse"
+        result.resolved_route = reverse_result.resolved_route
+        result.detail = (
+            f"{result.method} resolved {_build_url_name(namespace, name)} to {reverse_result.resolved_route}"
+        )
+        return result
+
+    result.method = selected_method or "reverse"
+    result.detail = (
+        f"{result.method} found an instance for {_build_url_name(namespace, name)} "
+        f"but reverse failed: {reverse_result.detail}"
+    )
+    return result
 
 
 def get_admin_urls():
@@ -252,80 +535,18 @@ def get_admin_urls():
     Returns a list of BackendURL dataclass instances for every URL pattern
     under the admin/ prefix.
     """
-    # URL names that are known to be non-testable via GET.
-    NON_TESTABLE_NAMES = {
-        "wagtailadmin_logout": "POST-only view",
-        "wagtailadmin_error_test": "Intentional error endpoint",
-        "process_import": "POST-only view",
-        "wagtailadmin_block_preview": "POST-only view",
-        "lock": "POST-only view",
-        "unlock": "POST-only view",
-        "find": "Requires query parameters",
-    }
-
     images_serve_available = _is_url_registered("wagtailimages_serve")
     docs_serve_available = _is_url_registered("wagtaildocs_serve")
-
-    resolver = get_resolver()
     skip_prefixes = get_skip_url_prefixes()
     results = []
-    for route, name, namespace, callback in walk_patterns(resolver.url_patterns):
-        if not route.startswith("admin/"):
+    for discovered_route in _discover_admin_routes():
+        normalized_route = _normalize_admin_route(discovered_route, skip_prefixes)
+        if normalized_route is None:
             continue
-        route = clean_regex_route(route)
-
-        # Skip routes that still contain regex metacharacters after cleaning
-        # (e.g. Wagtail's catch-all `.*/$` pattern)
-        if re.search(r"[.][*+?]|\(", route):
-            continue
-
-        # User-configured prefix exclusions
-        if skip_prefixes and any(route.startswith(p) for p in skip_prefixes):
-            continue
-
-        has_parameters = "<" in route
-        is_testable = True
-        skip_reason = ""
-        resolved_route = ""
-        if name in NON_TESTABLE_NAMES:
-            is_testable = False
-            skip_reason = NON_TESTABLE_NAMES[name]
-        elif not docs_serve_available and namespace in {
-            "wagtaildocs",
-            "wagtaildocs_chooser",
-            "wagtailadmin_api:documents",
-        }:
-            is_testable = False
-            skip_reason = 'Requires path("documents/", include(wagtaildocs_urls)) in URLconf'
-        elif (
-            not images_serve_available
-            and namespace == "wagtailimages"
-            and name
-            in {
-                "url_generator",
-                "url_generator_output",
-            }
-        ):
-            is_testable = False
-            skip_reason = 'Requires path("images/", include(wagtailimages_urls)) in URLconf'
-        elif has_parameters:
-            resolved = _resolve_parameterised_url(namespace, name, callback, route)
-            if resolved:
-                is_testable = True
-                resolved_route = resolved
-            else:
-                is_testable = False
-                skip_reason = "URL requires parameters"
-        results.append(
-            BackendURL(
-                route=route,
-                name=name,
-                namespace=namespace,
-                has_parameters=has_parameters,
-                view_name=_get_view_name(callback),
-                is_testable=is_testable,
-                skip_reason=skip_reason,
-                resolved_route=resolved_route,
-            )
+        classification = _classify_admin_route(
+            normalized_route,
+            docs_serve_available=docs_serve_available,
+            images_serve_available=images_serve_available,
         )
+        results.append(_finalize_admin_route(normalized_route, classification))
     return results

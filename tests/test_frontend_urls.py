@@ -2,7 +2,13 @@ from django.test import TestCase
 from wagtail.models import Page
 
 from sandbox.events.models import EventIndexPage
-from wagtail_unveil.discovery.frontend import FrontendURL, get_frontend_urls
+from wagtail_unveil.discovery.frontend import (
+    FrontendURL,
+    _build_frontend_url,
+    _classify_frontend_candidate,
+    _FrontendCandidate,
+    get_frontend_urls,
+)
 
 
 class TestGetFrontendUrls(TestCase):
@@ -130,3 +136,65 @@ class TestRoutableSubUrls(TestCase):
             self.assertEqual(url.page_type, self.page_type)
             self.assertEqual(url.page_title, "Events")
             self.assertTrue(url.name)
+
+
+class TestFrontendDiscoveryPhases(TestCase):
+    def test_plain_page_candidate_is_testable(self):
+        candidate = _FrontendCandidate(
+            url="/about/",
+            source="page",
+            page_type="core.StandardPage",
+            page_title="About",
+            name="",
+        )
+
+        classification = _classify_frontend_candidate(candidate)
+        result = _build_frontend_url(candidate, classification)
+
+        self.assertTrue(result.is_testable)
+        self.assertEqual(result.skip_reason, "")
+
+    def test_form_landing_candidate_requires_post(self):
+        candidate = _FrontendCandidate(
+            url="/contact/",
+            source="page",
+            page_type="forms.FormPage",
+            page_title="Contact",
+            name="landing_page",
+            requires_post=True,
+        )
+
+        classification = _classify_frontend_candidate(candidate)
+
+        self.assertFalse(classification.is_testable)
+        self.assertEqual(classification.skip_reason, "Requires POST submission")
+
+    def test_parameterized_routable_candidate_requires_parameters(self):
+        candidate = _FrontendCandidate(
+            url="/events/year/<int:year>/",
+            source="page",
+            page_type="events.EventIndexPage",
+            page_title="Events",
+            name="events_for_year",
+            has_parameters=True,
+        )
+
+        classification = _classify_frontend_candidate(candidate)
+
+        self.assertFalse(classification.is_testable)
+        self.assertEqual(classification.skip_reason, "URL requires parameters")
+
+    def test_regex_resolver_candidate_is_marked_untestable(self):
+        candidate = _FrontendCandidate(
+            url="/documents/(.*)/",
+            source="resolver",
+            page_type="",
+            page_title="",
+            name="wagtaildocs_serve",
+            contains_regex=True,
+        )
+
+        classification = _classify_frontend_candidate(candidate)
+
+        self.assertFalse(classification.is_testable)
+        self.assertEqual(classification.skip_reason, "URL contains regex patterns")

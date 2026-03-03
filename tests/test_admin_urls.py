@@ -7,8 +7,21 @@ from wagtail.images.models import Image
 from wagtail.images.tests.utils import get_test_image_file
 from wagtail.models import Site
 
-from wagtail_unveil.discovery.backend import BackendURL, get_admin_urls
-from wagtail_unveil.discovery.utils import clean_regex_route
+from wagtail_unveil.discovery.backend import (
+    BackendURL,
+    _AdminClassification,
+    _classify_admin_route,
+    _DiscoveredAdminRoute,
+    _finalize_admin_route,
+    _get_instance_for_model,
+    _get_model_from_modeladmin_name,
+    _get_namespace_specific_instance,
+    _normalize_admin_route,
+    _resolve_parameterized_url,
+    _resolve_settings_url,
+    get_admin_urls,
+)
+from wagtail_unveil.discovery.utils import clean_regex_route, route_contains_regex, route_has_parameters
 
 
 class TestGetAdminUrls(TestCase):
@@ -101,6 +114,133 @@ class TestCleanRegexRoute(TestCase):
             clean_regex_route("^a/(?P<pk>[0-9]+)/b/(?P<slug>[-\\w]+)/$"),
             "a/<pk>/b/<slug>/",
         )
+
+    def test_route_has_parameters(self):
+        self.assertTrue(route_has_parameters("admin/images/<int:image_id>/"))
+        self.assertFalse(route_has_parameters("admin/images/"))
+
+    def test_route_contains_regex(self):
+        self.assertTrue(route_contains_regex("documents/(.*)/"))
+        self.assertTrue(route_contains_regex("year/[0-9]+/"))
+        self.assertTrue(route_contains_regex(r"year/\d+/"))
+        self.assertFalse(route_contains_regex("documents/<path:path>/"))
+
+
+class TestAdminDiscoveryPhases(TestCase):
+    def test_normalization_cleans_route_and_sets_metadata(self):
+        def callback(request):
+            return None
+
+        discovered = _DiscoveredAdminRoute(
+            raw_route="^admin/example/(?P<pk>[0-9]+)/$",
+            name="example_edit",
+            namespace="example",
+            callback=callback,
+        )
+
+        normalized = _normalize_admin_route(discovered, skip_prefixes=[])
+
+        self.assertIsNotNone(normalized)
+        self.assertEqual(normalized.route, "admin/example/<pk>/")
+        self.assertTrue(normalized.has_parameters)
+        self.assertTrue(normalized.view_name.endswith(".callback"))
+
+    def test_normalization_drops_routes_with_unsafe_regex(self):
+        discovered = _DiscoveredAdminRoute(
+            raw_route="admin/catch-all/.*/",
+            name="unsafe",
+            namespace="",
+            callback=lambda request: None,
+        )
+
+        normalized = _normalize_admin_route(discovered, skip_prefixes=[])
+
+        self.assertIsNone(normalized)
+
+    def test_classification_marks_known_non_testable_name(self):
+        normalized = _normalize_admin_route(
+            _DiscoveredAdminRoute(
+                raw_route="admin/logout/",
+                name="wagtailadmin_logout",
+                namespace="wagtailadmin",
+                callback=lambda request: None,
+            ),
+            skip_prefixes=[],
+        )
+
+        classification = _classify_admin_route(
+            normalized,
+            docs_serve_available=True,
+            images_serve_available=True,
+        )
+
+        self.assertFalse(classification.is_testable)
+        self.assertEqual(classification.skip_reason, "POST-only view")
+        self.assertFalse(classification.should_resolve)
+
+    def test_classification_marks_missing_docs_dependency(self):
+        normalized = _normalize_admin_route(
+            _DiscoveredAdminRoute(
+                raw_route="admin/documents/<int:document_id>/edit/",
+                name="edit",
+                namespace="wagtaildocs",
+                callback=lambda request: None,
+            ),
+            skip_prefixes=[],
+        )
+
+        classification = _classify_admin_route(
+            normalized,
+            docs_serve_available=False,
+            images_serve_available=True,
+        )
+
+        self.assertFalse(classification.is_testable)
+        self.assertIn("wagtaildocs_urls", classification.skip_reason)
+        self.assertFalse(classification.should_resolve)
+
+    def test_parameterized_routes_require_resolution_before_skip_reason(self):
+        normalized = _normalize_admin_route(
+            _DiscoveredAdminRoute(
+                raw_route="admin/images/<int:image_id>/edit/",
+                name="edit",
+                namespace="wagtailimages",
+                callback=lambda request: None,
+            ),
+            skip_prefixes=[],
+        )
+
+        classification = _classify_admin_route(
+            normalized,
+            docs_serve_available=True,
+            images_serve_available=True,
+        )
+
+        self.assertTrue(classification.is_testable)
+        self.assertTrue(classification.should_resolve)
+        self.assertEqual(classification.skip_reason, "")
+
+    def test_finalization_assigns_parameter_skip_reason_after_failed_resolution(self):
+        normalized = _normalize_admin_route(
+            _DiscoveredAdminRoute(
+                raw_route="admin/images/<int:image_id>/edit/",
+                name="edit",
+                namespace="wagtailimages",
+                callback=lambda request: None,
+            ),
+            skip_prefixes=[],
+        )
+        classification = _AdminClassification(should_resolve=True)
+
+        with mock.patch(
+            "wagtail_unveil.discovery.backend._resolve_parameterized_url",
+            return_value=mock.Mock(resolved=False, resolved_route=""),
+        ):
+            result = _finalize_admin_route(normalized, classification)
+
+        self.assertFalse(result.is_testable)
+        self.assertEqual(result.skip_reason, "URL requires parameters")
+        self.assertEqual(result.resolved_route, "")
 
 
 class TestParameterisedURLResolution(TestCase):
@@ -205,6 +345,315 @@ class TestParameterisedURLResolution(TestCase):
         for url in unresolvable:
             self.assertFalse(url.is_testable, url.route)
             self.assertIn(url.skip_reason, ("URL requires parameters", "POST-only view"))
+
+
+class TestParameterizedResolutionStrategies(TestCase):
+    def test_settings_resolution_runs_first_and_stops(self):
+        with mock.patch(
+            "wagtail_unveil.discovery.backend._resolve_settings_url",
+            return_value=mock.Mock(resolved=False, attempts=["settings:no-model-instance"], detail="missing"),
+        ) as resolve_settings:
+            with mock.patch("wagtail_unveil.discovery.backend._get_model_from_callback") as get_model:
+                result = _resolve_parameterized_url(
+                    "wagtailsettings",
+                    "edit",
+                    callback=object(),
+                    route="admin/settings/",
+                )
+
+        resolve_settings.assert_called_once_with("edit", "admin/settings/")
+        get_model.assert_not_called()
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.attempts, ["settings:no-model-instance"])
+
+    def test_callback_model_strategy_wins_before_modeladmin_name(self):
+        instance = mock.Mock(pk=42)
+        with mock.patch("wagtail_unveil.discovery.backend._get_model_from_callback", return_value=User):
+            with mock.patch("wagtail_unveil.discovery.backend._get_instance_for_model", return_value=instance):
+                with mock.patch("wagtail_unveil.discovery.backend._get_model_from_modeladmin_name") as get_modeladmin:
+                    with mock.patch("wagtail_unveil.discovery.backend.reverse", return_value="/admin/users/42/"):
+                        result = _resolve_parameterized_url(
+                            "",
+                            "edit",
+                            callback=object(),
+                            route="admin/users/<int:pk>/",
+                        )
+
+        get_modeladmin.assert_not_called()
+        self.assertTrue(result.resolved)
+        self.assertEqual(result.method, "callback-model")
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:model-found",
+                "callback-model:instance-found",
+                "modeladmin-name:skipped",
+                "reverse:resolved",
+            ],
+        )
+
+    def test_modeladmin_name_fallback_resolves_when_callback_has_no_model(self):
+        instance = mock.Mock(pk=7)
+        with mock.patch("wagtail_unveil.discovery.backend._get_model_from_callback", return_value=None):
+            with mock.patch("wagtail_unveil.discovery.backend._get_model_from_modeladmin_name", return_value=Group):
+                with mock.patch("wagtail_unveil.discovery.backend._get_instance_for_model", return_value=instance):
+                    with mock.patch("wagtail_unveil.discovery.backend.reverse", return_value="/admin/groups/7/"):
+                        result = _resolve_parameterized_url(
+                            "",
+                            "taxonomy_person_modeladmin_edit",
+                            callback=object(),
+                            route="admin/taxonomy/person/<int:pk>/",
+                        )
+
+        self.assertTrue(result.resolved)
+        self.assertEqual(result.method, "modeladmin-name")
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:no-model",
+                "modeladmin-name:model-found",
+                "modeladmin-name:instance-found",
+                "reverse:resolved",
+            ],
+        )
+
+    def test_wagtailforms_namespace_fallback_resolves_without_model_metadata(self):
+        instance = mock.Mock(pk=9)
+        with mock.patch("wagtail_unveil.discovery.backend._get_model_from_callback", return_value=None):
+            with mock.patch("wagtail_unveil.discovery.backend._get_model_from_modeladmin_name", return_value=None):
+                with mock.patch("wagtail_unveil.discovery.backend._get_form_page_instance", return_value=instance):
+                    with mock.patch(
+                        "wagtail_unveil.discovery.backend.reverse",
+                        return_value="/admin/forms/submissions/9/",
+                    ):
+                        result = _resolve_parameterized_url(
+                            "wagtailforms",
+                            "list_submissions",
+                            callback=object(),
+                            route="admin/forms/submissions/<int:page_id>/",
+                        )
+
+        self.assertTrue(result.resolved)
+        self.assertEqual(result.method, "namespace:wagtailforms")
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:no-model",
+                "modeladmin-name:no-model",
+                "namespace:wagtailforms:instance-found",
+                "reverse:resolved",
+            ],
+        )
+
+    def test_workflow_namespace_overrides_callback_model_instance(self):
+        callback_instance = mock.Mock(pk=1)
+        workflow_instance = mock.Mock(pk=99)
+        with mock.patch("wagtail_unveil.discovery.backend._get_model_from_callback", return_value=User):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend._get_instance_for_model",
+                return_value=callback_instance,
+            ):
+                with mock.patch(
+                    "wagtail_unveil.discovery.backend._get_workflow_instance",
+                    return_value=workflow_instance,
+                ):
+                    with mock.patch(
+                        "wagtail_unveil.discovery.backend.reverse",
+                        return_value="/admin/workflows/usage/99/",
+                    ) as reverse_mock:
+                        result = _resolve_parameterized_url(
+                            "wagtailadmin_workflows",
+                            "usage",
+                            callback=object(),
+                            route="admin/workflows/usage/<int:pk>/",
+                        )
+
+        self.assertTrue(result.resolved)
+        self.assertEqual(result.method, "namespace:wagtailadmin_workflows")
+        reverse_mock.assert_called_once_with("wagtailadmin_workflows:usage", args=[99])
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:model-found",
+                "callback-model:instance-found",
+                "modeladmin-name:skipped",
+                "namespace:wagtailadmin_workflows:instance-found",
+                "reverse:resolved",
+            ],
+        )
+
+    def test_workflow_namespace_fails_closed_without_workflow_instance(self):
+        callback_instance = mock.Mock(pk=1)
+        with mock.patch("wagtail_unveil.discovery.backend._get_model_from_callback", return_value=User):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend._get_instance_for_model",
+                return_value=callback_instance,
+            ):
+                with mock.patch(
+                    "wagtail_unveil.discovery.backend._get_workflow_instance",
+                    return_value=None,
+                ):
+                    with mock.patch("wagtail_unveil.discovery.backend.reverse") as reverse_mock:
+                        result = _resolve_parameterized_url(
+                            "wagtailadmin_workflows",
+                            "usage",
+                            callback=object(),
+                            route="admin/workflows/usage/<int:pk>/",
+                        )
+
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.method, "namespace:wagtailadmin_workflows")
+        reverse_mock.assert_not_called()
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:model-found",
+                "callback-model:instance-found",
+                "modeladmin-name:skipped",
+                "namespace:wagtailadmin_workflows:no-instance",
+            ],
+        )
+        self.assertIn("did not provide a compatible instance", result.detail)
+
+    def test_treebeard_models_skip_root_nodes(self):
+        first_instance = mock.Mock()
+        queryset = mock.Mock()
+        queryset.exclude.return_value.first.return_value = first_instance
+        objects = mock.Mock()
+        objects.all.return_value = queryset
+        model = mock.Mock(depth=mock.Mock(), objects=objects)
+
+        instance = _get_instance_for_model(model)
+
+        objects.all.assert_called_once_with()
+        queryset.exclude.assert_called_once_with(depth=1)
+        self.assertIs(instance, first_instance)
+
+    def test_reverse_failure_records_detail_and_leaves_result_unresolved(self):
+        instance = mock.Mock(pk=5)
+        with mock.patch("wagtail_unveil.discovery.backend._get_model_from_callback", return_value=User):
+            with mock.patch("wagtail_unveil.discovery.backend._get_instance_for_model", return_value=instance):
+                with mock.patch(
+                    "wagtail_unveil.discovery.backend.reverse",
+                    side_effect=RuntimeError("boom"),
+                ):
+                    result = _resolve_parameterized_url("", "edit", callback=object(), route="admin/users/<int:pk>/")
+
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.method, "callback-model")
+        self.assertIn("reverse:failed", result.attempts)
+        self.assertIn("boom", result.detail)
+
+    def test_attempts_record_full_fallback_order_when_unresolved(self):
+        with mock.patch("wagtail_unveil.discovery.backend._get_model_from_callback", return_value=None):
+            with mock.patch("wagtail_unveil.discovery.backend._get_model_from_modeladmin_name", return_value=None):
+                with mock.patch("wagtail_unveil.discovery.backend._get_form_page_instance", return_value=None):
+                    result = _resolve_parameterized_url(
+                        "wagtailforms",
+                        "list_submissions",
+                        callback=object(),
+                        route="admin/forms/submissions/<int:page_id>/",
+                    )
+
+        self.assertFalse(result.resolved)
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:no-model",
+                "modeladmin-name:no-model",
+                "namespace:wagtailforms:no-instance",
+            ],
+        )
+        self.assertIn("No model-backed instance", result.detail)
+
+    def test_settings_resolution_result_explains_missing_instances(self):
+        objects = mock.Mock()
+        objects.first.return_value = None
+        model = mock.Mock()
+        model._meta.app_label = "core"
+        model._meta.model_name = "socialmediasettings"
+        model.objects = objects
+
+        with mock.patch("wagtail_unveil.discovery.backend.reverse", side_effect=RuntimeError("should not reverse")):
+            with mock.patch("wagtail.contrib.settings.registry.registry", [model]):
+                result = _resolve_settings_url("edit", "admin/settings/core/socialmedia/<int:pk>/")
+
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.method, "settings")
+        self.assertEqual(result.attempts, ["settings:no-model-instance"])
+
+    def test_settings_resolution_records_reverse_failures(self):
+        from sandbox.core.models import SocialMediaSettings
+
+        instance = mock.Mock(pk=3, site_id=11)
+        with mock.patch.object(SocialMediaSettings.objects, "first", return_value=instance):
+            with mock.patch("wagtail_unveil.discovery.backend.reverse", side_effect=RuntimeError("cannot reverse")):
+                with mock.patch("wagtail.contrib.settings.registry.registry", [SocialMediaSettings]):
+                    result = _resolve_settings_url("edit", "admin/settings/core/socialmedia/<int:pk>/")
+
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.method, "settings")
+        self.assertEqual(result.attempts, ["settings:reverse-failed"])
+        self.assertIn("cannot reverse", result.detail)
+
+    def test_settings_preview_resolution_skips_ineligible_models(self):
+        class PreviewableMixin:
+            pass
+
+        class PlainSettings:
+            _meta = type("Meta", (), {"app_label": "core", "model_name": "plainsettings"})()
+            objects = mock.Mock()
+
+        PlainSettings.objects.first.return_value = mock.Mock(pk=7, site_id=7)
+
+        with mock.patch("wagtail.contrib.settings.registry.registry", [PlainSettings]):
+            with mock.patch("wagtail.models.PreviewableMixin", PreviewableMixin, create=True):
+                result = _resolve_settings_url(
+                    "preview_on_edit",
+                    "admin/settings/core/plainsettings/<int:pk>/",
+                )
+
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.method, "settings")
+        self.assertEqual(result.attempts, ["settings:reverse-failed"])
+        self.assertEqual(
+            result.detail,
+            "Could not reverse wagtailsettings URL for any registered settings model",
+        )
+
+    def test_settings_preview_resolution_reports_missing_instances_for_eligible_models(self):
+        class PreviewableMixin:
+            pass
+
+        class PreviewableSettings(PreviewableMixin):
+            _meta = type("Meta", (), {"app_label": "core", "model_name": "previewablesettings"})()
+            objects = mock.Mock()
+
+        PreviewableSettings.objects.first.return_value = None
+
+        with mock.patch("wagtail.contrib.settings.registry.registry", [PreviewableSettings]):
+            with mock.patch("wagtail.models.PreviewableMixin", PreviewableMixin, create=True):
+                result = _resolve_settings_url(
+                    "preview_on_edit",
+                    "admin/settings/core/previewablesettings/<int:pk>/",
+                )
+
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.method, "settings")
+        self.assertEqual(result.attempts, ["settings:no-model-instance"])
+        self.assertEqual(result.detail, "No settings instances exist for the registered settings models")
+
+    def test_namespace_specific_forms_rule_skips_when_instance_already_exists(self):
+        instance = mock.Mock(pk=1)
+
+        method, selected_instance, attempts = _get_namespace_specific_instance("wagtailforms", "edit", instance)
+
+        self.assertEqual(method, "")
+        self.assertIs(selected_instance, instance)
+        self.assertEqual(attempts, ["namespace:wagtailforms:skipped"])
+
+    def test_modeladmin_name_helpers_return_none_for_unknown_models(self):
+        self.assertIsNone(_get_model_from_modeladmin_name("not_a_modeladmin_route"))
 
 
 class TestModeladminURLDiscovery(TestCase):

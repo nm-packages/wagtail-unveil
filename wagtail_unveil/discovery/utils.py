@@ -2,6 +2,8 @@ import re
 
 from django.urls import URLPattern, URLResolver
 
+UNSAFE_REGEX_ROUTE_PATTERN = re.compile(r"(\\|\(|\[|[.][*+?])")
+
 
 def walk_patterns(patterns, prefix="", namespace=""):
     """Recursively walk URL patterns, yielding (route, name, namespace) tuples."""
@@ -25,3 +27,13 @@ def clean_regex_route(route):
     route = route.replace("^", "").replace("$", "")
     route = re.sub(r"\(\?P<(\w+)>[^)]+\)", r"<\1>", route)
     return route
+
+
+def route_has_parameters(route):
+    """Return True when a normalized route still contains path parameters."""
+    return "<" in route
+
+
+def route_contains_regex(route):
+    """Return True when a normalized route still contains regex syntax."""
+    return bool(UNSAFE_REGEX_ROUTE_PATTERN.search(route))

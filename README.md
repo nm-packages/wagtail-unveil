@@ -154,6 +154,8 @@ make pre-commit # Run pre-commit hooks on all files
 
 The report UI intentionally uses plain static JavaScript files in `wagtail_unveil/static/wagtail_unveil/js/`, loaded in template order without a build step. Keep client-side concerns split into focused files rather than reintroducing a single report script.
 
+Discovery now follows explicit internal phases for backend and frontend routes, and admin parameter resolution uses an ordered strategy pipeline; see [docs/discovery-architecture.md](docs/discovery-architecture.md) when changing fallback behavior or classification rules.
+
 The sandbox also includes a deliberate failing frontend route at `/intentional-error/` so local report runs always have at least one visible error case.
 
 See [AGENTS.md](AGENTS.md) for the full list of development commands and agent-facing project guidance.
