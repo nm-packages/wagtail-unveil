@@ -6,6 +6,7 @@ from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail.images import urls as wagtailimages_urls
 
+from sandbox.home import views as home_views
 from sandbox.search import views as search_views
 
 urlpatterns = [
@@ -14,6 +15,11 @@ urlpatterns = [
     path("documents/", include(wagtaildocs_urls)),
     path("images/", include(wagtailimages_urls)),
     path("search/", search_views.search, name="search"),
+    path(
+        "intentional-error/",
+        home_views.intentional_frontend_error,
+        name="intentional_frontend_error",
+    ),
     path("unveil/", include("wagtail_unveil.urls")),
 ]
 
