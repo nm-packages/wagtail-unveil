@@ -13,3 +13,12 @@ repos:
     hooks:
       - id: ruff
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: biome-js-fix
+        name: biome-js-fix
+        entry: npm run lint:js:fix
+        language: system
+        pass_filenames: false
+        files: ^(assets_src/.*\.js|scripts/.*\.js|tests/js/.*\.js)$

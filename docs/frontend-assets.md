@@ -29,6 +29,16 @@ npm run test:js
 make test-js
 ```
 
+Run JavaScript lint/format checks (Biome):
+
+```bash
+npm run lint:js
+npm run lint:js:fix
+# or
+make lint-js
+make lint-js-fix
+```
+
 Build bundles:
 
 ```bash
@@ -72,6 +82,7 @@ Template include:
 
 CI includes frontend asset checks:
 
+- `js-lint` runs Biome checks for contributor-owned JS files
 - `js-tests` job runs JavaScript tests
 - `assets-check` runs the build and fails if generated bundle artifacts are stale
 
@@ -88,6 +99,24 @@ Run these before opening/updating a PR with frontend asset changes:
 ```bash
 make lint
 make coverage
+npm run lint:js
 npm run test:js
 npm run build:js
 ```
+
+## Formatting/Lint Scope
+
+Biome is the canonical formatter/linter for JavaScript in this repository.
+
+Included paths:
+
+- `assets_src/**/*.js`
+- `scripts/**/*.js`
+- `tests/js/**/*.js`
+
+Excluded generated artifacts:
+
+- `wagtail_unveil/static/wagtail_unveil/js/report.bundle.js`
+- `wagtail_unveil/static/wagtail_unveil/js/report.bundle.min.js`
+
+Pre-commit runs `npm run lint:js:fix` for these contributor-owned JS files so style/lint issues are fixed before commit.

@@ -25,6 +25,7 @@ make runserver   # start the sandbox dev server
 make test        # run package tests
 make test-js     # run JavaScript report tests
 make build-js    # build JavaScript report bundles
+make lint-js     # Biome JavaScript lint/format checks
 make tox         # run the version matrix
 make lint        # ruff check
 make lint-fix    # ruff check --fix
@@ -41,6 +42,8 @@ uv run --env-file .env django-admin runserver
 uv run --env-file .env django-admin test tests
 uv run ruff check .
 uv run tox
+npm run lint:js
+npm run lint:js:fix
 npm run test:js
 npm run build:js
 ```

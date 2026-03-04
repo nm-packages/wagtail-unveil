@@ -26,6 +26,8 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 - `static/wagtail_unveil/js/` — generated report bundle assets (`report.bundle.js`, `report.bundle.min.js`)
 - `../docs/frontend-assets.md` — canonical contributor guide for frontend asset build/test workflow and CI expectations
 
+JavaScript formatting and linting for contributor-owned frontend files is managed by Biome via `npm run lint:js` and `npm run lint:js:fix` (hooked into pre-commit and CI).
+
 ## Package Interfaces
 
 `wagtail_unveil` currently exposes:

@@ -2,7 +2,7 @@ UV = uv
 RUN = $(UV) run --env-file .env
 MANAGE = $(RUN) django-admin
 
-.PHONY: help setup env install migrate superuser sample-data runserver run test test-js build-js tox lint lint-fix makemigrations pre-commit coverage coverage-html clean
+.PHONY: help setup env install migrate superuser sample-data runserver run test test-js build-js tox lint lint-fix lint-js lint-js-fix makemigrations pre-commit coverage coverage-html clean
 
 help:
 	@echo "Usage: make <target>"
@@ -17,6 +17,8 @@ help:
 	@echo "  tox             Run tests across all Python/Django/Wagtail versions"
 	@echo "  lint            Run ruff check"
 	@echo "  lint-fix        Run ruff check --fix"
+	@echo "  lint-js         Run Biome JavaScript checks"
+	@echo "  lint-js-fix     Run Biome JavaScript checks with --write"
 	@echo "  pre-commit      Run pre-commit hooks on all files"
 	@echo "  makemigrations  Create package migrations"
 	@echo "  sample-data     Create sample data"
@@ -63,6 +65,12 @@ lint:
 
 lint-fix:
 	$(UV) run ruff check --fix .
+
+lint-js:
+	npm run lint:js
+
+lint-js-fix:
+	npm run lint:js:fix
 
 pre-commit:
 	$(UV) run pre-commit run --all-files

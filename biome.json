@@ -1,0 +1,44 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "files": {
+    "include": [
+      "assets_src/**/*.js",
+      "scripts/**/*.js",
+      "tests/js/**/*.js"
+    ],
+    "ignore": [
+      "wagtail_unveil/static/wagtail_unveil/js/report.bundle.js",
+      "wagtail_unveil/static/wagtail_unveil/js/report.bundle.min.js"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space"
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "complexity": {
+        "noForEach": "off",
+        "useOptionalChain": "off"
+      },
+      "correctness": {
+        "noInnerDeclarations": "off"
+      },
+      "performance": {
+        "noDelete": "off"
+      },
+      "security": {
+        "noGlobalEval": "off"
+      },
+      "suspicious": {
+        "noShadowRestrictedNames": "off"
+      },
+      "style": {
+        "noVar": "off",
+        "useTemplate": "off"
+      }
+    }
+  }
+}

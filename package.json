@@ -2,12 +2,15 @@
   "name": "wagtail-unveil",
   "private": true,
   "scripts": {
+    "lint:js": "biome check assets_src/js scripts tests/js",
+    "lint:js:fix": "biome check --write assets_src/js scripts tests/js",
     "test:js": "vitest run",
     "test:js:watch": "vitest",
     "build:js": "node scripts/build-report-js.mjs",
     "build:js:watch": "node scripts/build-report-js.mjs --watch"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "esbuild": "^0.25.0",
     "jsdom": "^26.0.0",
     "vitest": "^3.2.4"

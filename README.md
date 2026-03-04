@@ -151,6 +151,7 @@ make runserver  # Start the sandbox dev server
 make test       # Run package tests
 make test-js    # Run JavaScript report tests
 make build-js   # Build JavaScript report bundles
+make lint-js    # Lint/format-check JavaScript with Biome
 make tox        # Run tests across all Python/Django/Wagtail versions
 make lint       # Lint with ruff
 make coverage   # Run tests with coverage report
@@ -161,6 +162,8 @@ JavaScript workflows use Node:
 
 ```bash
 npm ci
+npm run lint:js
+npm run lint:js:fix
 npm run test:js
 npm run build:js
 npm run build:js:watch

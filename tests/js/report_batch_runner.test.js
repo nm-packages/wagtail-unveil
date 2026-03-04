@@ -3,10 +3,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { loadSourceScripts, resetReportDom } from "./helpers/reportHarness.js";
 
 describe("report batch runner", () => {
-    beforeEach(() => {
-        vi.useFakeTimers();
-        resetReportDom({
-            rowsHtml: `
+  beforeEach(() => {
+    vi.useFakeTimers();
+    resetReportDom({
+      rowsHtml: `
                 <tr>
                     <td>one</td>
                     <td>
@@ -22,58 +22,58 @@ describe("report batch runner", () => {
                     <td class="status-cell">-</td>
                 </tr>
             `,
-        });
-        loadSourceScripts();
-        window.UnveilReport.components.defineCustomElements();
-
-        window.UnveilReport.rowActions.testUrlButton = vi.fn((button, options) => {
-            if (options && typeof options.onComplete === "function") {
-                setTimeout(() => {
-                    options.onComplete({
-                        statusClass: button.dataset.statusClass,
-                    });
-                }, 0);
-            }
-
-            return Promise.resolve({
-                statusClass: button.dataset.statusClass,
-            });
-        });
     });
+    loadSourceScripts();
+    window.UnveilReport.components.defineCustomElements();
 
-    afterEach(() => {
-        vi.useRealTimers();
+    window.UnveilReport.rowActions.testUrlButton = vi.fn((button, options) => {
+      if (options && typeof options.onComplete === "function") {
+        setTimeout(() => {
+          options.onComplete({
+            statusClass: button.dataset.statusClass,
+          });
+        }, 0);
+      }
+
+      return Promise.resolve({
+        statusClass: button.dataset.statusClass,
+      });
     });
+  });
 
-    test("transitions through running, paused, continued, and finished", async () => {
-        const controls = {
-            cancelButton: document.querySelector(".cancel-btn"),
-            pauseButton: document.querySelector(".pause-btn"),
-            summary: document.getElementById("test-all-summary"),
-            testAllButton: document.querySelector(".test-all-btn"),
-        };
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
-        window.UnveilReport.batchRunner.testAll();
+  test("transitions through running, paused, continued, and finished", async () => {
+    const controls = {
+      cancelButton: document.querySelector(".cancel-btn"),
+      pauseButton: document.querySelector(".pause-btn"),
+      summary: document.getElementById("test-all-summary"),
+      testAllButton: document.querySelector(".test-all-btn"),
+    };
 
-        expect(controls.testAllButton.classList.contains("hidden")).toBe(true);
-        expect(controls.pauseButton.classList.contains("hidden")).toBe(false);
-        expect(controls.summary.classList.contains("hidden")).toBe(false);
+    window.UnveilReport.batchRunner.testAll();
 
-        window.UnveilReport.batchRunner.handlePauseClick();
-        expect(controls.pauseButton.textContent).toBe("Continue");
-        expect(controls.cancelButton.classList.contains("hidden")).toBe(false);
+    expect(controls.testAllButton.classList.contains("hidden")).toBe(true);
+    expect(controls.pauseButton.classList.contains("hidden")).toBe(false);
+    expect(controls.summary.classList.contains("hidden")).toBe(false);
 
-        window.UnveilReport.batchRunner.handlePauseClick();
-        expect(controls.pauseButton.textContent).toBe("Pause");
-        expect(controls.cancelButton.classList.contains("hidden")).toBe(true);
+    window.UnveilReport.batchRunner.handlePauseClick();
+    expect(controls.pauseButton.textContent).toBe("Continue");
+    expect(controls.cancelButton.classList.contains("hidden")).toBe(false);
 
-        vi.runAllTimers();
-        await Promise.resolve();
+    window.UnveilReport.batchRunner.handlePauseClick();
+    expect(controls.pauseButton.textContent).toBe("Pause");
+    expect(controls.cancelButton.classList.contains("hidden")).toBe(true);
 
-        expect(window.UnveilReport.state.testState).toBeNull();
-        expect(controls.testAllButton.classList.contains("hidden")).toBe(false);
-        expect(controls.pauseButton.classList.contains("hidden")).toBe(true);
-        expect(controls.summary.innerHTML).toContain("Results:");
-        expect(controls.summary.innerHTML).toContain("out of 2/2");
-    });
+    vi.runAllTimers();
+    await Promise.resolve();
+
+    expect(window.UnveilReport.state.testState).toBeNull();
+    expect(controls.testAllButton.classList.contains("hidden")).toBe(false);
+    expect(controls.pauseButton.classList.contains("hidden")).toBe(true);
+    expect(controls.summary.innerHTML).toContain("Results:");
+    expect(controls.summary.innerHTML).toContain("out of 2/2");
+  });
 });
