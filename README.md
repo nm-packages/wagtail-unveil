@@ -172,6 +172,8 @@ npm run build:js
 npm run build:js:watch
 ```
 
+Biome lint/format checks apply to contributor-owned JavaScript files in `assets_src/`, `scripts/`, and `tests/js/` with `.js`, `.mjs`, and `.cjs` extensions.
+
 Frontend asset maintenance details (source layout, build/test workflow, CI expectations, and rebuild rules) are documented in [docs/frontend-assets.md](docs/frontend-assets.md).
 
 Discovery now follows explicit internal phases for backend and frontend routes, and admin parameter resolution uses an ordered strategy pipeline; see [docs/discovery-architecture.md](docs/discovery-architecture.md) when changing fallback behavior or classification rules.

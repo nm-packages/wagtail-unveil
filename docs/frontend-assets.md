@@ -110,9 +110,9 @@ Biome is the canonical formatter/linter for JavaScript in this repository.
 
 Included paths:
 
-- `assets_src/**/*.js`
-- `scripts/**/*.js`
-- `tests/js/**/*.js`
+- `assets_src/**/*.{js,mjs,cjs}`
+- `scripts/**/*.{js,mjs,cjs}`
+- `tests/js/**/*.{js,mjs,cjs}`
 
 Excluded generated artifacts:
 

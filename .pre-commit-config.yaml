@@ -21,4 +21,4 @@ repos:
         entry: npm run lint:js:fix
         language: system
         pass_filenames: false
-        files: ^(assets_src/.*\.js|scripts/.*\.js|tests/js/.*\.js)$
+        files: ^(assets_src/.*\.(js|mjs|cjs)|scripts/.*\.(js|mjs|cjs)|tests/js/.*\.(js|mjs|cjs))$

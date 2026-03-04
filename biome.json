@@ -3,8 +3,14 @@
   "files": {
     "include": [
       "assets_src/**/*.js",
+      "assets_src/**/*.mjs",
+      "assets_src/**/*.cjs",
       "scripts/**/*.js",
-      "tests/js/**/*.js"
+      "scripts/**/*.mjs",
+      "scripts/**/*.cjs",
+      "tests/js/**/*.js",
+      "tests/js/**/*.mjs",
+      "tests/js/**/*.cjs"
     ],
     "ignore": [
       "wagtail_unveil/static/wagtail_unveil/js/report.bundle.js",
