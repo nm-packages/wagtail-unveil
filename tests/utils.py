@@ -177,6 +177,7 @@ class BaseReportViewTestMixin:
         self.assertIn('data-api-url="', content)
         self.assertIn('data-report-kind="', content)
         self.assertIn('data-report-state="loading"', content)
+        self.assertIn('data-loading-feedback="hidden"', content)
 
     def test_report_has_shell_wrapper(self):
         response = self.client.get(self.report_url)

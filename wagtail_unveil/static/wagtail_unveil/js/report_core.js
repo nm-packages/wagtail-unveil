@@ -29,13 +29,30 @@
         }
     }
 
+    function clearLoadingFeedbackTimer() {
+        if (window.UnveilReport && window.UnveilReport.state.loadingFeedbackTimer) {
+            window.clearTimeout(window.UnveilReport.state.loadingFeedbackTimer);
+            window.UnveilReport.state.loadingFeedbackTimer = null;
+        }
+    }
+
+    function setLoadingFeedbackVisibility(visible) {
+        document.body.dataset.loadingFeedback = visible ? "visible" : "hidden";
+    }
+
     function setPageState(state) {
+        if (state !== "loading") {
+            clearLoadingFeedbackTimer();
+            setLoadingFeedbackVisibility(false);
+        }
+
         document.body.dataset.reportState = state;
     }
 
-    function showLoadingScreen(message) {
+    function showLoadingScreen(message, options) {
         var loadingMessage = document.getElementById("report-loading-message");
         var errorMessage = document.getElementById("report-error-message");
+        var delayMs = options && typeof options.delayMs === "number" ? options.delayMs : 0;
 
         if (loadingMessage) {
             loadingMessage.textContent = message;
@@ -46,6 +63,20 @@
         }
 
         setPageState("loading");
+
+        clearLoadingFeedbackTimer();
+        if (delayMs > 0) {
+            setLoadingFeedbackVisibility(false);
+            window.UnveilReport.state.loadingFeedbackTimer = window.setTimeout(function() {
+                if (document.body.dataset.reportState === "loading") {
+                    setLoadingFeedbackVisibility(true);
+                }
+                window.UnveilReport.state.loadingFeedbackTimer = null;
+            }, delayMs);
+            return;
+        }
+
+        setLoadingFeedbackVisibility(true);
     }
 
     function showErrorScreen(message) {
@@ -96,16 +127,19 @@
             currentSortCol: null,
             currentSortAsc: true,
             hideUntestable: getCookieFlag("unveil_hide_untestable"),
+            loadingFeedbackTimer: null,
             testState: null,
         },
         helpers: {
             classifyStatus: classifyStatus,
+            clearLoadingFeedbackTimer: clearLoadingFeedbackTimer,
             clearSuccessBanner: clearSuccessBanner,
             getTableBody: getTableBody,
             getVisibleTestButtons: getVisibleTestButtons,
             isDataRow: isDataRow,
             moveFailedRowToTop: moveFailedRowToTop,
             renderStatus: renderStatus,
+            setLoadingFeedbackVisibility: setLoadingFeedbackVisibility,
             setPageState: setPageState,
             setCookieFlag: setCookieFlag,
             showErrorScreen: showErrorScreen,

@@ -22,7 +22,7 @@
         }
 
         document.body.dataset.unveilReportInitialized = "true";
-        report.helpers.showLoadingScreen("Loading report data...");
+        report.helpers.showLoadingScreen("Loading report data...", { delayMs: 200 });
         bindRetryButton();
         report.components.defineCustomElements();
         report.data.loadReportData().then(function() {
