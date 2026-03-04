@@ -14,11 +14,11 @@ from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
 class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
-    api_url = "/unveil/api/backend-urls/"
+    api_url = "/unveil/api/v1/backend-urls/"
 
     def test_filter_static(self):
         response = self.client.get(
-            "/unveil/api/backend-urls/?filter=static",
+            "/unveil/api/v1/backend-urls/?filter=static",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
@@ -29,7 +29,7 @@ class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
 
     def test_filter_parameterized(self):
         response = self.client.get(
-            "/unveil/api/backend-urls/?filter=parameterized",
+            "/unveil/api/v1/backend-urls/?filter=parameterized",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
@@ -40,10 +40,17 @@ class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
 
     def test_invalid_filter_does_not_apply_metadata_filter(self):
         response = self.client.get(
-            "/unveil/api/backend-urls/?filter=unknown",
+            "/unveil/api/v1/backend-urls/?filter=unknown",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         self.assertIsNone(response.json()["metadata"]["applied_filter"])
+
+    def test_response_includes_api_version_metadata(self):
+        response = self.client.get(
+            "/unveil/api/v1/backend-urls/",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        self.assertEqual(response.json()["metadata"]["api_version"], "v1")
 
 
 class TestAdminAPIViewHelpers(TestCase):
@@ -53,7 +60,7 @@ class TestAdminAPIViewHelpers(TestCase):
     @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
     def test_authenticate_api_request_accepts_matching_bearer_token(self):
         request = self.factory.get(
-            "/unveil/api/backend-urls/",
+            "/unveil/api/v1/backend-urls/",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         self.assertIsNone(_authenticate_api_request(request))
@@ -61,7 +68,7 @@ class TestAdminAPIViewHelpers(TestCase):
     @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
     def test_authenticate_api_request_rejects_wrong_bearer_token(self):
         request = self.factory.get(
-            "/unveil/api/backend-urls/",
+            "/unveil/api/v1/backend-urls/",
             HTTP_AUTHORIZATION="Bearer wrong-key",
         )
         response = _authenticate_api_request(request)
@@ -74,7 +81,7 @@ class TestAdminAPIViewHelpers(TestCase):
     @override_settings(DEBUG=False)
     def test_authenticate_api_request_rejects_non_bearer_header_without_api_key(self):
         request = self.factory.get(
-            "/unveil/api/backend-urls/",
+            "/unveil/api/v1/backend-urls/",
             HTTP_AUTHORIZATION="Basic abc123",
         )
         response = _authenticate_api_request(request)
@@ -125,7 +132,7 @@ class TestAdminUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, TestCas
 
     def test_report_includes_backend_api_url(self):
         response = self.client.get("/unveil/report/backend-urls/")
-        self.assertContains(response, 'data-api-url="/unveil/api/backend-urls/"')
+        self.assertContains(response, 'data-api-url="/unveil/api/v1/backend-urls/"')
 
     def test_report_uses_summary_placeholders(self):
         response = self.client.get("/unveil/report/backend-urls/")

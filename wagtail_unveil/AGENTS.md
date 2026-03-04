@@ -48,8 +48,8 @@ JSON API requests also allow superuser session auth when `DEBUG=True` and the re
 
 The package exports one URL namespace:
 
-- `wagtail_unveil:api_backend_urls`
-- `wagtail_unveil:api_frontend_urls`
+- `wagtail_unveil:api_v1_backend_urls`
+- `wagtail_unveil:api_v1_frontend_urls`
 - `wagtail_unveil:report_backend_urls`
 - `wagtail_unveil:report_frontend_urls`
 
@@ -59,12 +59,16 @@ Do not document or reintroduce the old split `api_urls.py` / `report_urls.py` na
 
 JSON API endpoints preserve top-level `urls` and `count` fields and also return a `metadata` object containing:
 
+- `api_version`
 - `generated_at`
 - `applied_filter`
 - `total_count`
 - `testable_count`
 - `untestable_count`
 - `package_version`
+
+`api_version` identifies the response contract version. `package_version` identifies the installed package release and is not the API version.
+Breaking API changes should use a new versioned path such as `/api/v2/...`.
 
 The HTML reports are shell views that fetch this JSON on page load rather than rendering discovery results directly in the Django template. They stay hidden behind a full-screen loading state until the API data and client-side controls are ready, so JavaScript is required for report use.
 
