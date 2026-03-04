@@ -1,0 +1,15 @@
+{
+  "name": "wagtail-unveil",
+  "private": true,
+  "scripts": {
+    "test:js": "vitest run",
+    "test:js:watch": "vitest",
+    "build:js": "node scripts/build-report-js.mjs",
+    "build:js:watch": "node scripts/build-report-js.mjs --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "jsdom": "^26.0.0",
+    "vitest": "^3.2.4"
+  }
+}

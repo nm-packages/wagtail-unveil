@@ -23,6 +23,8 @@ Prefer the `Makefile` targets for standard workflows:
 make setup       # env, install, migrate, sample data
 make runserver   # start the sandbox dev server
 make test        # run package tests
+make test-js     # run JavaScript report tests
+make build-js    # build JavaScript report bundles
 make tox         # run the version matrix
 make lint        # ruff check
 make lint-fix    # ruff check --fix
@@ -39,6 +41,8 @@ uv run --env-file .env django-admin runserver
 uv run --env-file .env django-admin test tests
 uv run ruff check .
 uv run tox
+npm run test:js
+npm run build:js
 ```
 
 ## Architecture Summary

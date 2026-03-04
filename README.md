@@ -149,13 +149,24 @@ These commands are for working on this repository's sandbox and test environment
 make setup      # Full dev setup: env, install, migrate, superuser, sample data
 make runserver  # Start the sandbox dev server
 make test       # Run package tests
+make test-js    # Run JavaScript report tests
+make build-js   # Build JavaScript report bundles
 make tox        # Run tests across all Python/Django/Wagtail versions
 make lint       # Lint with ruff
 make coverage   # Run tests with coverage report
 make pre-commit # Run pre-commit hooks on all files
 ```
 
-The report UI intentionally uses plain static JavaScript files in `wagtail_unveil/static/wagtail_unveil/js/`, loaded in template order without a build step. Keep client-side concerns split into focused files rather than reintroducing a single report script.
+JavaScript workflows use Node:
+
+```bash
+npm ci
+npm run test:js
+npm run build:js
+npm run build:js:watch
+```
+
+Report UI source modules live in `assets_src/js/` and are bundled to `wagtail_unveil/static/wagtail_unveil/js/report.bundle.js` / `report.bundle.min.js` with esbuild. Keep client-side concerns split into focused source files, then rebuild bundles before commit/release.
 
 Discovery now follows explicit internal phases for backend and frontend routes, and admin parameter resolution uses an ordered strategy pipeline; see [docs/discovery-architecture.md](docs/discovery-architecture.md) when changing fallback behavior or classification rules.
 

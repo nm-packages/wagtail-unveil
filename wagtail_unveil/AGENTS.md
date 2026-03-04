@@ -22,7 +22,8 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 - `discovery/utils.py` — shared resolver utilities
 - `templates/wagtail_unveil/` — report and dashboard templates
 - `static/wagtail_unveil/css/` — shared report styles
-- `static/wagtail_unveil/js/` — ordered, no-build report JavaScript modules plus bootstrap/data loading
+- `../assets_src/js/` — report JavaScript source modules
+- `static/wagtail_unveil/js/` — generated report bundle assets (`report.bundle.js`, `report.bundle.min.js`)
 
 ## Package Interfaces
 
@@ -100,6 +101,7 @@ Tests for this package live in the root `tests/` package and should be run with:
 
 ```bash
 uv run --env-file .env django-admin test tests
+npm run test:js
 ```
 
 Use `django.test.TestCase`, and use Wagtail test helpers only where admin behavior requires them.

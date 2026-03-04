@@ -2,7 +2,7 @@ UV = uv
 RUN = $(UV) run --env-file .env
 MANAGE = $(RUN) django-admin
 
-.PHONY: help setup env install migrate superuser sample-data runserver run test tox lint lint-fix makemigrations pre-commit coverage coverage-html clean
+.PHONY: help setup env install migrate superuser sample-data runserver run test test-js build-js tox lint lint-fix makemigrations pre-commit coverage coverage-html clean
 
 help:
 	@echo "Usage: make <target>"
@@ -12,6 +12,8 @@ help:
 	@echo "  superuser       Create a superuser"
 	@echo "  runserver       Start the sandbox dev server (alias: run)"
 	@echo "  test            Run package tests"
+	@echo "  test-js         Run JavaScript report tests"
+	@echo "  build-js        Build report JavaScript bundle assets"
 	@echo "  tox             Run tests across all Python/Django/Wagtail versions"
 	@echo "  lint            Run ruff check"
 	@echo "  lint-fix        Run ruff check --fix"
@@ -46,6 +48,12 @@ run: runserver
 
 test:
 	$(MANAGE) test tests
+
+test-js:
+	npm run test:js
+
+build-js:
+	npm run build:js
 
 tox:
 	$(UV) run tox
