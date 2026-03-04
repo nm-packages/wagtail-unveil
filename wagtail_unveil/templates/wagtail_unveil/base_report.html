@@ -6,6 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %} — wagtail-unveil</title>
     <link rel="stylesheet" href="{% static 'wagtail_unveil/css/admin_urls_report.css' %}">
+    <noscript>
+        <style>
+            .report-screen,
+            .report-shell {
+                display: none !important;
+            }
+
+            .report-noscript {
+                display: flex !important;
+            }
+        </style>
+    </noscript>
 </head>
 <body data-api-url="{{ api_url|default:'' }}" data-report-kind="{{ report_kind|default:'' }}" data-report-state="loading">
     <div class="report-screen report-screen-loading" id="report-loading-screen" role="status" aria-live="polite">
@@ -22,16 +34,6 @@
         </div>
     </div>
     <noscript>
-        <style>
-            .report-screen,
-            .report-shell {
-                display: none !important;
-            }
-
-            .report-noscript {
-                display: flex !important;
-            }
-        </style>
         <div class="report-noscript">
             <div class="report-screen-card">
                 <h1>JavaScript Required</h1>
