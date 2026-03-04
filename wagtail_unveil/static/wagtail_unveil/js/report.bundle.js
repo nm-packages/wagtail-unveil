@@ -1,12 +1,13 @@
 (() => {
   // assets_src/js/report_core.js
-  (function() {
-    "use strict";
+  (() => {
     if (window.UnveilReport) {
       return;
     }
     function getCookieFlag(name) {
-      var match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+      var match = document.cookie.match(
+        new RegExp("(?:^|; )" + name + "=([^;]*)")
+      );
       return match ? match[1] === "1" : false;
     }
     function setCookieFlag(name, enabled) {
@@ -54,7 +55,7 @@
       clearLoadingFeedbackTimer();
       if (delayMs > 0) {
         setLoadingFeedbackVisibility(false);
-        window.UnveilReport.state.loadingFeedbackTimer = window.setTimeout(function() {
+        window.UnveilReport.state.loadingFeedbackTimer = window.setTimeout(() => {
           if (document.body.dataset.reportState === "loading") {
             setLoadingFeedbackVisibility(true);
           }
@@ -73,7 +74,9 @@
     }
     function getVisibleTestButtons() {
       return Array.from(
-        document.querySelectorAll("tbody tr:not(.hidden) .test-btn:not(:disabled)")
+        document.querySelectorAll(
+          "tbody tr:not(.hidden) .test-btn:not(:disabled)"
+        )
       );
     }
     function classifyStatus(code) {
@@ -127,8 +130,7 @@
   })();
 
   // assets_src/js/report_filters.js
-  (function() {
-    "use strict";
+  (() => {
     var report = window.UnveilReport;
     var state = report.state;
     var helpers = report.helpers;
@@ -149,7 +151,10 @@
       }
       sortableCols = getSearchableColumns();
       for (index = 0; index < sortableCols.length; index++) {
-        colIdx = parseInt(sortableCols[index].getAttribute("data-sort-col"), 10);
+        colIdx = Number.parseInt(
+          sortableCols[index].getAttribute("data-sort-col"),
+          10
+        );
         text = row.children[colIdx].textContent.toLowerCase();
         if (text.indexOf(searchTerm) !== -1) {
           return true;
@@ -167,7 +172,7 @@
       return !row.classList.contains("untestable");
     }
     function applyFilters() {
-      document.querySelectorAll("tbody tr").forEach(function(row) {
+      document.querySelectorAll("tbody tr").forEach((row) => {
         var visible = rowMatchesSearch(row) && rowMatchesUntestableFilter(row);
         row.classList.toggle("hidden", !visible);
       });
@@ -207,8 +212,7 @@
   })();
 
   // assets_src/js/report_sorting.js
-  (function() {
-    "use strict";
+  (() => {
     var report = window.UnveilReport;
     var helpers = report.helpers;
     var state = report.state;
@@ -217,14 +221,14 @@
       var rows = Array.from(tbody.querySelectorAll("tr"));
       var structuralRows = [];
       var dataRows = [];
-      rows.forEach(function(row) {
+      rows.forEach((row) => {
         if (helpers.isDataRow(row)) {
           dataRows.push(row);
           return;
         }
         structuralRows.push(row);
       });
-      dataRows.sort(function(a, b) {
+      dataRows.sort((a, b) => {
         var aText = a.children[col].textContent.toLowerCase();
         var bText = b.children[col].textContent.toLowerCase();
         if (aText < bText) {
@@ -236,19 +240,22 @@
         return 0;
       });
       tbody.innerHTML = "";
-      structuralRows.concat(dataRows).forEach(function(row) {
+      structuralRows.concat(dataRows).forEach((row) => {
         tbody.appendChild(row);
       });
     }
     function updateSortIndicators(activeHeader) {
-      document.querySelectorAll("th[data-sort-col]").forEach(function(header) {
+      document.querySelectorAll("th[data-sort-col]").forEach((header) => {
         header.removeAttribute("data-sort-dir");
       });
-      activeHeader.setAttribute("data-sort-dir", state.currentSortAsc ? "asc" : "desc");
+      activeHeader.setAttribute(
+        "data-sort-dir",
+        state.currentSortAsc ? "asc" : "desc"
+      );
     }
     function handleSortClick(event) {
       var header = event.currentTarget;
-      var col = parseInt(header.getAttribute("data-sort-col"), 10);
+      var col = Number.parseInt(header.getAttribute("data-sort-col"), 10);
       if (state.currentSortCol === col) {
         state.currentSortAsc = !state.currentSortAsc;
       } else {
@@ -259,7 +266,7 @@
       sortRowsByColumn(col);
     }
     function init() {
-      document.querySelectorAll("th[data-sort-col]").forEach(function(header) {
+      document.querySelectorAll("th[data-sort-col]").forEach((header) => {
         if (header.dataset.unveilSortBound === "true") {
           return;
         }
@@ -273,8 +280,7 @@
   })();
 
   // assets_src/js/report_row_actions.js
-  (function() {
-    "use strict";
+  (() => {
     var report = window.UnveilReport;
     var helpers = report.helpers;
     function setBusyState(button) {
@@ -308,8 +314,8 @@
       statusCell = button.closest("td").nextElementSibling;
       setBusyState(button);
       statusCell.innerHTML = "\u2014";
-      return fetch(url, { credentials: "include" }).then(function(response) {
-        return finalizeResult(
+      return fetch(url, { credentials: "include" }).then(
+        (response) => finalizeResult(
           button,
           row,
           statusCell,
@@ -319,9 +325,9 @@
             statusClass: helpers.classifyStatus(response.status)
           },
           options
-        );
-      }).catch(function() {
-        return finalizeResult(
+        )
+      ).catch(
+        () => finalizeResult(
           button,
           row,
           statusCell,
@@ -331,8 +337,8 @@
             statusClass: "status-err"
           },
           options
-        );
-      });
+        )
+      );
     }
     report.rowActions = {
       testUrlButton
@@ -340,8 +346,7 @@
   })();
 
   // assets_src/js/report_batch_runner.js
-  (function() {
-    "use strict";
+  (() => {
     var report = window.UnveilReport;
     var helpers = report.helpers;
     var state = report.state;
@@ -418,7 +423,7 @@
       }
       runState.nextIndex = index;
       report.rowActions.testUrlButton(runState.buttons[index], {
-        onComplete: function(result) {
+        onComplete: (result) => {
           if (result.statusClass === "status-2xx") {
             runState.passed += 1;
           } else {
@@ -427,7 +432,7 @@
           runState.done += 1;
           updateSummary();
           if (state.testState) {
-            window.setTimeout(function() {
+            window.setTimeout(() => {
               runNext(index + 1);
             }, 100);
           }
@@ -471,7 +476,7 @@
       window.location.reload();
     }
     function resetVisibleStatuses() {
-      document.querySelectorAll("tbody tr:not(.hidden):not(.untestable) .status-cell").forEach(function(cell) {
+      document.querySelectorAll("tbody tr:not(.hidden):not(.untestable) .status-cell").forEach((cell) => {
         cell.innerHTML = "\u2014";
       });
     }
@@ -508,8 +513,7 @@
   })();
 
   // assets_src/js/report_components.js
-  (function() {
-    "use strict";
+  (() => {
     var report = window.UnveilReport;
     function defineCustomElement(name, constructor) {
       if (!customElements.get(name)) {
@@ -526,7 +530,7 @@
         button.type = "button";
         button.className = "reset-btn";
         button.textContent = "Reset";
-        button.addEventListener("click", function() {
+        button.addEventListener("click", () => {
           window.location.reload();
         });
         this.appendChild(button);
@@ -542,7 +546,7 @@
         button.type = "button";
         button.className = "help-btn";
         button.textContent = "Help";
-        button.addEventListener("click", function() {
+        button.addEventListener("click", () => {
           button.classList.toggle("active");
           document.querySelector(".help-panel").classList.toggle("hidden");
         });
@@ -623,11 +627,11 @@
         clear.className = "search-clear hidden";
         clear.setAttribute("aria-label", "Clear search");
         clear.textContent = "\xD7";
-        input.addEventListener("input", function() {
+        input.addEventListener("input", () => {
           clear.classList.toggle("hidden", !input.value);
           report.filters.updateSearchTerm(input.value);
         });
-        clear.addEventListener("click", function() {
+        clear.addEventListener("click", () => {
           input.value = "";
           clear.classList.add("hidden");
           report.filters.updateSearchTerm("");
@@ -652,7 +656,7 @@
         url = this.dataset.url;
         if (url) {
           button.dataset.url = url;
-          button.addEventListener("click", function() {
+          button.addEventListener("click", () => {
             report.rowActions.testUrlButton(button);
           });
         } else {
@@ -690,7 +694,10 @@
     function defineCustomElements() {
       defineCustomElement("unveil-reset-button", UnveilResetButton);
       defineCustomElement("unveil-help-button", UnveilHelpButton);
-      defineCustomElement("unveil-toggle-untestable-button", UnveilToggleUntestableButton);
+      defineCustomElement(
+        "unveil-toggle-untestable-button",
+        UnveilToggleUntestableButton
+      );
       defineCustomElement("unveil-test-all-button", UnveilTestAllButton);
       defineCustomElement("unveil-pause-button", UnveilPauseButton);
       defineCustomElement("unveil-cancel-button", UnveilCancelButton);
@@ -704,8 +711,7 @@
   })();
 
   // assets_src/js/report_data.js
-  (function() {
-    "use strict";
+  (() => {
     var report = window.UnveilReport;
     function getConfig() {
       return {
@@ -836,7 +842,7 @@
         tbody.appendChild(createEmptyRow(reportKind));
         return;
       }
-      urls.forEach(function(item) {
+      urls.forEach((item) => {
         if (reportKind === "backend") {
           tbody.appendChild(createBackendRow(item));
           return;
@@ -860,10 +866,10 @@
         headers: {
           Accept: "application/json"
         }
-      }).then(function(response) {
-        return response.json().catch(function() {
+      }).then(
+        (response) => response.json().catch(() => {
           throw new Error("Report data response was not valid JSON.");
-        }).then(function(data) {
+        }).then((data) => {
           if (!response.ok) {
             throw new Error(extractErrorMessage(response, data));
           }
@@ -871,13 +877,13 @@
             throw new Error("Report data response was not valid JSON.");
           }
           return data;
-        });
-      }).then(function(data) {
+        })
+      ).then((data) => {
         var urls = Array.isArray(data.urls) ? data.urls : [];
         updateSummary(data.metadata || null, data.count || urls.length);
         renderRows(urls, config.reportKind);
         return data;
-      }).catch(function(error) {
+      }).catch((error) => {
         updateSummary(null, 0);
         report.helpers.getTableBody().innerHTML = "";
         throw error;
@@ -889,15 +895,14 @@
   })();
 
   // assets_src/js/report_bootstrap.js
-  (function() {
-    "use strict";
+  (() => {
     function bindRetryButton() {
       var button = document.getElementById("report-retry-button");
       if (!button || button.dataset.unveilRetryBound === "true") {
         return;
       }
       button.dataset.unveilRetryBound = "true";
-      button.addEventListener("click", function() {
+      button.addEventListener("click", () => {
         window.location.reload();
       });
     }
@@ -907,15 +912,19 @@
         return;
       }
       document.body.dataset.unveilReportInitialized = "true";
-      report.helpers.showLoadingScreen("Loading report data...", { delayMs: 200 });
+      report.helpers.showLoadingScreen("Loading report data...", {
+        delayMs: 200
+      });
       bindRetryButton();
       report.components.defineCustomElements();
-      report.data.loadReportData().then(function() {
+      report.data.loadReportData().then(() => {
         report.sorting.init();
         report.filters.init();
         report.helpers.setPageState("ready");
-      }).catch(function(error) {
-        report.helpers.showErrorScreen(error.message || "Unable to load report data.");
+      }).catch((error) => {
+        report.helpers.showErrorScreen(
+          error.message || "Unable to load report data."
+        );
       });
     }
     if (document.readyState === "loading") {
