@@ -119,3 +119,4 @@ More focused guidance lives in:
 - Root `AGENTS.md` owns repo-wide guidance
 - Nested `AGENTS.md` files own only directory-local guidance
 - `docs/discovery-architecture.md` is the canonical contributor-facing reference for discovery and resolution behavior; AGENTS files should point to it rather than duplicating detailed flow logic
+- `docs/frontend-assets.md` is the canonical contributor-facing reference for frontend asset source, build/test workflow, and CI expectations

@@ -24,6 +24,7 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 - `static/wagtail_unveil/css/` — shared report styles
 - `../assets_src/js/` — report JavaScript source modules
 - `static/wagtail_unveil/js/` — generated report bundle assets (`report.bundle.js`, `report.bundle.min.js`)
+- `../docs/frontend-assets.md` — canonical contributor guide for frontend asset build/test workflow and CI expectations
 
 ## Package Interfaces
 

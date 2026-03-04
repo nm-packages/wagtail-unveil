@@ -166,7 +166,7 @@ npm run build:js
 npm run build:js:watch
 ```
 
-Report UI source modules live in `assets_src/js/` and are bundled to `wagtail_unveil/static/wagtail_unveil/js/report.bundle.js` / `report.bundle.min.js` with esbuild. Keep client-side concerns split into focused source files, then rebuild bundles before commit/release.
+Frontend asset maintenance details (source layout, build/test workflow, CI expectations, and rebuild rules) are documented in [docs/frontend-assets.md](docs/frontend-assets.md).
 
 Discovery now follows explicit internal phases for backend and frontend routes, and admin parameter resolution uses an ordered strategy pipeline; see [docs/discovery-architecture.md](docs/discovery-architecture.md) when changing fallback behavior or classification rules.
 
