@@ -71,6 +71,19 @@ class TestAdminAPIViewHelpers(TestCase):
             {"error": "Invalid or missing API key"},
         )
 
+    @override_settings(DEBUG=False)
+    def test_authenticate_api_request_rejects_non_bearer_header_without_api_key(self):
+        request = self.factory.get(
+            "/unveil/api/backend-urls/",
+            HTTP_AUTHORIZATION="Basic abc123",
+        )
+        response = _authenticate_api_request(request)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            json.loads(response.content),
+            {"error": "Invalid or missing API key"},
+        )
+
     def test_serialize_backend_url(self):
         url = BackendURL(
             route="admin/pages/1/edit/",
@@ -110,22 +123,22 @@ class TestAdminUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, TestCas
     def setUp(self):
         self.login()
 
-    def test_report_contains_known_url(self):
+    def test_report_includes_backend_api_url(self):
         response = self.client.get("/unveil/report/backend-urls/")
-        self.assertContains(response, "wagtailadmin_home")
+        self.assertContains(response, 'data-api-url="/unveil/api/backend-urls/"')
 
-    def test_report_disables_test_for_non_testable(self):
+    def test_report_uses_summary_placeholders(self):
         response = self.client.get("/unveil/report/backend-urls/")
-        self.assertContains(response, "disabled")
-        self.assertContains(response, "POST-only view")
-        self.assertContains(response, "Intentional error endpoint")
+        self.assertContains(response, 'id="report-total"')
+        self.assertContains(response, 'id="report-testable"')
+        self.assertContains(response, 'id="report-untestable"')
 
-    def test_report_shows_all_rows_by_default(self):
+    def test_report_does_not_render_rows_server_side(self):
         response = self.client.get("/unveil/report/backend-urls/")
         content = response.content.decode()
-        self.assertIn('data-has-parameters="true"', content)
-        self.assertIn('data-has-parameters="false"', content)
-        self.assertNotIn('class="hidden"', content.split("<tbody>")[1].split("</tbody>")[0])
+        self.assertNotIn("wagtailadmin_home", content)
+        self.assertNotIn('data-has-parameters="true"', content)
+        self.assertNotIn('data-has-parameters="false"', content)
 
     def test_report_has_help_button(self):
         response = self.client.get("/unveil/report/backend-urls/")

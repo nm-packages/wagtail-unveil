@@ -19,8 +19,8 @@ It exposes that discovery through JSON API endpoints, and (for superusers when `
 
 - **Full URL discovery** — walks Django's URL resolver tree and Wagtail's page tree to find every admin and frontend route, including `RoutablePageMixin` sub-paths
 - **Smart parameterized URL resolution** — automatically resolves URLs with parameters (snippets, images, documents, users) using real database instances so they become testable
-- **Interactive HTML reports** — browser-based tables with one-click testing, Test All with progress tracking, search, sort, and a Hide Untestable toggle
-- **JSON API** — bearer-token-authenticated endpoints for CI/CD integration and external monitoring tools
+- **Interactive HTML reports** — browser-based tables backed by the JSON API, with one-click testing, Test All with progress tracking, search, sort, and a Hide Untestable toggle
+- **JSON API** — Bearer-token-authenticated endpoints for CI/CD integration and external monitoring tools, plus debug-only superuser session access for the built-in reports
 - **Dashboard widget** — links to both reports directly from the Wagtail admin home page
 
 ## Quick Start
@@ -60,7 +60,8 @@ Then visit `/unveil/report/backend-urls/` or `/unveil/report/frontend-urls/` whi
 
 ### HTML Reports
 
-Interactive browser-based reports with one-click URL testing. Requires superuser login and `DEBUG=True`.
+Interactive browser-based reports with one-click URL testing. Requires superuser login, `DEBUG=True`, and JavaScript.
+The report page itself is a small shell that fetches its rows and summary counts from the matching JSON API endpoint, shows a full-screen loading state first, and reveals the report once the page is fully ready.
 
 - **Admin URLs Report** — `/unveil/report/backend-urls/`
 - **Frontend URLs Report** — `/unveil/report/frontend-urls/`
@@ -86,6 +87,8 @@ Responses keep the existing top-level `urls` and `count` fields and also include
 - `testable_count`
 - `untestable_count`
 - `package_version`
+
+For the built-in HTML reports, the same endpoints also accept a logged-in superuser session when `DEBUG=True` and the request is not attempting Bearer-token auth.
 
 For full API response examples and detailed feature documentation, see [docs/usage.md](docs/usage.md).
 

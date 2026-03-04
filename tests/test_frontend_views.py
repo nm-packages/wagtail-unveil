@@ -90,7 +90,16 @@ class TestFrontendUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, Test
     def test_report_shows_source_column(self):
         response = self.client.get("/unveil/report/frontend-urls/")
         self.assertContains(response, "Source")
-        self.assertContains(response, 'data-source="page"')
+
+    def test_report_includes_frontend_api_url(self):
+        response = self.client.get("/unveil/report/frontend-urls/")
+        self.assertContains(response, 'data-api-url="/unveil/api/frontend-urls/"')
+
+    def test_report_does_not_render_rows_server_side(self):
+        response = self.client.get("/unveil/report/frontend-urls/")
+        content = response.content.decode()
+        self.assertNotIn('data-source="page"', content)
+        self.assertNotIn('data-source="resolver"', content)
 
 
 class TestDashboardPanelFrontendLink(TestCase):

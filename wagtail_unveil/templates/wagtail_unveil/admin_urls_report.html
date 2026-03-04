@@ -5,7 +5,7 @@
 {% block heading %}Admin URLs Report{% endblock %}
 
 {% block summary %}
-Total: <span>{{ url_count }}</span> URLs (<span>{{ testable_count }}</span> testable, <span>{{ untestable_count }}</span> untestable)
+Total: <span id="report-total">…</span> URLs (<span id="report-testable">…</span> testable, <span id="report-untestable">…</span> untestable)
 {% endblock %}
 
 {% block search_placeholder %}Filter by name or namespace…{% endblock %}
@@ -89,30 +89,6 @@ Total: <span>{{ url_count }}</span> URLs (<span>{{ testable_count }}</span> test
             <th>Status</th>
         </tr>
     </thead>
-    <tbody>
-        {% for url in urls %}
-        <tr data-has-parameters="{{ url.has_parameters|yesno:'true,false' }}"{% if not url.is_testable %} class="untestable"{% endif %}>
-            <td class="route">{{ url.route|slice:"6:" }}</td>
-            <td>{{ url.name }}</td>
-            <td>{{ url.namespace }}</td>
-            <td class="view"><small>{{ url.view_name }}</small></td>
-            <td>
-                {% if url.is_testable %}
-                <span class="btn-group"><unveil-test-button data-url="/{% if url.resolved_route %}{{ url.resolved_route }}{% else %}{{ url.route }}{% endif %}"></unveil-test-button>
-                <unveil-open-button href="/{% if url.resolved_route %}{{ url.resolved_route }}{% else %}{{ url.route }}{% endif %}"></unveil-open-button></span>
-                {% else %}
-                <unveil-test-button disabled title="{{ url.skip_reason }}"></unveil-test-button>
-                {% endif %}
-            </td>
-            <td class="status-cell">
-                {% if not url.is_testable %}
-                <span class="skip-reason">{{ url.skip_reason }}</span>
-                {% else %}
-                —
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
+    <tbody></tbody>
 </table>
 {% endblock %}

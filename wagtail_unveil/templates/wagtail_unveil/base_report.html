@@ -6,34 +6,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %} — wagtail-unveil</title>
     <link rel="stylesheet" href="{% static 'wagtail_unveil/css/admin_urls_report.css' %}">
+    <noscript>
+        <style>
+            .report-screen,
+            .report-shell {
+                display: none !important;
+            }
+
+            .report-noscript {
+                display: flex !important;
+            }
+        </style>
+    </noscript>
 </head>
-<body>
-    <nav class="report-nav">
-        <a href="/">Home</a>
-        <a class="{% block admin_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil:report_backend_urls' %}">Admin URLs</a>
-        <a class="{% block frontend_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil:report_frontend_urls' %}">Frontend URLs</a>
-        <a href="{% url 'wagtailadmin_home' %}">Wagtail Admin</a>
-    </nav>
-    <div class="container">
-        <h1>{% block heading %}{% endblock %}</h1>
-        <p class="summary">
-            {% block summary %}{% endblock %}
-        </p>
-
-        <div class="filters">
-            <unveil-search-input placeholder="{% block search_placeholder %}{% endblock %}"></unveil-search-input>
-            <unveil-toggle-untestable-button></unveil-toggle-untestable-button>
-            <unveil-test-all-button></unveil-test-all-button>
-            <unveil-pause-button></unveil-pause-button>
-            <unveil-cancel-button></unveil-cancel-button>
-            <unveil-help-button></unveil-help-button>
-            <unveil-reset-button></unveil-reset-button>
+<body data-api-url="{{ api_url|default:'' }}" data-report-kind="{{ report_kind|default:'' }}" data-report-state="loading" data-loading-feedback="hidden">
+    <div class="report-screen report-screen-loading" id="report-loading-screen" role="status" aria-live="polite">
+        <div class="report-screen-card">
+            <h1>Loading report</h1>
+            <p id="report-loading-message">Loading report data…</p>
         </div>
-        <p class="test-all-summary hidden" id="test-all-summary"></p>
+    </div>
+    <div class="report-screen report-screen-error" id="report-error-screen" role="alert">
+        <div class="report-screen-card">
+            <h1>Unable to load report</h1>
+            <p id="report-error-message">Unable to load report data.</p>
+            <button type="button" class="report-retry-btn" id="report-retry-button">Retry</button>
+        </div>
+    </div>
+    <noscript>
+        <div class="report-noscript">
+            <div class="report-screen-card">
+                <h1>JavaScript Required</h1>
+                <p>JavaScript is required to load this report.</p>
+            </div>
+        </div>
+    </noscript>
+    <div class="report-shell">
+        <nav class="report-nav">
+            <a href="/">Home</a>
+            <a class="{% block admin_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil:report_backend_urls' %}">Admin URLs</a>
+            <a class="{% block frontend_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil:report_frontend_urls' %}">Frontend URLs</a>
+            <a href="{% url 'wagtailadmin_home' %}">Wagtail Admin</a>
+        </nav>
+        <div class="container">
+            <h1>{% block heading %}{% endblock %}</h1>
+            <p class="summary">
+                {% block summary %}{% endblock %}
+            </p>
 
-        {% block help_panel %}{% endblock %}
+            <div class="filters">
+                <unveil-search-input placeholder="{% block search_placeholder %}{% endblock %}"></unveil-search-input>
+                <unveil-toggle-untestable-button></unveil-toggle-untestable-button>
+                <unveil-test-all-button></unveil-test-all-button>
+                <unveil-pause-button></unveil-pause-button>
+                <unveil-cancel-button></unveil-cancel-button>
+                <unveil-help-button></unveil-help-button>
+                <unveil-reset-button></unveil-reset-button>
+            </div>
+            <p class="test-all-summary hidden" id="test-all-summary"></p>
 
-        {% block table %}{% endblock %}
+            {% block help_panel %}{% endblock %}
+
+            {% block table %}{% endblock %}
+        </div>
     </div>
 
     <script src="{% static 'wagtail_unveil/js/report_core.js' %}"></script>
@@ -42,6 +77,7 @@
     <script src="{% static 'wagtail_unveil/js/report_row_actions.js' %}"></script>
     <script src="{% static 'wagtail_unveil/js/report_batch_runner.js' %}"></script>
     <script src="{% static 'wagtail_unveil/js/report_components.js' %}"></script>
+    <script src="{% static 'wagtail_unveil/js/report_data.js' %}"></script>
     <script src="{% static 'wagtail_unveil/js/report_bootstrap.js' %}"></script>
 </body>
 </html>

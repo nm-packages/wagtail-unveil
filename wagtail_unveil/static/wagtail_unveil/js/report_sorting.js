@@ -2,13 +2,25 @@
     "use strict";
 
     var report = window.UnveilReport;
+    var helpers = report.helpers;
     var state = report.state;
 
     function sortRowsByColumn(col) {
         var tbody = document.querySelector("tbody");
         var rows = Array.from(tbody.querySelectorAll("tr"));
+        var structuralRows = [];
+        var dataRows = [];
 
-        rows.sort(function(a, b) {
+        rows.forEach(function(row) {
+            if (helpers.isDataRow(row)) {
+                dataRows.push(row);
+                return;
+            }
+
+            structuralRows.push(row);
+        });
+
+        dataRows.sort(function(a, b) {
             var aText = a.children[col].textContent.toLowerCase();
             var bText = b.children[col].textContent.toLowerCase();
 
@@ -21,7 +33,9 @@
             return 0;
         });
 
-        rows.forEach(function(row) {
+        tbody.innerHTML = "";
+
+        structuralRows.concat(dataRows).forEach(function(row) {
             tbody.appendChild(row);
         });
     }
