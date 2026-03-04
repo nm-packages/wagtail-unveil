@@ -118,6 +118,7 @@ The report URLs are included automatically when you add `wagtail_unveil.urls` (s
 
 Reports require **superuser login** and **`DEBUG=True`**.
 The HTML page then fetches its data from the matching JSON endpoint using the current session.
+JavaScript is required, and the report stays behind a full-screen loading state until the data and UI controls are ready.
 
 ### Admin URLs Report
 

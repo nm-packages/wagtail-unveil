@@ -154,6 +154,25 @@ class BaseReportViewTestMixin:
         content = response.content.decode()
         self.assertIn('data-api-url="', content)
         self.assertIn('data-report-kind="', content)
+        self.assertIn('data-report-state="loading"', content)
+
+    def test_report_has_shell_wrapper(self):
+        response = self.client.get(self.report_url)
+        self.assertContains(response, 'class="report-shell"')
+
+    def test_report_has_loading_screen(self):
+        response = self.client.get(self.report_url)
+        self.assertContains(response, 'class="report-screen report-screen-loading"')
+        self.assertContains(response, "Loading report")
+
+    def test_report_has_error_screen(self):
+        response = self.client.get(self.report_url)
+        self.assertContains(response, 'class="report-screen report-screen-error"')
+        self.assertContains(response, 'id="report-retry-button"')
+
+    def test_report_has_noscript_message(self):
+        response = self.client.get(self.report_url)
+        self.assertContains(response, "JavaScript is required to load this report.")
 
     def test_report_does_not_use_inline_onclick_handlers(self):
         response = self.client.get(self.report_url)
@@ -224,10 +243,6 @@ class BaseReportViewTestMixin:
         response = self.client.get(self.report_url)
         content = response.content.decode()
         self.assertIn("<tbody></tbody>", content)
-
-    def test_report_shows_loading_message(self):
-        response = self.client.get(self.report_url)
-        self.assertContains(response, "Loading report data")
 
     def test_report_returns_404_when_not_debug(self):
         with self.settings(DEBUG=False):

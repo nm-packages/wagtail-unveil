@@ -18,38 +18,10 @@
         };
     }
 
-    function getFeedbackElements() {
-        return {
-            error: document.getElementById("report-error"),
-            loading: document.getElementById("report-loading"),
-        };
-    }
-
     function setText(element, value) {
         if (element) {
             element.textContent = value;
         }
-    }
-
-    function showLoading(message) {
-        var feedback = getFeedbackElements();
-
-        setText(feedback.loading, message);
-        feedback.loading.classList.remove("hidden");
-        feedback.error.classList.add("hidden");
-        feedback.error.textContent = "";
-    }
-
-    function hideLoading() {
-        getFeedbackElements().loading.classList.add("hidden");
-    }
-
-    function showError(message) {
-        var feedback = getFeedbackElements();
-
-        setText(feedback.error, message);
-        feedback.error.classList.remove("hidden");
-        feedback.loading.classList.add("hidden");
     }
 
     function updateSummary(metadata, fallbackCount) {
@@ -168,13 +140,24 @@
         return row;
     }
 
+    function createEmptyRow(reportKind) {
+        var row = document.createElement("tr");
+        var cell = document.createElement("td");
+
+        row.className = "empty-row";
+        cell.setAttribute("colspan", reportKind === "backend" ? "6" : "7");
+        cell.textContent = "No URLs found.";
+        row.appendChild(cell);
+        return row;
+    }
+
     function renderRows(urls, reportKind) {
         var tbody = report.helpers.getTableBody();
 
         tbody.innerHTML = "";
 
         if (!urls.length) {
-            showLoading("No URLs found.");
+            tbody.appendChild(createEmptyRow(reportKind));
             return;
         }
 
@@ -186,8 +169,6 @@
 
             tbody.appendChild(createFrontendRow(item));
         });
-
-        hideLoading();
     }
 
     function extractErrorMessage(response, data) {
@@ -202,11 +183,8 @@
         var config = getConfig();
 
         if (!config.apiUrl || !config.reportKind) {
-            showError("Report configuration is missing.");
-            return Promise.resolve();
+            return Promise.reject(new Error("Report configuration is missing."));
         }
-
-        showLoading("Loading report data...");
 
         return fetch(config.apiUrl, {
             credentials: "include",
@@ -215,10 +193,14 @@
             },
         }).then(function(response) {
             return response.json().catch(function() {
-                return null;
+                throw new Error("Report data response was not valid JSON.");
             }).then(function(data) {
                 if (!response.ok) {
                     throw new Error(extractErrorMessage(response, data));
+                }
+
+                if (!data || !Array.isArray(data.urls)) {
+                    throw new Error("Report data response was not valid JSON.");
                 }
 
                 return data;
@@ -228,10 +210,11 @@
 
             updateSummary(data.metadata || null, data.count || urls.length);
             renderRows(urls, config.reportKind);
+            return data;
         }).catch(function(error) {
-            showError(error.message || "Unable to load report data.");
             updateSummary(null, 0);
             report.helpers.getTableBody().innerHTML = "";
+            throw error;
         });
     }
 

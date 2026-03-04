@@ -60,8 +60,8 @@ Then visit `/unveil/report/backend-urls/` or `/unveil/report/frontend-urls/` whi
 
 ### HTML Reports
 
-Interactive browser-based reports with one-click URL testing. Requires superuser login and `DEBUG=True`.
-The report page itself is a small shell that fetches its rows and summary counts from the matching JSON API endpoint.
+Interactive browser-based reports with one-click URL testing. Requires superuser login, `DEBUG=True`, and JavaScript.
+The report page itself is a small shell that fetches its rows and summary counts from the matching JSON API endpoint, shows a full-screen loading state first, and reveals the report once the page is fully ready.
 
 - **Admin URLs Report** — `/unveil/report/backend-urls/`
 - **Frontend URLs Report** — `/unveil/report/frontend-urls/`

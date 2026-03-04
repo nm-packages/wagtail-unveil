@@ -66,7 +66,7 @@ JSON API endpoints preserve top-level `urls` and `count` fields and also return 
 - `untestable_count`
 - `package_version`
 
-The HTML reports are shell views that fetch this JSON on page load rather than rendering discovery results directly in the Django template.
+The HTML reports are shell views that fetch this JSON on page load rather than rendering discovery results directly in the Django template. They stay hidden behind a full-screen loading state until the API data and client-side controls are ready, so JavaScript is required for report use.
 
 ## Discovery Notes
 

@@ -25,6 +25,35 @@
         }
     }
 
+    function setPageState(state) {
+        document.body.dataset.reportState = state;
+    }
+
+    function showLoadingScreen(message) {
+        var loadingMessage = document.getElementById("report-loading-message");
+        var errorMessage = document.getElementById("report-error-message");
+
+        if (loadingMessage) {
+            loadingMessage.textContent = message;
+        }
+
+        if (errorMessage) {
+            errorMessage.textContent = "";
+        }
+
+        setPageState("loading");
+    }
+
+    function showErrorScreen(message) {
+        var errorMessage = document.getElementById("report-error-message");
+
+        if (errorMessage) {
+            errorMessage.textContent = message;
+        }
+
+        setPageState("error");
+    }
+
     function getVisibleTestButtons() {
         return Array.from(
             document.querySelectorAll("tbody tr:not(.hidden) .test-btn:not(:disabled)")
@@ -72,7 +101,10 @@
             getVisibleTestButtons: getVisibleTestButtons,
             moveFailedRowToTop: moveFailedRowToTop,
             renderStatus: renderStatus,
+            setPageState: setPageState,
             setCookieFlag: setCookieFlag,
+            showErrorScreen: showErrorScreen,
+            showLoadingScreen: showLoadingScreen,
         },
     };
 })();
