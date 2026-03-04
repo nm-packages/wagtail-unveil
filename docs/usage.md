@@ -97,7 +97,7 @@ If both are set, environment is used. Requests with an invalid key receive a `40
 If no key is configured in either place, Bearer-authenticated requests return `500`.
 
 When `DEBUG=True`, the built-in HTML reports fetch the same endpoints using the current logged-in superuser session.
-That session-based access is only accepted when no `Authorization` header is sent.
+That session-based access is accepted when the request is not attempting Bearer-token auth.
 
 ### Metadata
 

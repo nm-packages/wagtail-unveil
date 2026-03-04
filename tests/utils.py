@@ -73,6 +73,16 @@ class BaseAPIViewTestMixin:
                 )
                 self.assertEqual(response.status_code, 200)
 
+    @override_settings(DEBUG=False)
+    def test_non_bearer_authorization_header_does_not_trigger_missing_api_key_error(self):
+        with patch.dict("os.environ", {}, clear=True):
+            with self.settings(WAGTAIL_UNVEIL_API_KEY=""):
+                response = self.client.get(
+                    self.api_url,
+                    HTTP_AUTHORIZATION="Basic abc123",
+                )
+                self.assertEqual(response.status_code, 403)
+
     @override_settings(DEBUG=True)
     def test_allows_superuser_session_without_authorization_header(self):
         User.objects.create_superuser(username="admin", password="password")
@@ -111,6 +121,18 @@ class BaseAPIViewTestMixin:
         )
 
         self.assertEqual(response.status_code, 403)
+
+    @override_settings(DEBUG=True)
+    def test_allows_superuser_session_with_non_bearer_authorization_header(self):
+        User.objects.create_superuser(username="admin", password="password")
+        self.client.login(username="admin", password="password")
+
+        response = self.client.get(
+            self.api_url,
+            HTTP_AUTHORIZATION="Basic abc123",
+        )
+
+        self.assertEqual(response.status_code, 200)
 
 
 class BaseReportViewTestMixin:

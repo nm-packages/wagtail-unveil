@@ -18,6 +18,10 @@
         return document.querySelector("tbody");
     }
 
+    function isDataRow(row) {
+        return !row.classList.contains("empty-row") && !row.classList.contains("success-banner-row");
+    }
+
     function clearSuccessBanner() {
         var banner = document.querySelector("tbody .success-banner-row");
         if (banner) {
@@ -99,6 +103,7 @@
             clearSuccessBanner: clearSuccessBanner,
             getTableBody: getTableBody,
             getVisibleTestButtons: getVisibleTestButtons,
+            isDataRow: isDataRow,
             moveFailedRowToTop: moveFailedRowToTop,
             renderStatus: renderStatus,
             setPageState: setPageState,

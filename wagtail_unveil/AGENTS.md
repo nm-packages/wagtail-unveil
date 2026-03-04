@@ -42,7 +42,7 @@ Do not document or assume package management commands unless they are reintroduc
 - `WAGTAIL_UNVEIL_API_KEY`
 
 `get_api_key()` checks the environment first, then Django settings fallback.
-JSON API requests also allow superuser session auth when `DEBUG=True` and the request does not send an `Authorization` header.
+JSON API requests also allow superuser session auth when `DEBUG=True` and the request is not attempting Bearer-token auth.
 
 ### URL Names
 

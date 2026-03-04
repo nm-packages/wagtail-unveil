@@ -16,6 +16,10 @@
         var colIdx;
         var text;
 
+        if (!helpers.isDataRow(row)) {
+            return true;
+        }
+
         if (!searchTerm) {
             return true;
         }
@@ -33,6 +37,10 @@
     }
 
     function rowMatchesUntestableFilter(row) {
+        if (!helpers.isDataRow(row)) {
+            return true;
+        }
+
         if (!state.hideUntestable) {
             return true;
         }

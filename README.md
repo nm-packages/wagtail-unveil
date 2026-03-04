@@ -88,7 +88,7 @@ Responses keep the existing top-level `urls` and `count` fields and also include
 - `untestable_count`
 - `package_version`
 
-For the built-in HTML reports, the same endpoints also accept a logged-in superuser session when `DEBUG=True` and no `Authorization` header is sent.
+For the built-in HTML reports, the same endpoints also accept a logged-in superuser session when `DEBUG=True` and the request is not attempting Bearer-token auth.
 
 For full API response examples and detailed feature documentation, see [docs/usage.md](docs/usage.md).
 

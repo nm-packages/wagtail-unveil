@@ -71,6 +71,19 @@ class TestAdminAPIViewHelpers(TestCase):
             {"error": "Invalid or missing API key"},
         )
 
+    @override_settings(DEBUG=False)
+    def test_authenticate_api_request_rejects_non_bearer_header_without_api_key(self):
+        request = self.factory.get(
+            "/unveil/api/backend-urls/",
+            HTTP_AUTHORIZATION="Basic abc123",
+        )
+        response = _authenticate_api_request(request)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            json.loads(response.content),
+            {"error": "Invalid or missing API key"},
+        )
+
     def test_serialize_backend_url(self):
         url = BackendURL(
             route="admin/pages/1/edit/",

@@ -20,13 +20,15 @@ def _json_error(message, *, status):
 def _authenticate_api_request(request):
     """Validate the configured API key against the request Authorization header."""
     auth_header = request.headers.get("Authorization", "")
+    parts = auth_header.split(" ", 1)
+    is_bearer_auth = len(parts) == 2 and parts[0].lower() == "bearer"
 
-    if auth_header:
+    if is_bearer_auth:
         api_key = get_api_key()
         if not api_key:
             return _json_error("WAGTAIL_UNVEIL_API_KEY is not set", status=500)
 
-        if auth_header != f"Bearer {api_key}":
+        if parts[1] != api_key:
             return _json_error("Invalid or missing API key", status=403)
 
         return None
