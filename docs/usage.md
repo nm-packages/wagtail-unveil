@@ -43,13 +43,13 @@ so `"/__debug__/"` and `"__debug__/"` are equivalent. Invalid values are silentl
 
 ```bash
 # All admin URLs
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/backend-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/backend-urls/
 
 # Static URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/backend-urls/?filter=static"
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/v1/backend-urls/?filter=static"
 
 # Parameterized URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/backend-urls/?filter=parameterized"
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/v1/backend-urls/?filter=parameterized"
 ```
 
 **Response:**
@@ -67,12 +67,13 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
   ],
   "count": 190,
   "metadata": {
+    "api_version": "v1",
     "generated_at": "2026-03-02T12:34:56+00:00",
     "applied_filter": null,
     "total_count": 190,
     "testable_count": 150,
     "untestable_count": 40,
-    "package_version": "0.1.0"
+    "package_version": "0.2.0"
   }
 }
 ```
@@ -81,13 +82,13 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
 
 ```bash
 # All frontend URLs
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/frontend-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/frontend-urls/
 
 # Page URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/frontend-urls/?filter=pages"
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/v1/frontend-urls/?filter=pages"
 
 # Resolver URLs only
-curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/frontend-urls/?filter=resolver"
+curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/v1/frontend-urls/?filter=resolver"
 ```
 
 ### Authentication
@@ -96,19 +97,22 @@ The API accepts a Bearer token matching `WAGTAIL_UNVEIL_API_KEY` (from environme
 If both are set, environment is used. Requests with an invalid key receive a `403` response.
 If no key is configured in either place, Bearer-authenticated requests return `500`.
 
-When `DEBUG=True`, the built-in HTML reports fetch the same endpoints using the current logged-in superuser session.
+When `DEBUG=True`, the built-in HTML reports fetch the same versioned endpoints using the current logged-in superuser session.
 That session-based access is accepted when the request is not attempting Bearer-token auth.
 
 ### Metadata
 
 Both JSON endpoints include a `metadata` object alongside the existing top-level `urls` and `count` fields.
 
+- `api_version` — response contract version, currently `v1`
 - `generated_at` — ISO 8601 timestamp for when the response was generated
 - `applied_filter` — the recognised `filter` value that was applied, or `null`
 - `total_count` — total URLs returned in the response
 - `testable_count` — number of URLs marked testable
 - `untestable_count` — number of URLs marked untestable
-- `package_version` — installed `wagtail-unveil` package version
+- `package_version` — installed `wagtail-unveil` package version, not the API version
+
+Breaking API changes should ship under a new versioned path such as `/unveil/api/v2/...`.
 
 ## HTML Reports
 
@@ -117,7 +121,7 @@ Both JSON endpoints include a `metadata` object alongside the existing top-level
 The report URLs are included automatically when you add `wagtail_unveil.urls` (see JSON API → Setup above).
 
 Reports require **superuser login** and **`DEBUG=True`**.
-The HTML page then fetches its data from the matching JSON endpoint using the current session.
+The HTML page then fetches its data from the matching versioned JSON endpoint using the current session.
 JavaScript is required, and the report stays behind a full-screen loading state until the data and UI controls are ready.
 
 ### Admin URLs Report

@@ -74,13 +74,14 @@ Set `WAGTAIL_UNVEIL_API_KEY` via environment variable (recommended) or Django se
 If both are set, the environment variable takes precedence.
 
 ```bash
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/backend-urls/
-curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/frontend-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/backend-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/frontend-urls/
 ```
 
 Filter with `?filter=static`, `?filter=parameterized`, `?filter=pages`, or `?filter=resolver`.
 Responses keep the existing top-level `urls` and `count` fields and also include a `metadata` object with:
 
+- `api_version`
 - `generated_at`
 - `applied_filter`
 - `total_count`
@@ -88,7 +89,11 @@ Responses keep the existing top-level `urls` and `count` fields and also include
 - `untestable_count`
 - `package_version`
 
-For the built-in HTML reports, the same endpoints also accept a logged-in superuser session when `DEBUG=True` and the request is not attempting Bearer-token auth.
+`api_version` describes the response contract version. `package_version` describes the installed `wagtail-unveil` release and is not the API version.
+
+Breaking API changes should ship under a new versioned path such as `/unveil/api/v2/...`.
+
+For the built-in HTML reports, the same versioned endpoints also accept a logged-in superuser session when `DEBUG=True` and the request is not attempting Bearer-token auth. The HTML reports are consumers of the JSON API, not a separate API contract.
 
 For full API response examples and detailed feature documentation, see [docs/usage.md](docs/usage.md).
 

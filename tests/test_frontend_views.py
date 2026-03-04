@@ -12,11 +12,11 @@ from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
 class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
-    api_url = "/unveil/api/frontend-urls/"
+    api_url = "/unveil/api/v1/frontend-urls/"
 
     def test_filter_pages(self):
         response = self.client.get(
-            "/unveil/api/frontend-urls/?filter=pages",
+            "/unveil/api/v1/frontend-urls/?filter=pages",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
@@ -27,7 +27,7 @@ class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
 
     def test_filter_resolver(self):
         response = self.client.get(
-            "/unveil/api/frontend-urls/?filter=resolver",
+            "/unveil/api/v1/frontend-urls/?filter=resolver",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
@@ -38,10 +38,17 @@ class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
 
     def test_invalid_filter_does_not_apply_metadata_filter(self):
         response = self.client.get(
-            "/unveil/api/frontend-urls/?filter=unknown",
+            "/unveil/api/v1/frontend-urls/?filter=unknown",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         self.assertIsNone(response.json()["metadata"]["applied_filter"])
+
+    def test_response_includes_api_version_metadata(self):
+        response = self.client.get(
+            "/unveil/api/v1/frontend-urls/",
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+        self.assertEqual(response.json()["metadata"]["api_version"], "v1")
 
 
 class TestFrontendAPIViewHelpers(TestCase):
@@ -93,7 +100,7 @@ class TestFrontendUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, Test
 
     def test_report_includes_frontend_api_url(self):
         response = self.client.get("/unveil/report/frontend-urls/")
-        self.assertContains(response, 'data-api-url="/unveil/api/frontend-urls/"')
+        self.assertContains(response, 'data-api-url="/unveil/api/v1/frontend-urls/"')
 
     def test_report_does_not_render_rows_server_side(self):
         response = self.client.get("/unveil/report/frontend-urls/")

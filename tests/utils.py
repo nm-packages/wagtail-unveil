@@ -35,6 +35,7 @@ class BaseAPIViewTestMixin:
         )
 
         metadata = response.json()["metadata"]
+        self.assertEqual(metadata["api_version"], "v1")
         self.assertEqual(metadata["generated_at"], "2026-03-02T12:34:56+00:00")
         self.assertIsNone(metadata["applied_filter"])
         self.assertEqual(metadata["package_version"], "9.9.9")

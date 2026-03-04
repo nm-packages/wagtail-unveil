@@ -79,6 +79,7 @@ def _build_urls_metadata(urls, *, applied_filter):
     """Build metadata describing how a URL payload was produced."""
     testable_count = sum(1 for url in urls if url.is_testable)
     return {
+        "api_version": "v1",
         "generated_at": timezone.now().isoformat(),
         "applied_filter": applied_filter,
         "total_count": len(urls),
@@ -125,7 +126,7 @@ def admin_urls_report(request):
         return HttpResponseNotFound()
 
     context = {
-        "api_url": reverse("wagtail_unveil:api_backend_urls"),
+        "api_url": reverse("wagtail_unveil:api_v1_backend_urls"),
         "report_kind": "backend",
     }
     return render(request, "wagtail_unveil/admin_urls_report.html", context)
@@ -159,7 +160,7 @@ def frontend_urls_report(request):
 
     pages_per_type = get_pages_per_type()
     context = {
-        "api_url": reverse("wagtail_unveil:api_frontend_urls"),
+        "api_url": reverse("wagtail_unveil:api_v1_frontend_urls"),
         "report_kind": "frontend",
         "pages_per_type": pages_per_type,
     }

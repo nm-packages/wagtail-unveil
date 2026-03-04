@@ -72,8 +72,8 @@ path("unveil/", include("wagtail_unveil.urls"))
 
 Routes provided:
 
-- `api/backend-urls/` → `wagtail_unveil:api_backend_urls`
-- `api/frontend-urls/` → `wagtail_unveil:api_frontend_urls`
+- `api/v1/backend-urls/` → `wagtail_unveil:api_v1_backend_urls`
+- `api/v1/frontend-urls/` → `wagtail_unveil:api_v1_frontend_urls`
 - `report/backend-urls/` → `wagtail_unveil:report_backend_urls`
 - `report/frontend-urls/` → `wagtail_unveil:report_frontend_urls`
 
