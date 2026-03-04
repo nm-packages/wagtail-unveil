@@ -153,10 +153,13 @@ make test-js    # Run JavaScript report tests
 make build-js   # Build JavaScript report bundles
 make lint-js    # Lint/format-check JavaScript with Biome
 make tox        # Run tests across all Python/Django/Wagtail versions
+make tox-smoke  # Run a fast smoke subset (min, modern, max supported stacks)
 make lint       # Lint with ruff
 make coverage   # Run tests with coverage report
 make pre-commit # Run pre-commit hooks on all files
 ```
+
+CI uses the smoke subset on pull requests/pushes for faster feedback, and runs the full tox matrix weekly plus manual dispatch.
 
 JavaScript workflows use Node:
 

@@ -27,6 +27,7 @@ make test-js     # run JavaScript report tests
 make build-js    # build JavaScript report bundles
 make lint-js     # Biome JavaScript lint/format checks
 make tox         # run the version matrix
+make tox-smoke   # run the fast smoke subset used in PR CI
 make lint        # ruff check
 make lint-fix    # ruff check --fix
 make coverage    # run tests with coverage report
@@ -42,6 +43,7 @@ uv run --env-file .env django-admin runserver
 uv run --env-file .env django-admin test tests
 uv run ruff check .
 uv run tox
+uv run tox -m smoke
 npm run lint:js
 npm run lint:js:fix
 npm run test:js
