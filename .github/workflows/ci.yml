@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  lint:
+  python-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
 
       - run: uv run ruff check .
 
-  js-lint:
+  frontend-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,8 +36,8 @@ jobs:
       - run: npm ci
       - run: npm run lint:js
 
-  js-tests:
-    needs: js-lint
+  frontend-test:
+    needs: frontend-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,8 +49,8 @@ jobs:
       - run: npm ci
       - run: npm run test:js
 
-  assets-check:
-    needs: js-tests
+  frontend-assets:
+    needs: frontend-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -63,8 +63,8 @@ jobs:
       - run: npm run build:js
       - run: git diff --exit-code -- wagtail_unveil/static/wagtail_unveil/js/report.bundle.js wagtail_unveil/static/wagtail_unveil/js/report.bundle.min.js
 
-  coverage:
-    needs: lint
+  python-coverage:
+    needs: python-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,8 +79,8 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: sandbox.settings
 
-  test:
-    needs: lint
+  python-test-matrix:
+    needs: python-lint
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
