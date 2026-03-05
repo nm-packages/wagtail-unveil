@@ -327,7 +327,7 @@ class TestMultisiteFrontendUrls(TestCase):
 
         self.sub_site = Site.objects.create(
             hostname="sub.localhost",
-            port=80,
+            port=8000,
             site_name="Subsite",
             root_page=self.sub_home,
             is_default_site=False,
@@ -345,7 +345,7 @@ class TestMultisiteFrontendUrls(TestCase):
         self.assertEqual(len(matches), 1)
         match = matches[0]
         self.assertFalse(match.is_testable)
-        self.assertEqual(match.skip_reason, "Belongs to non-default site host: sub.localhost")
+        self.assertEqual(match.skip_reason, "Belongs to non-default site host: sub.localhost:8000")
 
     def test_default_site_page_entries_remain_testable(self):
         default_site_pages = [

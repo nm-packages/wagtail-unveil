@@ -166,7 +166,7 @@ Current skip reasons used by the discovery layer:
 - `URL requires parameters`
 - `URL contains regex patterns`
 - `Requires POST submission`
-- `Belongs to non-default site host: <hostname>`
+- `Belongs to non-default site host: <hostname>` (or `...: <hostname>:<port>` for non-standard ports)
 
 ## Known Limitations and Intentional Exclusions
 

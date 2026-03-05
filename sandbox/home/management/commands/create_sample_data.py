@@ -287,7 +287,7 @@ class Command(BaseCommand):
 
         site, created = Site.objects.update_or_create(
             hostname="sub.localhost",
-            port=80,
+            port=8000,
             defaults={
                 "site_name": f"{SAMPLE_PREFIX} Subsite",
                 "root_page": sub_home,
