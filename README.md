@@ -196,6 +196,20 @@ The sandbox also includes a deliberate failing frontend route at `/intentional-e
 
 See [AGENTS.md](AGENTS.md) for the full list of development commands and agent-facing project guidance.
 
+## Releasing
+
+Package publishing is handled by GitHub Actions through `.github/workflows/release.yml`.
+Publishing a GitHub Release triggers a build + artifact validation + PyPI publish flow using PyPI Trusted Publisher (OIDC).
+
+Maintainer checklist:
+
+1. Bump `version` in `pyproject.toml`.
+2. Merge to `main` and ensure CI is green.
+3. Create a GitHub Release with a matching tag using `v` prefix (`vX.Y.Z` or pre-release like `vX.Y.Zrc1`).
+4. Publish the GitHub Release and confirm the `Release` workflow succeeds.
+
+For full setup instructions (including one-time PyPI Trusted Publisher configuration and troubleshooting), see [docs/releasing.md](docs/releasing.md).
+
 ## License
 
 [MIT](LICENSE)

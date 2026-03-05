@@ -50,6 +50,16 @@ npm run test:js
 npm run build:assets
 ```
 
+Release preflight commands:
+
+```bash
+uv build --sdist --wheel --out-dir /tmp/wagtail-unveil-dist-check
+uvx twine check /tmp/wagtail-unveil-dist-check/*
+```
+
+Maintainer release publishing is CI-driven from GitHub Releases via `.github/workflows/release.yml`.
+Use `docs/releasing.md` as the canonical release runbook.
+
 ## Architecture Summary
 
 ### URL Discovery
@@ -133,3 +143,4 @@ More focused guidance lives in:
 - `docs/discovery-architecture.md` is the canonical contributor-facing reference for discovery and resolution behavior; AGENTS files should point to it rather than duplicating detailed flow logic
 - `docs/frontend-assets.md` is the canonical contributor-facing reference for frontend asset source, build/test workflow, and CI expectations
 - `docs/api-versioning.md` is the canonical contributor-facing reference for API version lifecycle policy and version-bump workflow
+- `docs/releasing.md` is the canonical contributor-facing reference for release workflow, PyPI Trusted Publisher setup, and maintainer release troubleshooting
