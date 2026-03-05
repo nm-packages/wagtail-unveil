@@ -5,7 +5,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/wagtail-unveil.svg)](https://pypi.org/project/wagtail-unveil/)
 [![Python versions](https://img.shields.io/pypi/pyversions/wagtail-unveil.svg)](https://pypi.org/project/wagtail-unveil/)
 [![Wagtail versions](https://img.shields.io/badge/wagtail-7.0--7.3-teal.svg)](https://pypi.org/project/wagtail-unveil/)
-[![License](https://img.shields.io/pypi/l/wagtail-unveil.svg)](https://github.com/nickmoreton/wagtail-unveil/blob/main/LICENSE)
+[![License](https://img.shields.io/pypi/l/wagtail-unveil.svg)](https://github.com/nm-packages/wagtail-unveil/blob/main/LICENSE)
 
 ![Frontend URLs Report](docs/frontend-urls-report.png)
 
@@ -195,6 +195,20 @@ Discovery now follows explicit internal phases for backend and frontend routes, 
 The sandbox also includes a deliberate failing frontend route at `/intentional-error/` so local report runs always have at least one visible error case.
 
 See [AGENTS.md](AGENTS.md) for the full list of development commands and agent-facing project guidance.
+
+## Releasing
+
+Package publishing is handled by GitHub Actions through `.github/workflows/release.yml`.
+Publishing a GitHub Release triggers a build + artifact validation + PyPI publish flow using PyPI Trusted Publisher (OIDC).
+
+Maintainer checklist:
+
+1. Bump `version` in `pyproject.toml`.
+2. Merge to `main` and ensure CI is green.
+3. Create a GitHub Release with a matching tag using `v` prefix (`vX.Y.Z` or pre-release like `vX.Y.Zrc1`).
+4. Publish the GitHub Release and confirm the `Release` workflow succeeds.
+
+For full setup instructions (including one-time PyPI Trusted Publisher configuration and troubleshooting), see [docs/releasing.md](docs/releasing.md).
 
 ## License
 
