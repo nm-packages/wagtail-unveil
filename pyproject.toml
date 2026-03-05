@@ -38,9 +38,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nickmoreton/wagtail-unveil"
-Source = "https://github.com/nickmoreton/wagtail-unveil"
-Issues = "https://github.com/nickmoreton/wagtail-unveil/issues"
+Homepage = "https://github.com/nm-packages/wagtail-unveil"
+Source = "https://github.com/nm-packages/wagtail-unveil"
+Issues = "https://github.com/nm-packages/wagtail-unveil/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["wagtail_unveil"]

@@ -5,7 +5,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/wagtail-unveil.svg)](https://pypi.org/project/wagtail-unveil/)
 [![Python versions](https://img.shields.io/pypi/pyversions/wagtail-unveil.svg)](https://pypi.org/project/wagtail-unveil/)
 [![Wagtail versions](https://img.shields.io/badge/wagtail-7.0--7.3-teal.svg)](https://pypi.org/project/wagtail-unveil/)
-[![License](https://img.shields.io/pypi/l/wagtail-unveil.svg)](https://github.com/nickmoreton/wagtail-unveil/blob/main/LICENSE)
+[![License](https://img.shields.io/pypi/l/wagtail-unveil.svg)](https://github.com/nm-packages/wagtail-unveil/blob/main/LICENSE)
 
 ![Frontend URLs Report](docs/frontend-urls-report.png)
 

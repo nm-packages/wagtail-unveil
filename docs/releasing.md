@@ -38,8 +38,8 @@ The GitHub repository and workflow identity must match exactly, or publish will 
 
 Examples:
 
-- `pyproject.toml` version `0.3.0` => GitHub tag `v0.3.0`
-- `pyproject.toml` version `0.4.0rc1` => GitHub tag `v0.4.0rc1`
+- `pyproject.toml` version `0.3.0` => GitHub tag `v0.3.0`, release title `0.3.0` (or `Release 0.3.0`)
+- `pyproject.toml` version `0.4.0rc1` => GitHub tag `v0.4.0rc1`, release title `0.4.0rc1` (or `Release 0.4.0rc1`)
 
 ## Local Preflight (Optional but Recommended)
 
