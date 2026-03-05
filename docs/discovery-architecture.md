@@ -111,7 +111,7 @@ Each candidate is classified by `_classify_frontend_candidate()` and emitted as 
 7. Emit one base page candidate for the page URL.
 8. If the page is a `FormMixin` subclass, add a second landing-page candidate and leave classification to a later phase.
 9. If the page is a `RoutablePageMixin` subclass, add sub-route candidates from `_discover_routable_page_candidates()`.
-10. After collecting all page candidates, `_apply_page_limit()` applies `WAGTAIL_UNVEIL_PAGES_PER_TYPE` by grouping on `(page_type, page_title)` so each selected page keeps all of its related entries.
+10. During candidate discovery, `_discover_page_candidates()` enforces `WAGTAIL_UNVEIL_PAGES_PER_TYPE` inline via `included_pages_by_type`, grouping on `(page_type, page_title)` so each selected page keeps all of its related entries before routable expansion.
 
 `WAGTAIL_UNVEIL_PAGES_PER_TYPE` affects page-derived URLs only. Resolver-derived frontend URLs are not limited by that setting.
 
@@ -166,7 +166,7 @@ Current skip reasons used by the discovery layer:
 - `URL requires parameters`
 - `URL contains regex patterns`
 - `Requires POST submission`
-- `Belongs to non-default site host: <hostname>` (or `...: <hostname>:<port>` for non-standard ports)
+- `Belongs to non-default site host` (or `...: <hostname>` / `...: <hostname>:<port>` when a hostname is available)
 
 ## Known Limitations and Intentional Exclusions
 
