@@ -1,5 +1,5 @@
-from urllib.parse import urlparse
 from unittest.mock import patch
+from urllib.parse import urlparse
 
 from django.test import TestCase, override_settings
 from wagtail.models import Page, Site
