@@ -39,12 +39,6 @@ INSTALLED_APPS = [
 ]
 ```
 
-Run migrations:
-
-```bash
-python manage.py migrate
-```
-
 Add the HTML reports to your `urls.py` and browse them interactively:
 
 ```python
