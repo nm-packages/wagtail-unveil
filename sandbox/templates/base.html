@@ -38,11 +38,7 @@
         <header>
             {% wagtail_site as current_site %}
             {% if settings.core.BrandingSettings.site_name %}
-            <div class="site-name">
-                <a href="{% if current_site and current_site.root_url %}{{ current_site.root_url }}/{% elif current_site.root_page %}{% pageurl current_site.root_page %}{% else %}/{% endif %}">
-                    {{ settings.core.BrandingSettings.site_name }}
-                </a>
-            </div>
+            <div class="site-name"><a href="{% if current_site.root_page %}{% pageurl current_site.root_page %}{% else %}/{% endif %}">{{ settings.core.BrandingSettings.site_name }}</a></div>
             {% endif %}
             {% if settings.core.BrandingSettings.tagline %}
             <div class="tagline">{{ settings.core.BrandingSettings.tagline }}</div>

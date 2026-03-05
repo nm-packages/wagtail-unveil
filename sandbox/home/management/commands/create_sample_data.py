@@ -51,8 +51,6 @@ class Command(BaseCommand):
         self._create_search_promotions()
         self._create_editor_user()
         self._create_child_pages()
-        self._create_multisite_fixture()
-        self._ensure_sites_use_dev_port()
         self._create_core_pages()
         self._create_collections()
         self._create_people()
@@ -135,10 +133,6 @@ class Command(BaseCommand):
                 facebook__startswith="https://facebook.com/sample",
             ).delete()
             self.stdout.write(f"Deleted {deleted[0]} social media setting(s)")
-
-        deleted = Site.objects.filter(hostname="sub.localhost", is_default_site=False).delete()
-        self.stdout.write(f"Deleted {deleted[0]} multisite fixture site(s)")
-
         deleted = BrandingSettings.objects.filter(site_name__startswith=SAMPLE_PREFIX).delete()
         self.stdout.write(f"Deleted {deleted[0]} branding setting(s)")
 
@@ -253,72 +247,6 @@ class Command(BaseCommand):
             page = StandardPage(title=title, slug=f"sample-{slug}", body=body)
             home_page.add_child(instance=page)
             self.stdout.write(f"Created page: {title}")
-
-    def _create_multisite_fixture(self):
-        """Create a non-default site with its own homepage and child page."""
-        root_page = Page.get_first_root_node()
-        if not root_page:
-            self.stdout.write("Skipped multisite fixture: no root page found")
-            return
-
-        subsite_title = f"{SAMPLE_PREFIX} Subsite Home"
-        subsite_slug = "sample-subsite-home"
-        sub_home = HomePage.objects.filter(title=subsite_title, slug=subsite_slug).first()
-        if sub_home:
-            self.stdout.write(f"Skipped page: {subsite_title} (already exists)")
-        else:
-            sub_home = HomePage(
-                title=subsite_title,
-                slug=subsite_slug,
-            )
-            root_page.add_child(instance=sub_home)
-            self.stdout.write(f"Created page: {subsite_title}")
-
-        subsite_page_title = f"{SAMPLE_PREFIX} Subsite About"
-        if Page.objects.filter(title=subsite_page_title).exists():
-            self.stdout.write(f"Skipped page: {subsite_page_title} (already exists)")
-        else:
-            sub_page = StandardPage(
-                title=subsite_page_title,
-                slug="sample-subsite-about",
-                body="<p>Sample content served from the subdomain fixture site.</p>",
-            )
-            sub_home.add_child(instance=sub_page)
-            self.stdout.write(f"Created page: {subsite_page_title}")
-
-        subsite_name = f"{SAMPLE_PREFIX} Subsite"
-        existing_sites = Site.objects.filter(hostname="sub.localhost", is_default_site=False).order_by("id")
-        site = existing_sites.first()
-        if site:
-            site.port = 8000
-            site.site_name = subsite_name
-            site.root_page = sub_home
-            site.is_default_site = False
-            site.save(update_fields=["port", "site_name", "root_page", "is_default_site"])
-
-            duplicate_count = existing_sites.exclude(pk=site.pk).count()
-            if duplicate_count:
-                existing_sites.exclude(pk=site.pk).delete()
-                self.stdout.write(f"Removed {duplicate_count} duplicate subsite record(s)")
-
-            self.stdout.write(f"Updated site: {site.hostname}:{site.port}")
-        else:
-            site = Site.objects.create(
-                hostname="sub.localhost",
-                port=8000,
-                site_name=subsite_name,
-                root_page=sub_home,
-                is_default_site=False,
-            )
-            self.stdout.write(f"Created site: {site.hostname}:{site.port}")
-
-    def _ensure_sites_use_dev_port(self):
-        """Ensure sandbox Site entries use port 8000 for local development."""
-        updated = Site.objects.exclude(port=8000).update(port=8000)
-        if updated:
-            self.stdout.write(f"Updated {updated} site(s) to port 8000")
-        else:
-            self.stdout.write("Skipped site port normalization: all sites already use port 8000")
 
     def _create_core_pages(self):
         """Create a ListingPage with StandardPage children under HomePage."""

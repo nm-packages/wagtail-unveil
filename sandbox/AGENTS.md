@@ -35,6 +35,6 @@ The sandbox mounts:
 
 ## Sample Data
 
-`create_sample_data` creates representative objects used by URL discovery tests, including pages, images, documents, redirects, snippets, settings, chooser-backed models, form pages, routable event pages, and a secondary non-default Wagtail `Site` (`sub.localhost:8000`) for multisite/subdomain coverage.
+`create_sample_data` creates representative objects used by URL discovery tests, including pages, images, documents, redirects, snippets, settings, chooser-backed models, form pages, and routable event pages.
 
 Use sandbox apps to exercise package behavior. Do not move reusable package logic into the sandbox.
