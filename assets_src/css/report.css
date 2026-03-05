@@ -1,16 +1,10 @@
-/* assets_src/css/report.css */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 body {
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: #f5f5f5;
   color: #333;
   padding: 20px;
@@ -18,11 +12,11 @@ body {
 .report-shell {
   display: none;
 }
-body[data-report-state=loading],
-body[data-report-state=error] {
+body[data-report-state="loading"],
+body[data-report-state="error"] {
   overflow: hidden;
 }
-body[data-report-state=ready] .report-shell {
+body[data-report-state="ready"] .report-shell {
   display: block;
 }
 .report-screen {
@@ -35,13 +29,15 @@ body[data-report-state=ready] .report-shell {
   background: #f5f5f5;
   z-index: 20;
 }
-body[data-report-state=loading] .report-screen-loading {
+body[data-report-state="loading"] .report-screen-loading {
   display: flex;
 }
-body[data-report-state=error] .report-screen-error {
+body[data-report-state="error"] .report-screen-error {
   display: flex;
 }
-body[data-loading-feedback=hidden] .report-screen-loading .report-screen-card {
+body[data-loading-feedback="hidden"]
+  .report-screen-loading
+  .report-screen-card {
   display: none;
 }
 .report-screen-card {
@@ -167,11 +163,11 @@ th[data-sort-col]::after {
   width: 1em;
   text-align: center;
 }
-th[data-sort-dir=asc]::after {
-  content: " \25b2";
+th[data-sort-dir="asc"]::after {
+  content: " ▲";
 }
-th[data-sort-dir=desc]::after {
-  content: " \25bc";
+th[data-sort-dir="desc"]::after {
+  content: " ▼";
 }
 td {
   padding: 8px 12px;

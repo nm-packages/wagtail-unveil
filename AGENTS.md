@@ -23,7 +23,11 @@ Prefer the `Makefile` targets for standard workflows:
 make setup       # env, install, migrate, sample data
 make runserver   # start the sandbox dev server
 make test        # run package tests
+make test-js     # run JavaScript report tests
+make build-assets # build report frontend assets (JavaScript + CSS)
+make lint-assets # Biome frontend asset lint/format checks (JavaScript + CSS)
 make tox         # run the version matrix
+make tox-smoke   # run the fast smoke subset used in PR CI
 make lint        # ruff check
 make lint-fix    # ruff check --fix
 make coverage    # run tests with coverage report
@@ -39,6 +43,11 @@ uv run --env-file .env django-admin runserver
 uv run --env-file .env django-admin test tests
 uv run ruff check .
 uv run tox
+uv run tox -m smoke
+npm run lint:assets
+npm run lint:assets:fix
+npm run test:js
+npm run build:assets
 ```
 
 ## Architecture Summary
@@ -115,3 +124,4 @@ More focused guidance lives in:
 - Root `AGENTS.md` owns repo-wide guidance
 - Nested `AGENTS.md` files own only directory-local guidance
 - `docs/discovery-architecture.md` is the canonical contributor-facing reference for discovery and resolution behavior; AGENTS files should point to it rather than duplicating detailed flow logic
+- `docs/frontend-assets.md` is the canonical contributor-facing reference for frontend asset source, build/test workflow, and CI expectations

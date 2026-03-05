@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %} — wagtail-unveil</title>
-    <link rel="stylesheet" href="{% static 'wagtail_unveil/css/admin_urls_report.css' %}">
+    <link rel="stylesheet" href="{% static 'wagtail_unveil/css/admin_urls_report.min.css' %}">
     <noscript>
         <style>
             .report-screen,
@@ -71,13 +71,6 @@
         </div>
     </div>
 
-    <script src="{% static 'wagtail_unveil/js/report_core.js' %}"></script>
-    <script src="{% static 'wagtail_unveil/js/report_filters.js' %}"></script>
-    <script src="{% static 'wagtail_unveil/js/report_sorting.js' %}"></script>
-    <script src="{% static 'wagtail_unveil/js/report_row_actions.js' %}"></script>
-    <script src="{% static 'wagtail_unveil/js/report_batch_runner.js' %}"></script>
-    <script src="{% static 'wagtail_unveil/js/report_components.js' %}"></script>
-    <script src="{% static 'wagtail_unveil/js/report_data.js' %}"></script>
-    <script src="{% static 'wagtail_unveil/js/report_bootstrap.js' %}"></script>
+    <script src="{% static 'wagtail_unveil/js/report.bundle.min.js' %}"></script>
 </body>
 </html>

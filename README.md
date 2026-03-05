@@ -154,13 +154,34 @@ These commands are for working on this repository's sandbox and test environment
 make setup      # Full dev setup: env, install, migrate, superuser, sample data
 make runserver  # Start the sandbox dev server
 make test       # Run package tests
+make test-js    # Run JavaScript report tests
+make build-assets # Build report frontend assets (JavaScript + CSS)
+make lint-assets # Lint/format-check frontend assets (JavaScript + CSS) with Biome
 make tox        # Run tests across all Python/Django/Wagtail versions
+make tox-smoke  # Run a fast smoke subset (min, modern, max supported stacks)
 make lint       # Lint with ruff
 make coverage   # Run tests with coverage report
 make pre-commit # Run pre-commit hooks on all files
 ```
 
-The report UI intentionally uses plain static JavaScript files in `wagtail_unveil/static/wagtail_unveil/js/`, loaded in template order without a build step. Keep client-side concerns split into focused files rather than reintroducing a single report script.
+CI uses the smoke subset on pull requests/pushes for faster feedback, and runs the full tox matrix weekly plus manual dispatch.
+
+JavaScript workflows use Node:
+
+```bash
+npm ci
+npm run lint:assets
+npm run lint:assets:fix
+npm run test:js
+npm run build:assets
+npm run build:assets:watch
+```
+
+`build:assets` and `build:assets:watch` build both JavaScript bundles and report CSS artifacts.
+
+Biome lint/format checks apply to contributor-owned frontend source files in `assets_src/`, `scripts/`, and `tests/js/` with `.js`, `.mjs`, `.cjs`, and `.css` extensions.
+
+Frontend asset maintenance details (source layout, build/test workflow, CI expectations, and rebuild rules) are documented in [docs/frontend-assets.md](docs/frontend-assets.md).
 
 Discovery now follows explicit internal phases for backend and frontend routes, and admin parameter resolution uses an ordered strategy pipeline; see [docs/discovery-architecture.md](docs/discovery-architecture.md) when changing fallback behavior or classification rules.
 

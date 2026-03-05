@@ -1,0 +1,122 @@
+import { beforeEach, describe, expect, test } from "vitest";
+
+import {
+  loadBundleScript,
+  resetReportDom,
+  stubFetchResponse,
+} from "./helpers/reportHarness.js";
+
+async function waitForRender() {
+  await Promise.resolve();
+  await Promise.resolve();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+describe("report bundle", () => {
+  beforeEach(() => {
+    resetReportDom({
+      apiUrl: "/unveil/api/backend-urls/",
+      reportKind: "backend",
+    });
+
+    stubFetchResponse({
+      count: 1,
+      metadata: {
+        total_count: 1,
+        testable_count: 1,
+        untestable_count: 0,
+      },
+      urls: [
+        {
+          route: "admin/home/",
+          resolved_route: "admin/home/",
+          name: "home",
+          namespace: "wagtailadmin",
+          has_parameters: false,
+          view_name: "demo.View",
+          is_testable: true,
+          skip_reason: "",
+        },
+      ],
+    });
+  });
+
+  test("boots and renders report rows", async () => {
+    loadBundleScript();
+
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+
+    await waitForRender();
+
+    expect(window.UnveilReport).toBeTruthy();
+    expect(document.body.dataset.reportState).toBe("ready");
+    expect(document.querySelectorAll("tbody tr").length).toBe(1);
+    expect(document.querySelector(".test-btn")).toBeTruthy();
+  });
+
+  test("reset clears init guard so bootstrap can run again", async () => {
+    const firstFetch = stubFetchResponse({
+      count: 1,
+      metadata: {
+        total_count: 1,
+        testable_count: 1,
+        untestable_count: 0,
+      },
+      urls: [
+        {
+          route: "admin/home/",
+          resolved_route: "admin/home/",
+          name: "home",
+          namespace: "wagtailadmin",
+          has_parameters: false,
+          view_name: "demo.View",
+          is_testable: true,
+          skip_reason: "",
+        },
+      ],
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(firstFetch).toHaveBeenCalledTimes(1);
+    expect(document.body.dataset.unveilReportInitialized).toBe("true");
+
+    resetReportDom({
+      apiUrl: "/unveil/api/backend-urls/",
+      reportKind: "backend",
+    });
+
+    expect(document.body.dataset.unveilReportInitialized).toBeUndefined();
+
+    const secondFetch = stubFetchResponse({
+      count: 1,
+      metadata: {
+        total_count: 1,
+        testable_count: 1,
+        untestable_count: 0,
+      },
+      urls: [
+        {
+          route: "admin/again/",
+          resolved_route: "admin/again/",
+          name: "again",
+          namespace: "wagtailadmin",
+          has_parameters: false,
+          view_name: "demo.View",
+          is_testable: true,
+          skip_reason: "",
+        },
+      ],
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(secondFetch).toHaveBeenCalledTimes(1);
+    expect(document.body.dataset.reportState).toBe("ready");
+    expect(document.querySelectorAll("tbody tr").length).toBe(1);
+  });
+});

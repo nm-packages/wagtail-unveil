@@ -5,13 +5,16 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  lint:
+  python-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,8 +27,47 @@ jobs:
 
       - run: uv run ruff check .
 
-  coverage:
-    needs: lint
+  frontend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - run: npm ci
+      - run: npm run lint:assets
+
+  frontend-test:
+    needs: frontend-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - run: npm ci
+      - run: npm run test:js
+
+  frontend-assets:
+    needs: frontend-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - run: npm ci
+      - run: npm run build:assets
+      - run: git diff --exit-code -- wagtail_unveil/static/wagtail_unveil/js/report.bundle.js wagtail_unveil/static/wagtail_unveil/js/report.bundle.min.js wagtail_unveil/static/wagtail_unveil/css/admin_urls_report.css wagtail_unveil/static/wagtail_unveil/css/admin_urls_report.min.css
+
+  python-coverage:
+    needs: python-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,8 +82,37 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: sandbox.settings
 
-  test:
-    needs: lint
+  python-test-smoke:
+    needs: python-lint
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.10"
+            toxenv: "py310-django42-wagtail70"
+          - python-version: "3.13"
+            toxenv: "py313-django52-wagtail73"
+          - python-version: "3.14"
+            toxenv: "py314-django60-wagtail73"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+
+      - uses: astral-sh/setup-uv@v5
+
+      - run: uv run tox -e ${{ matrix.toxenv }}
+        env:
+          DJANGO_SETTINGS_MODULE: sandbox.settings
+
+  python-test-full-matrix:
+    needs: python-lint
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

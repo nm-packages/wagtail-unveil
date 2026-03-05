@@ -2,7 +2,7 @@ UV = uv
 RUN = $(UV) run --env-file .env
 MANAGE = $(RUN) django-admin
 
-.PHONY: help setup env install migrate superuser sample-data runserver run test tox lint lint-fix makemigrations pre-commit coverage coverage-html clean
+.PHONY: help setup env install migrate superuser sample-data runserver run test test-js build-assets tox tox-smoke lint lint-fix lint-assets lint-assets-fix makemigrations pre-commit coverage coverage-html clean
 
 help:
 	@echo "Usage: make <target>"
@@ -12,9 +12,14 @@ help:
 	@echo "  superuser       Create a superuser"
 	@echo "  runserver       Start the sandbox dev server (alias: run)"
 	@echo "  test            Run package tests"
+	@echo "  test-js         Run JavaScript report tests"
+	@echo "  build-assets    Build report frontend assets (JavaScript + CSS)"
 	@echo "  tox             Run tests across all Python/Django/Wagtail versions"
+	@echo "  tox-smoke       Run the fast smoke tox subset used for PR CI"
 	@echo "  lint            Run ruff check"
 	@echo "  lint-fix        Run ruff check --fix"
+	@echo "  lint-assets     Run Biome frontend asset checks (JavaScript + CSS)"
+	@echo "  lint-assets-fix Run Biome frontend asset checks with --write"
 	@echo "  pre-commit      Run pre-commit hooks on all files"
 	@echo "  makemigrations  Create package migrations"
 	@echo "  sample-data     Create sample data"
@@ -47,14 +52,29 @@ run: runserver
 test:
 	$(MANAGE) test tests
 
+test-js:
+	npm run test:js
+
+build-assets:
+	npm run build:assets
+
 tox:
 	$(UV) run tox
+
+tox-smoke:
+	$(UV) run tox -m smoke
 
 lint:
 	$(UV) run ruff check .
 
 lint-fix:
 	$(UV) run ruff check --fix .
+
+lint-assets:
+	npm run lint:assets
+
+lint-assets-fix:
+	npm run lint:assets:fix
 
 pre-commit:
 	$(UV) run pre-commit run --all-files

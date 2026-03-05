@@ -124,6 +124,8 @@ Reports require **superuser login** and **`DEBUG=True`**.
 The HTML page then fetches its data from the matching versioned JSON endpoint using the current session.
 JavaScript is required, and the report stays behind a full-screen loading state until the data and UI controls are ready.
 
+Contributor note: frontend report asset source/build/test workflow is documented in [frontend-assets.md](frontend-assets.md).
+
 ### Admin URLs Report
 
 Visit `/unveil/report/backend-urls/` while logged into the Wagtail admin.

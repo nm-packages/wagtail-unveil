@@ -21,8 +21,13 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 - `discovery/frontend.py` — frontend URL discovery
 - `discovery/utils.py` — shared resolver utilities
 - `templates/wagtail_unveil/` — report and dashboard templates
-- `static/wagtail_unveil/css/` — shared report styles
-- `static/wagtail_unveil/js/` — ordered, no-build report JavaScript modules plus bootstrap/data loading
+- `../assets_src/css/` — editable report CSS source
+- `../assets_src/js/` — report JavaScript source modules
+- `static/wagtail_unveil/css/` — generated report CSS assets (`admin_urls_report.css`, `admin_urls_report.min.css`)
+- `static/wagtail_unveil/js/` — generated report JS bundle assets (`report.bundle.js`, `report.bundle.min.js`)
+- `../docs/frontend-assets.md` — canonical contributor guide for frontend asset build/test workflow and CI expectations
+
+Frontend asset formatting and linting for contributor-owned files is managed by Biome via `npm run lint:assets` and `npm run lint:assets:fix` (hooked into pre-commit and CI).
 
 ## Package Interfaces
 
@@ -104,6 +109,7 @@ Tests for this package live in the root `tests/` package and should be run with:
 
 ```bash
 uv run --env-file .env django-admin test tests
+npm run test:js
 ```
 
 Use `django.test.TestCase`, and use Wagtail test helpers only where admin behavior requires them.
