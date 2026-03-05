@@ -44,6 +44,16 @@ def validate_api_version_registry(registry: dict[str, APIVersionContract]) -> No
                 f"API contract {contract.version!r} has invalid status {contract.status!r}.",
             )
 
+        if contract.status == "stable" and (contract.deprecated_on is not None or contract.sunset_on is not None):
+            raise ValueError(
+                f"API contract {contract.version!r} is stable and must not set deprecated_on/sunset_on.",
+            )
+
+        if contract.status == "deprecated" and contract.deprecated_on is None:
+            raise ValueError(
+                f"API contract {contract.version!r} is deprecated and must set deprecated_on.",
+            )
+
         if contract.deprecated_on and contract.sunset_on and contract.deprecated_on > contract.sunset_on:
             raise ValueError(f"API contract {contract.version!r} has deprecated_on after sunset_on.")
 

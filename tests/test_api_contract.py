@@ -123,6 +123,38 @@ class TestAPIContractRegistry(SimpleTestCase):
         with self.assertRaises(ValueError):
             validate_api_version_registry(registry)
 
+    def test_validate_registry_rejects_stable_version_with_deprecated_on(self):
+        registry = {
+            "v1": _contract(
+                version="v1",
+                status="stable",
+                backend_path="api/v1/backend-urls/",
+                frontend_path="api/v1/frontend-urls/",
+                backend_name="api_v1_backend_urls",
+                frontend_name="api_v1_frontend_urls",
+                deprecated_on=date(2026, 1, 1),
+            ),
+        }
+
+        with self.assertRaises(ValueError):
+            validate_api_version_registry(registry)
+
+    def test_validate_registry_rejects_stable_version_with_sunset_on(self):
+        registry = {
+            "v1": _contract(
+                version="v1",
+                status="stable",
+                backend_path="api/v1/backend-urls/",
+                frontend_path="api/v1/frontend-urls/",
+                backend_name="api_v1_backend_urls",
+                frontend_name="api_v1_frontend_urls",
+                sunset_on=date(2026, 12, 31),
+            ),
+        }
+
+        with self.assertRaises(ValueError):
+            validate_api_version_registry(registry)
+
     def test_validate_registry_rejects_empty_registry(self):
         with self.assertRaises(ValueError):
             validate_api_version_registry({})
@@ -181,6 +213,53 @@ class TestAPIContractRegistry(SimpleTestCase):
                 frontend_path="api/v1/frontend-urls/",
                 backend_name="api_v1_backend_urls",
                 frontend_name="api_v1_frontend_urls",
+            ),
+        }
+
+        with self.assertRaises(ValueError):
+            validate_api_version_registry(registry)
+
+    def test_validate_registry_rejects_deprecated_version_without_deprecated_on(self):
+        registry = {
+            "v1": _contract(
+                version="v1",
+                status="stable",
+                backend_path="api/v1/backend-urls/",
+                frontend_path="api/v1/frontend-urls/",
+                backend_name="api_v1_backend_urls",
+                frontend_name="api_v1_frontend_urls",
+            ),
+            "v2": _contract(
+                version="v2",
+                status="deprecated",
+                backend_path="api/v2/backend-urls/",
+                frontend_path="api/v2/frontend-urls/",
+                backend_name="api_v2_backend_urls",
+                frontend_name="api_v2_frontend_urls",
+            ),
+        }
+
+        with self.assertRaises(ValueError):
+            validate_api_version_registry(registry)
+
+    def test_validate_registry_rejects_sunset_without_deprecated_on(self):
+        registry = {
+            "v1": _contract(
+                version="v1",
+                status="stable",
+                backend_path="api/v1/backend-urls/",
+                frontend_path="api/v1/frontend-urls/",
+                backend_name="api_v1_backend_urls",
+                frontend_name="api_v1_frontend_urls",
+            ),
+            "v2": _contract(
+                version="v2",
+                status="deprecated",
+                backend_path="api/v2/backend-urls/",
+                frontend_path="api/v2/frontend-urls/",
+                backend_name="api_v2_backend_urls",
+                frontend_name="api_v2_frontend_urls",
+                sunset_on=date(2026, 12, 31),
             ),
         }
 
