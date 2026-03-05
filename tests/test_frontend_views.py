@@ -1,22 +1,30 @@
+from dataclasses import replace
+from datetime import date
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import RequestFactory, TestCase, override_settings
+from django.urls import reverse
 from wagtail.test.utils import WagtailTestUtils
 
 from tests.utils import BaseAPIViewTestMixin, BaseReportViewTestMixin
+from wagtail_unveil.api_contract import get_api_contract, get_latest_stable_api_contract
 from wagtail_unveil.discovery.frontend import FrontendURL
 from wagtail_unveil.views import _serialize_frontend_url
 from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
+V1_CONTRACT = get_api_contract("v1")
+API_URL = f"/unveil/{V1_CONTRACT.frontend_url_path}"
+
 
 @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
 class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
-    api_url = "/unveil/api/v1/frontend-urls/"
+    api_url = API_URL
+    api_version = V1_CONTRACT.version
 
     def test_filter_pages(self):
         response = self.client.get(
-            "/unveil/api/v1/frontend-urls/?filter=pages",
+            f"{self.api_url}?filter=pages",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
@@ -27,7 +35,7 @@ class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
 
     def test_filter_resolver(self):
         response = self.client.get(
-            "/unveil/api/v1/frontend-urls/?filter=resolver",
+            f"{self.api_url}?filter=resolver",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         data = response.json()
@@ -38,17 +46,36 @@ class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
 
     def test_invalid_filter_does_not_apply_metadata_filter(self):
         response = self.client.get(
-            "/unveil/api/v1/frontend-urls/?filter=unknown",
+            f"{self.api_url}?filter=unknown",
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
         self.assertIsNone(response.json()["metadata"]["applied_filter"])
 
     def test_response_includes_api_version_metadata(self):
         response = self.client.get(
-            "/unveil/api/v1/frontend-urls/",
+            self.api_url,
             HTTP_AUTHORIZATION="Bearer test-secret",
         )
-        self.assertEqual(response.json()["metadata"]["api_version"], "v1")
+        self.assertEqual(response.json()["metadata"]["api_version"], self.api_version)
+
+    @patch("wagtail_unveil.views.get_api_contract")
+    def test_response_sets_deprecation_headers_for_deprecated_contract(self, mock_get_api_contract):
+        deprecated_contract = replace(
+            V1_CONTRACT,
+            status="deprecated",
+            deprecated_on=date(2026, 1, 1),
+            sunset_on=date(2026, 12, 31),
+        )
+        mock_get_api_contract.return_value = deprecated_contract
+
+        response = self.client.get(
+            self.api_url,
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+
+        self.assertEqual(response["Deprecation"], "true")
+        self.assertIn("Sunset", response)
+        self.assertEqual(response.json()["metadata"]["api_lifecycle"]["status"], "deprecated")
 
 
 class TestFrontendAPIViewHelpers(TestCase):
@@ -100,7 +127,9 @@ class TestFrontendUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, Test
 
     def test_report_includes_frontend_api_url(self):
         response = self.client.get("/unveil/report/frontend-urls/")
-        self.assertContains(response, 'data-api-url="/unveil/api/v1/frontend-urls/"')
+        latest_contract = get_latest_stable_api_contract()
+        api_url = reverse(f"wagtail_unveil:{latest_contract.frontend_url_name}")
+        self.assertContains(response, f'data-api-url="{api_url}"')
 
     def test_report_does_not_render_rows_server_side(self):
         response = self.client.get("/unveil/report/frontend-urls/")

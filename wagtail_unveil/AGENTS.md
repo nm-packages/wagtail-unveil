@@ -11,6 +11,7 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 ## Key Files
 
 - `apps.py` — Django app config
+- `api_contract.py` — internal API version registry and lifecycle metadata constants
 - `models.py` — package models
 - `../docs/discovery-architecture.md` — contributor reference for discovery internals, fallbacks, and limitations
 - `settings.py` — settings helpers for page limits, skip prefixes, and API key lookup
@@ -58,6 +59,13 @@ The package exports one URL namespace:
 - `wagtail_unveil:report_backend_urls`
 - `wagtail_unveil:report_frontend_urls`
 
+Versioned API path segments, URL names, and `metadata.api_version` should be
+driven by `wagtail_unveil.api_contract.API_VERSION_REGISTRY` and helper accessors.
+The package should support explicit parallel versions (`v1`, `v2`, ...) with deprecation windows.
+Additional `wagtail_unveil:api_vN_*` names may be present when newer versions are introduced.
+Canonical contributor policy for deciding and implementing API versions:
+`../docs/api-versioning.md`.
+
 Do not document or reintroduce the old split `api_urls.py` / `report_urls.py` namespace layout unless the code changes back to that design.
 
 ### JSON Response Shape
@@ -65,6 +73,7 @@ Do not document or reintroduce the old split `api_urls.py` / `report_urls.py` na
 JSON API endpoints preserve top-level `urls` and `count` fields and also return a `metadata` object containing:
 
 - `api_version`
+- `api_lifecycle`
 - `generated_at`
 - `applied_filter`
 - `total_count`
@@ -72,8 +81,22 @@ JSON API endpoints preserve top-level `urls` and `count` fields and also return 
 - `untestable_count`
 - `package_version`
 
-`api_version` identifies the response contract version. `package_version` identifies the installed package release and is not the API version.
-Breaking API changes should use a new versioned path such as `/api/v2/...`.
+`api_version` identifies the response contract version.
+`api_lifecycle` identifies lifecycle status (`stable` or `deprecated`) and optional dates.
+`package_version` identifies the installed package release and is not the API version.
+Breaking API changes should use a new versioned path such as `/api/v2/...` and deprecate older versions before removal.
+
+### New Version Checklist
+
+When adding a new API version:
+
+1. Add the contract entry to `API_VERSION_REGISTRY` with lifecycle dates/status
+2. Confirm backend/frontend versioned routes and names are generated for the new version
+3. Add/adjust tests for coexistence, lifecycle metadata, and deprecation headers
+4. Update README/docs with lifecycle timeline and version-specific notes
+
+For detailed rationale, breaking-change decision rules, lifecycle defaults, and
+worked examples, see `../docs/api-versioning.md`.
 
 The HTML reports are shell views that fetch this JSON on page load rather than rendering discovery results directly in the Django template. They stay hidden behind a full-screen loading state until the API data and client-side controls are ready, so JavaScript is required for report use.
 

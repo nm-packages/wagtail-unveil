@@ -15,6 +15,11 @@ urlpatterns = [
 ]
 ```
 
+Contributor note: versioned API paths, URL names, and lifecycle state are derived from
+the internal `wagtail_unveil.api_contract.API_VERSION_REGISTRY`.
+Canonical contributor policy for deciding and implementing versions lives in
+[api-versioning.md](api-versioning.md).
+
 2. Set `WAGTAIL_UNVEIL_API_KEY` (environment variable recommended):
 
 ```bash
@@ -68,6 +73,11 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
   "count": 190,
   "metadata": {
     "api_version": "v1",
+    "api_lifecycle": {
+      "status": "stable",
+      "deprecated_on": null,
+      "sunset_on": null
+    },
     "generated_at": "2026-03-02T12:34:56+00:00",
     "applied_filter": null,
     "total_count": 190,
@@ -100,11 +110,19 @@ If no key is configured in either place, Bearer-authenticated requests return `5
 When `DEBUG=True`, the built-in HTML reports fetch the same versioned endpoints using the current logged-in superuser session.
 That session-based access is accepted when the request is not attempting Bearer-token auth.
 
+### Deprecation Headers
+
+Deprecated API versions return:
+
+- `Deprecation: true`
+- `Sunset: <RFC 1123 datetime>` when a sunset date is configured for that version
+
 ### Metadata
 
 Both JSON endpoints include a `metadata` object alongside the existing top-level `urls` and `count` fields.
 
-- `api_version` — response contract version, currently `v1`
+- `api_version` — response contract version (from `wagtail_unveil.api_contract.API_VERSION_REGISTRY`)
+- `api_lifecycle` — lifecycle state for this API version (`stable` or `deprecated`) plus `deprecated_on` / `sunset_on`
 - `generated_at` — ISO 8601 timestamp for when the response was generated
 - `applied_filter` — the recognised `filter` value that was applied, or `null`
 - `total_count` — total URLs returned in the response
@@ -112,7 +130,13 @@ Both JSON endpoints include a `metadata` object alongside the existing top-level
 - `untestable_count` — number of URLs marked untestable
 - `package_version` — installed `wagtail-unveil` package version, not the API version
 
-Breaking API changes should ship under a new versioned path such as `/unveil/api/v2/...`.
+### API Lifecycle Policy
+
+- Versioned endpoints are explicit and can run in parallel (for example `v1` and `v2`)
+- Built-in HTML reports call the latest stable version from the registry
+
+For deprecation windows, breaking-change criteria, and the full version bump
+workflow, see [api-versioning.md](api-versioning.md).
 
 ## HTML Reports
 

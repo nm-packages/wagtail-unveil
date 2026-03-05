@@ -1,3 +1,6 @@
+from datetime import datetime, time
+from datetime import timezone as datetime_timezone
+from email.utils import format_datetime
 from importlib.metadata import PackageNotFoundError, version
 
 from django.conf import settings
@@ -7,6 +10,12 @@ from django.urls import reverse
 from django.utils import timezone
 from wagtail.admin.auth import user_passes_test
 
+from wagtail_unveil.api_contract import (
+    APIVersionContract,
+    get_api_contract,
+    get_latest_stable_api_contract,
+    get_latest_stable_api_version,
+)
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.frontend import get_frontend_urls
 from wagtail_unveil.settings import get_api_key, get_pages_per_type
@@ -75,11 +84,21 @@ def _get_package_version():
         return ""
 
 
-def _build_urls_metadata(urls, *, applied_filter):
+def _serialize_api_lifecycle(contract: APIVersionContract):
+    """Serialize lifecycle metadata for API contract responses."""
+    return {
+        "status": contract.status,
+        "deprecated_on": contract.deprecated_on.isoformat() if contract.deprecated_on else None,
+        "sunset_on": contract.sunset_on.isoformat() if contract.sunset_on else None,
+    }
+
+
+def _build_urls_metadata(urls, *, applied_filter, contract: APIVersionContract):
     """Build metadata describing how a URL payload was produced."""
     testable_count = sum(1 for url in urls if url.is_testable)
     return {
-        "api_version": "v1",
+        "api_version": contract.version,
+        "api_lifecycle": _serialize_api_lifecycle(contract),
         "generated_at": timezone.now().isoformat(),
         "applied_filter": applied_filter,
         "total_count": len(urls),
@@ -89,23 +108,63 @@ def _build_urls_metadata(urls, *, applied_filter):
     }
 
 
-def _build_urls_json_response(urls, serializer, *, applied_filter=None):
+def _apply_lifecycle_headers(response: JsonResponse, contract: APIVersionContract):
+    """Attach deprecation headers for deprecated API versions."""
+    if contract.status != "deprecated":
+        return response
+
+    response["Deprecation"] = "true"
+    if contract.sunset_on is not None:
+        sunset_at = datetime.combine(contract.sunset_on, time(23, 59, 59), tzinfo=datetime_timezone.utc)
+        response["Sunset"] = format_datetime(sunset_at, usegmt=True)
+
+    return response
+
+
+def _build_urls_json_response(urls, serializer, *, applied_filter=None, contract: APIVersionContract):
     """Serialize URL entries and wrap them in the standard JSON payload."""
     data = {
         "urls": [serializer(url) for url in urls],
         "count": len(urls),
-        "metadata": _build_urls_metadata(urls, applied_filter=applied_filter),
+        "metadata": _build_urls_metadata(urls, applied_filter=applied_filter, contract=contract),
     }
-    return JsonResponse(data)
+    response = JsonResponse(data)
+    return _apply_lifecycle_headers(response, contract)
 
 
-def admin_urls_json(request):
-    """Return admin URLs as JSON, protected by API key."""
+def _get_backend_urls_for_version(api_version):
+    """Return backend URL objects for a specific API version."""
+    # Future API versions can customize discovery behavior here.
+    return get_admin_urls()
+
+
+def _get_frontend_urls_for_version(api_version):
+    """Return frontend URL objects for a specific API version."""
+    # Future API versions can customize discovery behavior here.
+    return get_frontend_urls()
+
+
+def _get_backend_serializer_for_version(api_version):
+    """Return backend serializer function for a specific API version."""
+    # Future API versions can customize response fields here.
+    return _serialize_backend_url
+
+
+def _get_frontend_serializer_for_version(api_version):
+    """Return frontend serializer function for a specific API version."""
+    # Future API versions can customize response fields here.
+    return _serialize_frontend_url
+
+
+def _admin_urls_json_for_version(request, api_version):
+    """Return admin URLs as JSON for a specific API version."""
+    contract = get_api_contract(api_version)
     auth_error = _authenticate_api_request(request)
     if auth_error is not None:
         return auth_error
 
-    urls = get_admin_urls()
+    urls = _get_backend_urls_for_version(api_version)
+    serializer = _get_backend_serializer_for_version(api_version)
 
     url_filter = request.GET.get("filter")
     applied_filter = None
@@ -116,29 +175,23 @@ def admin_urls_json(request):
         urls = [u for u in urls if u.has_parameters]
         applied_filter = url_filter
 
-    return _build_urls_json_response(urls, _serialize_backend_url, applied_filter=applied_filter)
+    return _build_urls_json_response(
+        urls,
+        serializer,
+        applied_filter=applied_filter,
+        contract=contract,
+    )
 
 
-@user_passes_test(lambda u: u.is_superuser)
-def admin_urls_report(request):
-    """Render an HTML report of all admin URLs. Only available when DEBUG=True."""
-    if not settings.DEBUG:
-        return HttpResponseNotFound()
-
-    context = {
-        "api_url": reverse("wagtail_unveil:api_v1_backend_urls"),
-        "report_kind": "backend",
-    }
-    return render(request, "wagtail_unveil/admin_urls_report.html", context)
-
-
-def frontend_urls_json(request):
-    """Return frontend URLs as JSON, protected by API key."""
+def _frontend_urls_json_for_version(request, api_version):
+    """Return frontend URLs as JSON for a specific API version."""
+    contract = get_api_contract(api_version)
     auth_error = _authenticate_api_request(request)
     if auth_error is not None:
         return auth_error
 
-    urls = get_frontend_urls()
+    urls = _get_frontend_urls_for_version(api_version)
+    serializer = _get_frontend_serializer_for_version(api_version)
 
     source_filter = request.GET.get("filter")
     applied_filter = None
@@ -149,7 +202,51 @@ def frontend_urls_json(request):
         urls = [u for u in urls if u.source == "resolver"]
         applied_filter = source_filter
 
-    return _build_urls_json_response(urls, _serialize_frontend_url, applied_filter=applied_filter)
+    return _build_urls_json_response(
+        urls,
+        serializer,
+        applied_filter=applied_filter,
+        contract=contract,
+    )
+
+
+def build_admin_urls_json_view(api_version):
+    """Build a Django view callable bound to a specific backend API version."""
+
+    def view(request):
+        return _admin_urls_json_for_version(request, api_version)
+
+    view.__name__ = f"admin_urls_json_{api_version}"
+    return view
+
+
+def build_frontend_urls_json_view(api_version):
+    """Build a Django view callable bound to a specific frontend API version."""
+
+    def view(request):
+        return _frontend_urls_json_for_version(request, api_version)
+
+    view.__name__ = f"frontend_urls_json_{api_version}"
+    return view
+
+
+# Backward-compatible callables bound to the current latest stable API version.
+admin_urls_json = build_admin_urls_json_view(get_latest_stable_api_version())
+frontend_urls_json = build_frontend_urls_json_view(get_latest_stable_api_version())
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def admin_urls_report(request):
+    """Render an HTML report of all admin URLs. Only available when DEBUG=True."""
+    if not settings.DEBUG:
+        return HttpResponseNotFound()
+
+    contract = get_latest_stable_api_contract()
+    context = {
+        "api_url": reverse(f"wagtail_unveil:{contract.backend_url_name}"),
+        "report_kind": "backend",
+    }
+    return render(request, "wagtail_unveil/admin_urls_report.html", context)
 
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -158,9 +255,10 @@ def frontend_urls_report(request):
     if not settings.DEBUG:
         return HttpResponseNotFound()
 
+    contract = get_latest_stable_api_contract()
     pages_per_type = get_pages_per_type()
     context = {
-        "api_url": reverse("wagtail_unveil:api_v1_frontend_urls"),
+        "api_url": reverse(f"wagtail_unveil:{contract.frontend_url_name}"),
         "report_kind": "frontend",
         "pages_per_type": pages_per_type,
     }
