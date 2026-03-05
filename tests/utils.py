@@ -223,7 +223,7 @@ class BaseReportViewTestMixin:
 
     def test_report_loads_static_css(self):
         response = self.client.get(self.report_url)
-        self.assertContains(response, "wagtail_unveil/css/admin_urls_report.css")
+        self.assertContains(response, "wagtail_unveil/css/admin_urls_report.min.css")
 
     def test_report_loads_static_js_bundle(self):
         response = self.client.get(self.report_url)

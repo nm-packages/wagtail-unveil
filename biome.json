@@ -5,6 +5,7 @@
       "assets_src/**/*.js",
       "assets_src/**/*.mjs",
       "assets_src/**/*.cjs",
+      "assets_src/**/*.css",
       "scripts/**/*.js",
       "scripts/**/*.mjs",
       "scripts/**/*.cjs",
@@ -13,6 +14,8 @@
       "tests/js/**/*.cjs"
     ],
     "ignore": [
+      "wagtail_unveil/static/wagtail_unveil/css/admin_urls_report.css",
+      "wagtail_unveil/static/wagtail_unveil/css/admin_urls_report.min.css",
       "wagtail_unveil/static/wagtail_unveil/js/report.bundle.js",
       "wagtail_unveil/static/wagtail_unveil/js/report.bundle.min.js"
     ]

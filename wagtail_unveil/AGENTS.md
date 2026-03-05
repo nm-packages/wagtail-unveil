@@ -21,12 +21,13 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 - `discovery/frontend.py` — frontend URL discovery
 - `discovery/utils.py` — shared resolver utilities
 - `templates/wagtail_unveil/` — report and dashboard templates
-- `static/wagtail_unveil/css/` — shared report styles
+- `../assets_src/css/` — editable report CSS source
 - `../assets_src/js/` — report JavaScript source modules
-- `static/wagtail_unveil/js/` — generated report bundle assets (`report.bundle.js`, `report.bundle.min.js`)
+- `static/wagtail_unveil/css/` — generated report CSS assets (`admin_urls_report.css`, `admin_urls_report.min.css`)
+- `static/wagtail_unveil/js/` — generated report JS bundle assets (`report.bundle.js`, `report.bundle.min.js`)
 - `../docs/frontend-assets.md` — canonical contributor guide for frontend asset build/test workflow and CI expectations
 
-JavaScript formatting and linting for contributor-owned frontend files is managed by Biome via `npm run lint:js` and `npm run lint:js:fix` (hooked into pre-commit and CI).
+Frontend asset formatting and linting for contributor-owned files is managed by Biome via `npm run lint:assets` and `npm run lint:assets:fix` (hooked into pre-commit and CI).
 
 ## Package Interfaces
 

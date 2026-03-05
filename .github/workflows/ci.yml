@@ -37,7 +37,7 @@ jobs:
           node-version: "22"
 
       - run: npm ci
-      - run: npm run lint:js
+      - run: npm run lint:assets
 
   frontend-test:
     needs: frontend-lint
@@ -63,8 +63,8 @@ jobs:
           node-version: "22"
 
       - run: npm ci
-      - run: npm run build:js
-      - run: git diff --exit-code -- wagtail_unveil/static/wagtail_unveil/js/report.bundle.js wagtail_unveil/static/wagtail_unveil/js/report.bundle.min.js
+      - run: npm run build:assets
+      - run: git diff --exit-code -- wagtail_unveil/static/wagtail_unveil/js/report.bundle.js wagtail_unveil/static/wagtail_unveil/js/report.bundle.min.js wagtail_unveil/static/wagtail_unveil/css/admin_urls_report.css wagtail_unveil/static/wagtail_unveil/css/admin_urls_report.min.css
 
   python-coverage:
     needs: python-lint

@@ -5,9 +5,13 @@ It is contributor-focused and describes source layout, build/test workflows, and
 
 ## Source And Output Layout
 
+- `assets_src/css/` — editable report CSS source
 - `assets_src/js/` — editable JavaScript source modules for report behavior
 - `scripts/report.entry.js` — ordered entry file used for bundling
-- `scripts/build-report-js.mjs` — esbuild script that generates report bundles
+- `scripts/build-report-assets.mjs` — esbuild script that generates report frontend assets
+- `wagtail_unveil/static/wagtail_unveil/css/` — generated CSS artifacts:
+  - `admin_urls_report.css`
+  - `admin_urls_report.min.css`
 - `wagtail_unveil/static/wagtail_unveil/js/` — generated bundle artifacts:
   - `report.bundle.js`
   - `report.bundle.min.js`
@@ -29,39 +33,40 @@ npm run test:js
 make test-js
 ```
 
-Run JavaScript lint/format checks (Biome):
+Run frontend asset lint/format checks (Biome):
 
 ```bash
-npm run lint:js
-npm run lint:js:fix
+npm run lint:assets
+npm run lint:assets:fix
 # or
-make lint-js
-make lint-js-fix
+make lint-assets
+make lint-assets-fix
 ```
 
-Build bundles:
+Build frontend assets (JS + CSS):
 
 ```bash
-npm run build:js
+npm run build:assets
 # or
-make build-js
+make build-assets
 ```
 
 Watch mode while editing frontend source:
 
 ```bash
-npm run build:js:watch
+npm run build:assets:watch
 ```
 
-## When To Rebuild Bundles
+## When To Rebuild Assets
 
-Rebuild bundles after changes to any of the following:
+Rebuild assets after changes to any of the following:
 
+- files in `assets_src/css/`
 - files in `assets_src/js/`
 - `scripts/report.entry.js`
-- `scripts/build-report-js.mjs`
+- `scripts/build-report-assets.mjs`
 
-Generated bundle files in `wagtail_unveil/static/wagtail_unveil/js/` are release artifacts and should be committed with the source changes that require them.
+Generated asset files in `wagtail_unveil/static/wagtail_unveil/css/` and `wagtail_unveil/static/wagtail_unveil/js/` are release artifacts and should be committed with the source changes that require them.
 
 ## Report Template Contract
 
@@ -71,6 +76,7 @@ Reports currently load the minified bundle in:
 
 Template include:
 
+- `wagtail_unveil/css/admin_urls_report.min.css`
 - `wagtail_unveil/js/report.bundle.min.js`
 
 ## Testing Strategy
@@ -82,14 +88,14 @@ Template include:
 
 CI includes frontend asset checks:
 
-- `js-lint` runs Biome checks for contributor-owned JS files
-- `js-tests` job runs JavaScript tests
-- `assets-check` runs the build and fails if generated bundle artifacts are stale
+- `frontend-lint` runs Biome checks for contributor-owned frontend asset files
+- `frontend-test` runs JavaScript tests
+- `frontend-assets` runs the build and fails if generated bundle artifacts are stale
 
-If `assets-check` fails:
+If `frontend-assets` fails:
 
-1. Run `npm run build:js` locally.
-2. Commit updated bundle artifacts in `wagtail_unveil/static/wagtail_unveil/js/`.
+1. Run `npm run build:assets` locally.
+2. Commit updated generated assets in `wagtail_unveil/static/wagtail_unveil/css/` and `wagtail_unveil/static/wagtail_unveil/js/`.
 3. Push again.
 
 ## Pre-Push Checklist
@@ -99,24 +105,27 @@ Run these before opening/updating a PR with frontend asset changes:
 ```bash
 make lint
 make coverage
-npm run lint:js
+npm run lint:assets
 npm run test:js
-npm run build:js
+npm run build:assets
 ```
 
 ## Formatting/Lint Scope
 
-Biome is the canonical formatter/linter for JavaScript in this repository.
+Biome is the canonical formatter/linter for frontend source files in this repository.
 
 Included paths:
 
 - `assets_src/**/*.{js,mjs,cjs}`
+- `assets_src/**/*.css`
 - `scripts/**/*.{js,mjs,cjs}`
 - `tests/js/**/*.{js,mjs,cjs}`
 
 Excluded generated artifacts:
 
+- `wagtail_unveil/static/wagtail_unveil/css/admin_urls_report.css`
+- `wagtail_unveil/static/wagtail_unveil/css/admin_urls_report.min.css`
 - `wagtail_unveil/static/wagtail_unveil/js/report.bundle.js`
 - `wagtail_unveil/static/wagtail_unveil/js/report.bundle.min.js`
 
-Pre-commit runs `npm run lint:js:fix` for these contributor-owned JS files so style/lint issues are fixed before commit.
+Pre-commit runs `npm run lint:assets:fix` for these contributor-owned frontend files so style/lint issues are fixed before commit.

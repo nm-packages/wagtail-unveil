@@ -16,9 +16,9 @@ repos:
 
   - repo: local
     hooks:
-      - id: biome-js-fix
-        name: biome-js-fix
-        entry: npm run lint:js:fix
+      - id: biome-assets-fix
+        name: biome-assets-fix
+        entry: npm run lint:assets:fix
         language: system
         pass_filenames: false
-        files: ^(assets_src/.*\.(js|mjs|cjs)|scripts/.*\.(js|mjs|cjs)|tests/js/.*\.(js|mjs|cjs))$
+        files: ^(assets_src/.*\.(js|mjs|cjs|css)|scripts/.*\.(js|mjs|cjs)|tests/js/.*\.(js|mjs|cjs))$

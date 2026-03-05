@@ -150,8 +150,8 @@ make setup      # Full dev setup: env, install, migrate, superuser, sample data
 make runserver  # Start the sandbox dev server
 make test       # Run package tests
 make test-js    # Run JavaScript report tests
-make build-js   # Build JavaScript report bundles
-make lint-js    # Lint/format-check JavaScript with Biome
+make build-assets # Build report frontend assets (JavaScript + CSS)
+make lint-assets # Lint/format-check frontend assets (JavaScript + CSS) with Biome
 make tox        # Run tests across all Python/Django/Wagtail versions
 make tox-smoke  # Run a fast smoke subset (min, modern, max supported stacks)
 make lint       # Lint with ruff
@@ -165,14 +165,16 @@ JavaScript workflows use Node:
 
 ```bash
 npm ci
-npm run lint:js
-npm run lint:js:fix
+npm run lint:assets
+npm run lint:assets:fix
 npm run test:js
-npm run build:js
-npm run build:js:watch
+npm run build:assets
+npm run build:assets:watch
 ```
 
-Biome lint/format checks apply to contributor-owned JavaScript files in `assets_src/`, `scripts/`, and `tests/js/` with `.js`, `.mjs`, and `.cjs` extensions.
+`build:assets` and `build:assets:watch` build both JavaScript bundles and report CSS artifacts.
+
+Biome lint/format checks apply to contributor-owned frontend source files in `assets_src/`, `scripts/`, and `tests/js/` with `.js`, `.mjs`, `.cjs`, and `.css` extensions.
 
 Frontend asset maintenance details (source layout, build/test workflow, CI expectations, and rebuild rules) are documented in [docs/frontend-assets.md](docs/frontend-assets.md).
 

@@ -24,8 +24,8 @@ make setup       # env, install, migrate, sample data
 make runserver   # start the sandbox dev server
 make test        # run package tests
 make test-js     # run JavaScript report tests
-make build-js    # build JavaScript report bundles
-make lint-js     # Biome JavaScript lint/format checks
+make build-assets # build report frontend assets (JavaScript + CSS)
+make lint-assets # Biome frontend asset lint/format checks (JavaScript + CSS)
 make tox         # run the version matrix
 make tox-smoke   # run the fast smoke subset used in PR CI
 make lint        # ruff check
@@ -44,10 +44,10 @@ uv run --env-file .env django-admin test tests
 uv run ruff check .
 uv run tox
 uv run tox -m smoke
-npm run lint:js
-npm run lint:js:fix
+npm run lint:assets
+npm run lint:assets:fix
 npm run test:js
-npm run build:js
+npm run build:assets
 ```
 
 ## Architecture Summary
