@@ -86,6 +86,13 @@ Routes provided:
 - `report/backend-urls/` → `wagtail_unveil:report_backend_urls`
 - `report/frontend-urls/` → `wagtail_unveil:report_frontend_urls`
 
+Versioned API paths, URL names, and lifecycle metadata are derived from the
+internal `wagtail_unveil.api_contract.API_VERSION_REGISTRY`.
+New API versions should be added in parallel and deprecate older versions over a documented window.
+Additional `api/vN/...` routes may be present when newer versions are introduced.
+Canonical contributor policy for versioning decisions and implementation workflow:
+`docs/api-versioning.md`.
+
 JSON endpoints use Bearer token auth via `WAGTAIL_UNVEIL_API_KEY`. HTML report views require a superuser and `DEBUG=True`.
 
 ### Sandbox
@@ -125,3 +132,4 @@ More focused guidance lives in:
 - Nested `AGENTS.md` files own only directory-local guidance
 - `docs/discovery-architecture.md` is the canonical contributor-facing reference for discovery and resolution behavior; AGENTS files should point to it rather than duplicating detailed flow logic
 - `docs/frontend-assets.md` is the canonical contributor-facing reference for frontend asset source, build/test workflow, and CI expectations
+- `docs/api-versioning.md` is the canonical contributor-facing reference for API version lifecycle policy and version-bump workflow

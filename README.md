@@ -69,6 +69,10 @@ The report page itself is a small shell that fetches its rows and summary counts
 ### JSON API
 
 The API endpoints are included automatically when you add `wagtail_unveil.urls` (see Quick Start above).
+Versioned API paths, URL names, and lifecycle state are derived from the internal
+`wagtail_unveil.api_contract.API_VERSION_REGISTRY`.
+For contributor policy on why/when/how to version, see
+[docs/api-versioning.md](docs/api-versioning.md).
 
 Set `WAGTAIL_UNVEIL_API_KEY` via environment variable (recommended) or Django settings, then query with a Bearer token.
 If both are set, the environment variable takes precedence.
@@ -82,6 +86,7 @@ Filter with `?filter=static`, `?filter=parameterized`, `?filter=pages`, or `?fil
 Responses keep the existing top-level `urls` and `count` fields and also include a `metadata` object with:
 
 - `api_version`
+- `api_lifecycle`
 - `generated_at`
 - `applied_filter`
 - `total_count`
@@ -89,9 +94,11 @@ Responses keep the existing top-level `urls` and `count` fields and also include
 - `untestable_count`
 - `package_version`
 
-`api_version` describes the response contract version. `package_version` describes the installed `wagtail-unveil` release and is not the API version.
+`api_version` describes the response contract version. `api_lifecycle` describes whether that version is stable or deprecated, plus deprecation/sunset dates when set. `package_version` describes the installed `wagtail-unveil` release and is not the API version.
 
-Breaking API changes should ship under a new versioned path such as `/unveil/api/v2/...`.
+API lifecycle policy is summarized here, but the canonical maintainer guide is
+[docs/api-versioning.md](docs/api-versioning.md). Breaking changes should ship
+under a new versioned path such as `/unveil/api/v2/...`.
 
 For the built-in HTML reports, the same versioned endpoints also accept a logged-in superuser session when `DEBUG=True` and the request is not attempting Bearer-token auth. The HTML reports are consumers of the JSON API, not a separate API contract.
 

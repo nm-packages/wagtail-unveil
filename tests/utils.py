@@ -4,11 +4,14 @@ from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.test import override_settings
 
+from wagtail_unveil.api_contract import get_api_contract
+
 
 class BaseAPIViewTestMixin:
     """Shared API view tests. Concrete class must set api_url: str."""
 
     api_url: str
+    api_version: str = "v1"
 
     def test_returns_json(self):
         response = self.client.get(
@@ -35,7 +38,17 @@ class BaseAPIViewTestMixin:
         )
 
         metadata = response.json()["metadata"]
-        self.assertEqual(metadata["api_version"], "v1")
+        contract = get_api_contract(self.api_version)
+        self.assertEqual(metadata["api_version"], self.api_version)
+        self.assertEqual(metadata["api_lifecycle"]["status"], contract.status)
+        self.assertEqual(
+            metadata["api_lifecycle"]["deprecated_on"],
+            contract.deprecated_on.isoformat() if contract.deprecated_on else None,
+        )
+        self.assertEqual(
+            metadata["api_lifecycle"]["sunset_on"],
+            contract.sunset_on.isoformat() if contract.sunset_on else None,
+        )
         self.assertEqual(metadata["generated_at"], "2026-03-02T12:34:56+00:00")
         self.assertIsNone(metadata["applied_filter"])
         self.assertEqual(metadata["package_version"], "9.9.9")
@@ -44,6 +57,8 @@ class BaseAPIViewTestMixin:
             metadata["testable_count"] + metadata["untestable_count"],
             metadata["total_count"],
         )
+        self.assertNotIn("Deprecation", response)
+        self.assertNotIn("Sunset", response)
 
     def test_requires_api_key(self):
         response = self.client.get(self.api_url)
