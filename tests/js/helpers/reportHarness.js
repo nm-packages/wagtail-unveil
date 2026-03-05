@@ -72,6 +72,11 @@ function evaluateFile(fileName) {
 
 export function resetReportDom(options = {}) {
   delete window.UnveilReport;
+
+  if (document && document.body && document.body.dataset) {
+    delete document.body.dataset.unveilReportInitialized;
+  }
+
   setFixtureBody(options);
 }
 
@@ -113,7 +118,18 @@ export function stubFetchResponse(payload, options = {}) {
     json: async () => payload,
   });
 
-  global.fetch = mock;
+  if (typeof globalThis !== "undefined") {
+    globalThis.fetch = mock;
+  }
+
+  if (typeof window !== "undefined") {
+    window.fetch = mock;
+  }
+
+  if (typeof global !== "undefined") {
+    global.fetch = mock;
+  }
+
   return mock;
 }
 
