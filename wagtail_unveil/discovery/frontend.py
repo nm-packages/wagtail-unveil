@@ -1,4 +1,3 @@
-from collections import defaultdict
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
@@ -57,11 +56,18 @@ def _discover_page_candidates():
     from wagtail.models import Page
 
     skip_prefixes = get_skip_url_prefixes()
+    limit = get_pages_per_type()
+    included_pages_by_type = {}
     results = []
     pages = Page.objects.live().specific()
     for page in pages:
         if type(page) is Page:
             continue
+
+        page_type = f"{page._meta.app_label}.{type(page).__name__}"
+        if limit and included_pages_by_type.get(page_type, 0) >= limit:
+            continue
+
         try:
             url = page.url
         except Exception:
@@ -72,7 +78,8 @@ def _discover_page_candidates():
         path = parsed.path
         if _should_skip_frontend_url(path, skip_prefixes):
             continue
-        page_type = f"{page._meta.app_label}.{type(page).__name__}"
+
+        included_pages_by_type[page_type] = included_pages_by_type.get(page_type, 0) + 1
         results.append(
             _FrontendCandidate(
                 url=path,
@@ -96,7 +103,7 @@ def _discover_page_candidates():
         if RoutablePageMixin is not None and isinstance(page, RoutablePageMixin):
             results.extend(_discover_routable_page_candidates(page, path, page_type, skip_prefixes))
 
-    return _apply_page_limit(results)
+    return results
 
 
 def _discover_routable_page_candidates(page, page_path, page_type, skip_prefixes=()):
@@ -127,28 +134,6 @@ def _discover_routable_page_candidates(page, page_path, page_type, skip_prefixes
             )
         )
     return results
-
-
-def _apply_page_limit(candidates):
-    """Apply the configured per-page-type limit while keeping page entries together."""
-    limit = get_pages_per_type()
-    if not limit:
-        return candidates
-
-    page_urls = defaultdict(list)
-    for candidate in candidates:
-        key = (candidate.page_type, candidate.page_title)
-        page_urls[key].append(candidate)
-
-    type_pages = defaultdict(list)
-    for (page_type, _title), urls in page_urls.items():
-        type_pages[page_type].append(urls)
-
-    limited = []
-    for pages_in_type in type_pages.values():
-        for page_entries in pages_in_type[:limit]:
-            limited.extend(page_entries)
-    return limited
 
 
 def _discover_resolver_candidates():
