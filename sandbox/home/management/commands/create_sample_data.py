@@ -52,6 +52,7 @@ class Command(BaseCommand):
         self._create_editor_user()
         self._create_child_pages()
         self._create_multisite_fixture()
+        self._ensure_sites_use_dev_port()
         self._create_core_pages()
         self._create_collections()
         self._create_people()
@@ -285,19 +286,39 @@ class Command(BaseCommand):
             sub_home.add_child(instance=sub_page)
             self.stdout.write(f"Created page: {subsite_page_title}")
 
-        site, created = Site.objects.update_or_create(
-            hostname="sub.localhost",
-            port=8000,
-            defaults={
-                "site_name": f"{SAMPLE_PREFIX} Subsite",
-                "root_page": sub_home,
-                "is_default_site": False,
-            },
-        )
-        if created:
-            self.stdout.write(f"Created site: {site.hostname}")
+        subsite_name = f"{SAMPLE_PREFIX} Subsite"
+        existing_sites = Site.objects.filter(hostname="sub.localhost", is_default_site=False).order_by("id")
+        site = existing_sites.first()
+        if site:
+            site.port = 8000
+            site.site_name = subsite_name
+            site.root_page = sub_home
+            site.is_default_site = False
+            site.save(update_fields=["port", "site_name", "root_page", "is_default_site"])
+
+            duplicate_count = existing_sites.exclude(pk=site.pk).count()
+            if duplicate_count:
+                existing_sites.exclude(pk=site.pk).delete()
+                self.stdout.write(f"Removed {duplicate_count} duplicate subsite record(s)")
+
+            self.stdout.write(f"Updated site: {site.hostname}:{site.port}")
         else:
-            self.stdout.write(f"Updated site: {site.hostname}")
+            site = Site.objects.create(
+                hostname="sub.localhost",
+                port=8000,
+                site_name=subsite_name,
+                root_page=sub_home,
+                is_default_site=False,
+            )
+            self.stdout.write(f"Created site: {site.hostname}:{site.port}")
+
+    def _ensure_sites_use_dev_port(self):
+        """Ensure sandbox Site entries use port 8000 for local development."""
+        updated = Site.objects.exclude(port=8000).update(port=8000)
+        if updated:
+            self.stdout.write(f"Updated {updated} site(s) to port 8000")
+        else:
+            self.stdout.write("Skipped site port normalization: all sites already use port 8000")
 
     def _create_core_pages(self):
         """Create a ListingPage with StandardPage children under HomePage."""
