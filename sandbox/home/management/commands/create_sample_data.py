@@ -51,6 +51,7 @@ class Command(BaseCommand):
         self._create_search_promotions()
         self._create_editor_user()
         self._create_child_pages()
+        self._create_multisite_fixture()
         self._create_core_pages()
         self._create_collections()
         self._create_people()
@@ -133,6 +134,10 @@ class Command(BaseCommand):
                 facebook__startswith="https://facebook.com/sample",
             ).delete()
             self.stdout.write(f"Deleted {deleted[0]} social media setting(s)")
+
+        deleted = Site.objects.filter(hostname="sub.localhost", is_default_site=False).delete()
+        self.stdout.write(f"Deleted {deleted[0]} multisite fixture site(s)")
+
         deleted = BrandingSettings.objects.filter(site_name__startswith=SAMPLE_PREFIX).delete()
         self.stdout.write(f"Deleted {deleted[0]} branding setting(s)")
 
@@ -247,6 +252,52 @@ class Command(BaseCommand):
             page = StandardPage(title=title, slug=f"sample-{slug}", body=body)
             home_page.add_child(instance=page)
             self.stdout.write(f"Created page: {title}")
+
+    def _create_multisite_fixture(self):
+        """Create a non-default site with its own homepage and child page."""
+        root_page = Page.get_first_root_node()
+        if not root_page:
+            self.stdout.write("Skipped multisite fixture: no root page found")
+            return
+
+        subsite_title = f"{SAMPLE_PREFIX} Subsite Home"
+        subsite_slug = "sample-subsite-home"
+        sub_home = HomePage.objects.filter(title=subsite_title, slug=subsite_slug).first()
+        if sub_home:
+            self.stdout.write(f"Skipped page: {subsite_title} (already exists)")
+        else:
+            sub_home = HomePage(
+                title=subsite_title,
+                slug=subsite_slug,
+            )
+            root_page.add_child(instance=sub_home)
+            self.stdout.write(f"Created page: {subsite_title}")
+
+        subsite_page_title = f"{SAMPLE_PREFIX} Subsite About"
+        if Page.objects.filter(title=subsite_page_title).exists():
+            self.stdout.write(f"Skipped page: {subsite_page_title} (already exists)")
+        else:
+            sub_page = StandardPage(
+                title=subsite_page_title,
+                slug="sample-subsite-about",
+                body="<p>Sample content served from the subdomain fixture site.</p>",
+            )
+            sub_home.add_child(instance=sub_page)
+            self.stdout.write(f"Created page: {subsite_page_title}")
+
+        site, created = Site.objects.update_or_create(
+            hostname="sub.localhost",
+            port=80,
+            defaults={
+                "site_name": f"{SAMPLE_PREFIX} Subsite",
+                "root_page": sub_home,
+                "is_default_site": False,
+            },
+        )
+        if created:
+            self.stdout.write(f"Created site: {site.hostname}")
+        else:
+            self.stdout.write(f"Updated site: {site.hostname}")
 
     def _create_core_pages(self):
         """Create a ListingPage with StandardPage children under HomePage."""

@@ -1,10 +1,13 @@
+from urllib.parse import urlparse
 from unittest.mock import patch
 
 from django.test import TestCase, override_settings
-from wagtail.models import Page
+from wagtail.models import Page, Site
 
+from sandbox.core.models import StandardPage
 from sandbox.events.models import EventIndexPage
 from sandbox.forms.models import FormPage
+from sandbox.home.models import HomePage
 from wagtail_unveil.discovery.frontend import (
     FrontendURL,
     _build_frontend_url,
@@ -97,6 +100,10 @@ class TestRoutableSubUrls(TestCase):
     def _get_event_urls(self):
         return [u for u in self.urls if u.source == "page" and u.page_type == self.page_type]
 
+    def _event_index_path(self):
+        parsed = urlparse(self.event_index.url)
+        return parsed.path or self.event_index.url
+
     def test_static_sub_route_discovered_and_testable(self):
         event_urls = self._get_event_urls()
         past_urls = [u for u in event_urls if u.url.endswith("/past/")]
@@ -117,14 +124,14 @@ class TestRoutableSubUrls(TestCase):
 
     def test_index_route_not_duplicated(self):
         event_urls = self._get_event_urls()
-        base_path = self.event_index.url
+        base_path = self._event_index_path()
         # Only one entry should match the base page URL (no duplicate from @path(""))
         base_urls = [u for u in event_urls if u.url == base_path]
         self.assertEqual(len(base_urls), 1)
 
     def test_sub_route_urls_correctly_constructed(self):
         event_urls = self._get_event_urls()
-        base_path = self.event_index.url.rstrip("/")
+        base_path = self._event_index_path().rstrip("/")
         for url in event_urls:
             self.assertTrue(
                 url.url.startswith(base_path),
@@ -133,7 +140,7 @@ class TestRoutableSubUrls(TestCase):
 
     def test_sub_route_fields(self):
         event_urls = self._get_event_urls()
-        sub_routes = [u for u in event_urls if u.url != self.event_index.url]
+        sub_routes = [u for u in event_urls if u.url != self._event_index_path()]
         self.assertGreater(len(sub_routes), 0)
         for url in sub_routes:
             self.assertEqual(url.source, "page")
@@ -265,3 +272,85 @@ class TestFrontendDiscoveryPhases(TestCase):
 
         self.assertFalse(classification.is_testable)
         self.assertEqual(classification.skip_reason, "URL contains regex patterns")
+
+    def test_cross_site_candidate_without_hostname_uses_generic_reason(self):
+        candidate = _FrontendCandidate(
+            url="/about/",
+            source="page",
+            page_type="core.StandardPage",
+            page_title="About",
+            name="",
+            is_cross_site=True,
+        )
+
+        classification = _classify_frontend_candidate(candidate)
+
+        self.assertFalse(classification.is_testable)
+        self.assertEqual(classification.skip_reason, "Belongs to non-default site host")
+
+    def test_cross_site_candidate_with_non_standard_port_includes_port(self):
+        candidate = _FrontendCandidate(
+            url="/about/",
+            source="page",
+            page_type="core.StandardPage",
+            page_title="About",
+            name="",
+            site_hostname="sub.localhost",
+            site_port=8080,
+            is_cross_site=True,
+        )
+
+        classification = _classify_frontend_candidate(candidate)
+
+        self.assertFalse(classification.is_testable)
+        self.assertEqual(
+            classification.skip_reason,
+            "Belongs to non-default site host: sub.localhost:8080",
+        )
+
+
+class TestMultisiteFrontendUrls(TestCase):
+    def setUp(self):
+        root = Page.get_first_root_node()
+
+        self.sub_home = HomePage(title="Subsite Home", slug="subsite-home")
+        root.add_child(instance=self.sub_home)
+        self.sub_home.save_revision().publish()
+
+        self.sub_page = StandardPage(
+            title="Subsite About",
+            slug="subsite-about",
+            body="<p>Subsite page body.</p>",
+        )
+        self.sub_home.add_child(instance=self.sub_page)
+        self.sub_page.save_revision().publish()
+
+        self.sub_site = Site.objects.create(
+            hostname="sub.localhost",
+            port=80,
+            site_name="Subsite",
+            root_page=self.sub_home,
+            is_default_site=False,
+        )
+
+        self.urls = get_frontend_urls()
+
+    def test_non_default_site_page_is_discovered(self):
+        matches = [u for u in self.urls if u.source == "page" and u.page_title == "Subsite About"]
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0].url, "/subsite-about/")
+
+    def test_non_default_site_page_is_marked_untestable(self):
+        matches = [u for u in self.urls if u.source == "page" and u.page_title == "Subsite About"]
+        self.assertEqual(len(matches), 1)
+        match = matches[0]
+        self.assertFalse(match.is_testable)
+        self.assertEqual(match.skip_reason, "Belongs to non-default site host: sub.localhost")
+
+    def test_default_site_page_entries_remain_testable(self):
+        default_site_pages = [
+            u
+            for u in self.urls
+            if u.source == "page" and u.page_title != "Subsite About" and not u.name and not u.skip_reason
+        ]
+        self.assertGreater(len(default_site_pages), 0)
