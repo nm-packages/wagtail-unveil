@@ -11,7 +11,7 @@
 
 ## Why?
 
-Wagtail sites accumulate hundreds of URLs - admin views, page routes, routable sub-paths, and API endpoints. Broken routes can hide until a user hits an error. **wagtail-unveil** discovers your URLs and helps you verify responses quickly.
+Wagtail sites can accumulate many URLs across the admin site and frontend. Broken routes can hide until a user hits an error. **wagtail-unveil** discovers your URLs and helps you verify responses for your apps routes.
 
 It exposes discovery through:
 - JSON API endpoints (Bearer token auth)
