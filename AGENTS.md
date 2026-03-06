@@ -20,18 +20,21 @@ These commands are for contributors working in this repository's sandbox and tes
 Prefer the `Makefile` targets for standard workflows:
 
 ```bash
-make setup       # env, install, migrate, sample data
-make runserver   # start the sandbox dev server
-make test        # run package tests
-make test-js     # run JavaScript report tests
-make build-assets # build report frontend assets (JavaScript + CSS)
-make lint-assets # Biome frontend asset lint/format checks (JavaScript + CSS)
-make tox         # run the version matrix
-make tox-smoke   # run the fast smoke subset used in PR CI
-make lint        # ruff check
-make lint-fix    # ruff check --fix
-make coverage    # run tests with coverage report
-make pre-commit  # run all configured hooks
+make setup           # env, install, migrate, sample data
+make runserver       # start the sandbox dev server
+make test            # run package tests
+make test-js         # run JavaScript report tests
+make build-assets    # build report frontend assets (JavaScript + CSS)
+make lint-assets     # Biome frontend asset lint/format checks (JavaScript + CSS)
+make lint-assets-fix # Biome frontend asset lint/format with autofix
+make tox             # run the version matrix
+make tox-smoke       # run the fast smoke subset used in PR CI
+make lint            # ruff check
+make lint-fix        # ruff check --fix
+make coverage        # run tests with coverage report
+make coverage-html   # generate HTML coverage report
+make docs-check      # verify docs command parity and drift checks
+make pre-commit      # run all configured hooks
 ```
 
 Equivalent direct commands are also valid:
@@ -144,3 +147,5 @@ More focused guidance lives in:
 - `docs/frontend-assets.md` is the canonical contributor-facing reference for frontend asset source, build/test workflow, and CI expectations
 - `docs/api-versioning.md` is the canonical contributor-facing reference for API version lifecycle policy and version-bump workflow
 - `docs/releasing.md` is the canonical contributor-facing reference for release workflow, PyPI Trusted Publisher setup, and maintainer release troubleshooting
+- Command-level docs must stay in sync with `Makefile`; when targets change, update `AGENTS.md` and `README.md` in the same PR
+- Run `make docs-check` before merging docs or workflow changes that touch development commands

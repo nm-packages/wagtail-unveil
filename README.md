@@ -152,16 +152,20 @@ The setting applies to both the frontend resolver source and the admin URL disco
 These commands are for working on this repository's sandbox and test environment. They are not part of the public interface exposed by the reusable `wagtail_unveil` package.
 
 ```bash
-make setup      # Full dev setup: env, install, migrate, superuser, sample data
+make setup      # Full dev setup: env, install, migrate, sample data
 make runserver  # Start the sandbox dev server
 make test       # Run package tests
 make test-js    # Run JavaScript report tests
 make build-assets # Build report frontend assets (JavaScript + CSS)
 make lint-assets # Lint/format-check frontend assets (JavaScript + CSS) with Biome
+make lint-assets-fix # Lint/format frontend assets (JavaScript + CSS) with Biome autofix
 make tox        # Run tests across all Python/Django/Wagtail versions
 make tox-smoke  # Run a fast smoke subset (min, modern, max supported stacks)
 make lint       # Lint with ruff
+make lint-fix   # Lint with ruff and apply safe fixes
 make coverage   # Run tests with coverage report
+make coverage-html # Generate HTML coverage report and open it locally
+make docs-check # Verify docs command parity and common drift cases
 make pre-commit # Run pre-commit hooks on all files
 ```
 

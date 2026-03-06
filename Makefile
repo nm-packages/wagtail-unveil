@@ -2,7 +2,7 @@ UV = uv
 RUN = $(UV) run --env-file .env
 MANAGE = $(RUN) django-admin
 
-.PHONY: help setup env install migrate superuser sample-data runserver run test test-js build-assets tox tox-smoke lint lint-fix lint-assets lint-assets-fix makemigrations pre-commit coverage coverage-html clean
+.PHONY: help setup env install migrate superuser sample-data runserver run test test-js build-assets tox tox-smoke lint lint-fix lint-assets lint-assets-fix docs-check makemigrations pre-commit coverage coverage-html clean
 
 help:
 	@echo "Usage: make <target>"
@@ -20,6 +20,7 @@ help:
 	@echo "  lint-fix        Run ruff check --fix"
 	@echo "  lint-assets     Run Biome frontend asset checks (JavaScript + CSS)"
 	@echo "  lint-assets-fix Run Biome frontend asset checks with --write"
+	@echo "  docs-check      Verify docs command parity and common drift cases"
 	@echo "  pre-commit      Run pre-commit hooks on all files"
 	@echo "  makemigrations  Create package migrations"
 	@echo "  sample-data     Create sample data"
@@ -75,6 +76,9 @@ lint-assets:
 
 lint-assets-fix:
 	npm run lint:assets:fix
+
+docs-check:
+	python3 scripts/docs_check.py
 
 pre-commit:
 	$(UV) run pre-commit run --all-files
