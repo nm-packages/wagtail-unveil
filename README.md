@@ -88,6 +88,7 @@ Defaults to `[]`. Leading slashes are normalized.
 
 - Full usage reference: [docs/usage.md](docs/usage.md)
 - Contributor/developer guide: [docs/development.md](docs/development.md)
+- Coding conventions: [CONVENTIONS.md](CONVENTIONS.md)
 - API versioning policy: [docs/api-versioning.md](docs/api-versioning.md)
 - Discovery internals: [docs/discovery-architecture.md](docs/discovery-architecture.md)
 - Frontend asset workflow: [docs/frontend-assets.md](docs/frontend-assets.md)

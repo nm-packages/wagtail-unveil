@@ -76,6 +76,7 @@ When changing contributor commands or Make targets:
 ## Related Docs
 
 - User-facing package overview: [../README.md](../README.md)
+- Coding conventions: [../CONVENTIONS.md](../CONVENTIONS.md)
 - Agent project guidance: [../AGENTS.md](../AGENTS.md)
 - Usage reference: [usage.md](usage.md)
 - Frontend assets: [frontend-assets.md](frontend-assets.md)
