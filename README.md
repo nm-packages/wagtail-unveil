@@ -47,6 +47,8 @@ Try the reports:
 - `/unveil/report/backend-urls/`
 - `/unveil/report/frontend-urls/`
 
+You can open both reports from links in the Wagtail admin dashboard panel.
+
 Try the API:
 
 ```bash
