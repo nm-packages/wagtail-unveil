@@ -13,6 +13,12 @@ This file is the canonical guidance for coding agents working in this repository
 - `tests/` — Root-level test package for the reusable package
 - `.env.example` — Template for local development environment variables
 
+## Docs Map
+
+- `README.md` — user-facing package overview, install, quickstart, and key configuration
+- `docs/development.md` — human contributor setup, day-to-day workflow, and CI-aligned dev commands
+- `AGENTS.md` files — canonical agent-facing guidance and documentation contract
+
 ## Development Commands
 
 These commands are for contributors working in this repository's sandbox and test environment. They are not package-level interfaces exposed by `wagtail_unveil`.
@@ -144,6 +150,7 @@ More focused guidance lives in:
 - Root `AGENTS.md` owns repo-wide guidance
 - Nested `AGENTS.md` files own only directory-local guidance
 - `docs/discovery-architecture.md` is the canonical contributor-facing reference for discovery and resolution behavior; AGENTS files should point to it rather than duplicating detailed flow logic
+- `docs/development.md` is the canonical human contributor workflow guide for local setup, validation loops, and CI-oriented dev commands
 - `docs/frontend-assets.md` is the canonical contributor-facing reference for frontend asset source, build/test workflow, and CI expectations
 - `docs/api-versioning.md` is the canonical contributor-facing reference for API version lifecycle policy and version-bump workflow
 - `docs/releasing.md` is the canonical contributor-facing reference for release workflow, PyPI Trusted Publisher setup, and maintainer release troubleshooting

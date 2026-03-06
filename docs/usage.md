@@ -45,7 +45,8 @@ make lint
 make coverage
 ```
 
-For the complete command catalog and command parity policy, see
+For contributor command workflows, see
+[`development.md`](development.md). For agent-facing command parity policy, see
 [`AGENTS.md`](../AGENTS.md).
 
 ### Configuration Notes

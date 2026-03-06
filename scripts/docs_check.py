@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MAKEFILE_PATH = ROOT / "Makefile"
 README_PATH = ROOT / "README.md"
 AGENTS_PATH = ROOT / "AGENTS.md"
+DEVELOPMENT_DOC_PATH = ROOT / "docs/development.md"
 
 REQUIRED_TARGETS = [
     "setup",
@@ -38,11 +39,6 @@ def _extract_phony_targets(makefile_text: str) -> set[str]:
     return set(match.group(1).split())
 
 
-def _extract_readme_development_section(readme_text: str) -> str:
-    match = re.search(r"^## Development\n(.*?)(?:\n## |\Z)", readme_text, flags=re.DOTALL | re.MULTILINE)
-    return match.group(1) if match else ""
-
-
 def _missing_command_mentions(text: str, targets: list[str]) -> list[str]:
     return [target for target in targets if f"make {target}" not in text]
 
@@ -53,7 +49,7 @@ def main() -> int:
     makefile_text = MAKEFILE_PATH.read_text(encoding="utf-8")
     readme_text = README_PATH.read_text(encoding="utf-8")
     agents_text = AGENTS_PATH.read_text(encoding="utf-8")
-    readme_dev_section = _extract_readme_development_section(readme_text)
+    development_doc_text = DEVELOPMENT_DOC_PATH.read_text(encoding="utf-8")
 
     phony_targets = _extract_phony_targets(makefile_text)
     if not phony_targets:
@@ -65,12 +61,9 @@ def main() -> int:
         if re.search(rf"^{re.escape(target)}:", makefile_text, flags=re.MULTILINE) is None:
             errors.append(f"Makefile check: required target '{target}' has no target definition.")
 
-    readme_missing = _missing_command_mentions(readme_dev_section, REQUIRED_TARGETS)
-    if readme_missing:
+    if "docs/development.md" not in readme_text:
         errors.append(
-            "README check: missing make command mentions in Development section: "
-            + ", ".join(f"'make {target}'" for target in readme_missing)
-            + ".",
+            "README check: missing required link to 'docs/development.md' in documentation links.",
         )
 
     agents_missing = _missing_command_mentions(agents_text, REQUIRED_TARGETS)
@@ -81,15 +74,25 @@ def main() -> int:
             + ".",
         )
 
-    if re.search(r"make setup[^\n]*superuser", readme_dev_section, flags=re.IGNORECASE):
-        errors.append("README check: stale setup comment found; 'make setup' must not claim it creates a superuser.")
+    development_missing = _missing_command_mentions(development_doc_text, REQUIRED_TARGETS)
+    if development_missing:
+        errors.append(
+            "Development docs check: missing make command mentions in docs/development.md: "
+            + ", ".join(f"'make {target}'" for target in development_missing)
+            + ".",
+        )
+
+    if re.search(r"make setup[^\n]*superuser", development_doc_text, flags=re.IGNORECASE):
+        errors.append(
+            "Development docs check: stale setup comment found; 'make setup' must not claim it creates a superuser.",
+        )
 
     if errors:
         for error in errors:
             print(error)
         return 1
 
-    print("docs-check passed: Makefile, README, and AGENTS command docs are in sync.")
+    print("docs-check passed: Makefile, README, AGENTS, and docs/development.md are in sync.")
     return 0
 
 
