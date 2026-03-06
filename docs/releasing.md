@@ -36,6 +36,10 @@ The GitHub repository and workflow identity must match exactly, or publish will 
 5. Publish the GitHub Release.
 6. Confirm `.github/workflows/release.yml` succeeds and the version appears on PyPI.
 
+For local sandbox/test command workflows before a release, use:
+- [`docs/development.md`](development.md) for canonical developer workflow and quickstart commands
+- [`AGENTS.md`](../AGENTS.md) for canonical contributor command/reference guidance
+
 Examples:
 
 - `pyproject.toml` version `0.3.0` => GitHub tag `v0.3.0`, release title `0.3.0` (or `Release 0.3.0`)

@@ -34,6 +34,21 @@ WAGTAIL_UNVEIL_API_KEY = "your-secret-key"
 
    If both are set, the environment variable takes precedence.
 
+### Local Validation Quickstart
+
+For contributor workflows in this repository, the fastest validation loop is:
+
+```bash
+make test
+make test-js
+make lint
+make coverage
+```
+
+For contributor command workflows, see
+[`development.md`](development.md). For agent-facing command parity policy, see
+[`AGENTS.md`](../AGENTS.md).
+
 ### Configuration Notes
 
 `WAGTAIL_UNVEIL_PAGES_PER_TYPE` defaults to `1` when omitted.
