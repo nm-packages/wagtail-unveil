@@ -13,6 +13,8 @@ README_PATH = ROOT / "README.md"
 AGENTS_PATH = ROOT / "AGENTS.md"
 DEVELOPMENT_DOC_PATH = ROOT / "docs/development.md"
 
+# This list is the single source of truth for contributor-facing Makefile
+# targets that must be discoverable in both AGENTS.md and docs/development.md.
 REQUIRED_TARGETS = [
     "setup",
     "runserver",
@@ -30,6 +32,16 @@ REQUIRED_TARGETS = [
     "docs-check",
     "pre-commit",
 ]
+
+README_GUIDE_LINK_RE = re.compile(
+    r"Contributor/developer guide:\s*\[docs/development\.md\]\(docs/development\.md\)",
+    re.IGNORECASE,
+)
+SETUP_SUPERUSER_LINE_RE = re.compile(r"make\s+setup[^\n]*superuser", re.IGNORECASE)
+SETUP_SUPERUSER_NEGATION_RE = re.compile(
+    r"\b(doesn't|does not|do not|did not|never)\b",
+    re.IGNORECASE,
+)
 
 
 def _extract_phony_targets(makefile_text: str) -> set[str]:
@@ -61,9 +73,9 @@ def main() -> int:
         if re.search(rf"^{re.escape(target)}:", makefile_text, flags=re.MULTILINE) is None:
             errors.append(f"Makefile check: required target '{target}' has no target definition.")
 
-    if "docs/development.md" not in readme_text:
+    if README_GUIDE_LINK_RE.search(readme_text) is None:
         errors.append(
-            "README check: missing required link to 'docs/development.md' in documentation links.",
+            "README check: missing required 'Contributor/developer guide' link to docs/development.md.",
         )
 
     agents_missing = _missing_command_mentions(agents_text, REQUIRED_TARGETS)
@@ -82,10 +94,31 @@ def main() -> int:
             + ".",
         )
 
-    if re.search(r"make setup[^\n]*superuser", development_doc_text, flags=re.IGNORECASE):
-        errors.append(
-            "Development docs check: stale setup comment found; 'make setup' must not claim it creates a superuser.",
-        )
+    setup_claim_terms = (
+        "create",
+        "creates",
+        "creating",
+        "require",
+        "requires",
+        "includes",
+        "included",
+        "adding",
+        "adds",
+        "add",
+        "made",
+    )
+    for line in development_doc_text.splitlines():
+        lower_line = line.lower()
+        if SETUP_SUPERUSER_LINE_RE.search(line) is None:
+            continue
+        if SETUP_SUPERUSER_NEGATION_RE.search(lower_line):
+            continue
+        if any(term in lower_line for term in setup_claim_terms):
+            errors.append(
+                "Development docs check: stale setup comment found; this doc must not claim "
+                "that `make setup` creates superuser access.",
+            )
+            break
 
     if errors:
         for error in errors:

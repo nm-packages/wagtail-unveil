@@ -9,6 +9,7 @@ make setup
 ```
 
 Optional: create a superuser for report UI access.
+Report pages also require `DEBUG=True`.
 
 ```bash
 make superuser

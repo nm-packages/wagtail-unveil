@@ -78,7 +78,7 @@ lint-assets-fix:
 	npm run lint:assets:fix
 
 docs-check:
-	python3 scripts/docs_check.py
+	$(UV) run python scripts/docs_check.py
 
 pre-commit:
 	$(UV) run pre-commit run --all-files

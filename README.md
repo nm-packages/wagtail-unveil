@@ -43,7 +43,7 @@ urlpatterns = [
 ]
 ```
 
-Try the reports:
+Try the reports (HTML admin views; requires superuser session and `DEBUG=True`):
 - `/unveil/report/backend-urls/`
 - `/unveil/report/frontend-urls/`
 

@@ -154,5 +154,5 @@ More focused guidance lives in:
 - `docs/frontend-assets.md` is the canonical contributor-facing reference for frontend asset source, build/test workflow, and CI expectations
 - `docs/api-versioning.md` is the canonical contributor-facing reference for API version lifecycle policy and version-bump workflow
 - `docs/releasing.md` is the canonical contributor-facing reference for release workflow, PyPI Trusted Publisher setup, and maintainer release troubleshooting
-- Command-level docs must stay in sync with `Makefile`; when targets change, update `AGENTS.md` and `README.md` in the same PR
+- Command-level docs must stay in sync with `Makefile`; when targets change, update `AGENTS.md` and `docs/development.md` in the same PR. `README.md` should link to this contributor workflow, not duplicate command lists.
 - Run `make docs-check` before merging docs or workflow changes that touch development commands
