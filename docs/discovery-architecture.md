@@ -107,10 +107,11 @@ Each candidate is classified by `_classify_frontend_candidate()` and emitted as 
 3. Read `page.url` defensively so pages that error during URL generation do not break discovery.
 4. Convert absolute page URLs to path-only values via `urlparse()`.
 5. Apply `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES`.
-6. Emit one base page candidate for the page URL.
-7. If the page is a `FormMixin` subclass, add a second landing-page candidate and leave classification to a later phase.
-8. If the page is a `RoutablePageMixin` subclass, add sub-route candidates from `_discover_routable_page_candidates()`.
-9. After collecting all page candidates, `_apply_page_limit()` applies `WAGTAIL_UNVEIL_PAGES_PER_TYPE` by grouping on `(page_type, page_title)` so each selected page keeps all of its related entries.
+6. Resolve each page's owning `Site` and record whether it belongs to the default site.
+7. Emit one base page candidate for the page URL.
+8. If the page is a `FormMixin` subclass, add a second landing-page candidate and leave classification to a later phase.
+9. If the page is a `RoutablePageMixin` subclass, add sub-route candidates from `_discover_routable_page_candidates()`.
+10. During candidate discovery, `_discover_page_candidates()` enforces `WAGTAIL_UNVEIL_PAGES_PER_TYPE` inline via `included_pages_by_type`, grouping on `(page_type, page_title)` so each selected page keeps all of its related entries before routable expansion.
 
 `WAGTAIL_UNVEIL_PAGES_PER_TYPE` affects page-derived URLs only. Resolver-derived frontend URLs are not limited by that setting.
 
@@ -152,6 +153,7 @@ Classification is the only step that should decide why a route is not directly G
 
 - backend classification owns hard-coded non-testable names and serve-readiness checks
 - frontend classification owns `Requires POST submission`, `URL requires parameters`, and `URL contains regex patterns`
+- frontend classification also marks non-default-site page URLs as untestable to avoid cross-host false positives in report testing
 - backend finalization adds `URL requires parameters` only when a route required resolution and no concrete path could be produced
 
 Current skip reasons used by the discovery layer:
@@ -164,6 +166,7 @@ Current skip reasons used by the discovery layer:
 - `URL requires parameters`
 - `URL contains regex patterns`
 - `Requires POST submission`
+- `Belongs to non-default site host` (or `...: <hostname>` / `...: <hostname>:<port>` when a hostname is available)
 
 ## Known Limitations and Intentional Exclusions
 
@@ -175,6 +178,7 @@ Current intentional boundaries:
 - frontend resolver routes with regex constructs are discovered but not directly testable
 - parameterized routable sub-routes are discovered but not directly testable
 - form landing pages are represented but are not GET-testable
+- page URLs discovered from non-default Wagtail `Site` records are represented but marked untestable because report testing uses the current host
 - package routes in the `wagtail_unveil` namespace are intentionally excluded from frontend discovery
 - configured skip prefixes can remove page, admin, resolver, and routable URLs from discovery output
 

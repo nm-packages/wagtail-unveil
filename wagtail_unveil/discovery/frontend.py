@@ -25,6 +25,9 @@ class _FrontendCandidate:
     page_type: str
     page_title: str
     name: str
+    site_hostname: str = ""
+    site_port: int | None = None
+    is_cross_site: bool = False
     has_parameters: bool = False
     contains_regex: bool = False
     requires_post: bool = False
@@ -39,6 +42,27 @@ class _FrontendClassification:
 def _should_skip_frontend_url(url, skip_prefixes):
     """Return True when a frontend URL matches configured skip prefixes."""
     return bool(skip_prefixes and any(url.lstrip("/").startswith(prefix) for prefix in skip_prefixes))
+
+
+def _get_default_site():
+    """Return the default Wagtail Site instance when available."""
+    try:
+        from wagtail.models import Site
+    except ImportError:
+        return None
+
+    return Site.objects.filter(is_default_site=True).first()
+
+
+def _format_cross_site_skip_reason(candidate):
+    """Build a skip reason for candidates that belong to a non-default site host."""
+    if not candidate.site_hostname:
+        return "Belongs to non-default site host"
+
+    if candidate.site_port and candidate.site_port not in (80, 443):
+        return f"Belongs to non-default site host: {candidate.site_hostname}:{candidate.site_port}"
+
+    return f"Belongs to non-default site host: {candidate.site_hostname}"
 
 
 def _discover_page_candidates():
@@ -58,6 +82,7 @@ def _discover_page_candidates():
     skip_prefixes = get_skip_url_prefixes()
     limit = get_pages_per_type()
     included_pages_by_type = {}
+    default_site = _get_default_site()
     results = []
     pages = Page.objects.live().specific()
     for page in pages:
@@ -80,6 +105,17 @@ def _discover_page_candidates():
             continue
 
         included_pages_by_type[page_type] = included_pages_by_type.get(page_type, 0) + 1
+
+        page_site = None
+        try:
+            page_site = page.get_site()
+        except Exception:
+            page_site = None
+
+        site_hostname = page_site.hostname if page_site else parsed.hostname or ""
+        site_port = page_site.port if page_site else parsed.port
+        is_cross_site = bool(default_site and page_site and page_site.pk != default_site.pk)
+
         results.append(
             _FrontendCandidate(
                 url=path,
@@ -87,6 +123,9 @@ def _discover_page_candidates():
                 page_type=page_type,
                 page_title=page.title,
                 name="",
+                site_hostname=site_hostname,
+                site_port=site_port,
+                is_cross_site=is_cross_site,
             )
         )
         if FormMixin is not None and isinstance(page, FormMixin):
@@ -97,16 +136,37 @@ def _discover_page_candidates():
                     page_type=page_type,
                     page_title=page.title,
                     name="landing_page",
+                    site_hostname=site_hostname,
+                    site_port=site_port,
+                    is_cross_site=is_cross_site,
                     requires_post=True,
                 )
             )
         if RoutablePageMixin is not None and isinstance(page, RoutablePageMixin):
-            results.extend(_discover_routable_page_candidates(page, path, page_type, skip_prefixes))
+            results.extend(
+                _discover_routable_page_candidates(
+                    page,
+                    path,
+                    page_type,
+                    skip_prefixes,
+                    site_hostname,
+                    site_port,
+                    is_cross_site,
+                )
+            )
 
     return results
 
 
-def _discover_routable_page_candidates(page, page_path, page_type, skip_prefixes=()):
+def _discover_routable_page_candidates(
+    page,
+    page_path,
+    page_type,
+    skip_prefixes=(),
+    site_hostname="",
+    site_port=None,
+    is_cross_site=False,
+):
     """Discover routable page candidates before classification."""
     results = []
     for pattern in type(page).get_subpage_urls():
@@ -130,6 +190,9 @@ def _discover_routable_page_candidates(page, page_path, page_type, skip_prefixes
                 page_type=page_type,
                 page_title=page.title,
                 name=pattern.name or "",
+                site_hostname=site_hostname,
+                site_port=site_port,
+                is_cross_site=is_cross_site,
                 has_parameters=route_has_parameters(sub_route),
             )
         )
@@ -169,6 +232,11 @@ def _discover_resolver_candidates():
 
 def _classify_frontend_candidate(candidate):
     """Classify a frontend candidate and assign any skip reason."""
+    if candidate.is_cross_site:
+        return _FrontendClassification(
+            is_testable=False,
+            skip_reason=_format_cross_site_skip_reason(candidate),
+        )
     if candidate.requires_post:
         return _FrontendClassification(
             is_testable=False,
