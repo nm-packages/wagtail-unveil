@@ -1,8 +1,11 @@
+import platform
 from datetime import datetime, time
 from datetime import timezone as datetime_timezone
 from email.utils import format_datetime
 from importlib.metadata import PackageNotFoundError, version
 
+import wagtail
+from django import get_version as get_django_version
 from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
@@ -18,7 +21,7 @@ from wagtail_unveil.api_contract import (
 )
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.frontend import get_frontend_urls
-from wagtail_unveil.settings import get_api_key, get_pages_per_type
+from wagtail_unveil.settings import get_api_key, get_pages_per_type, get_setting_diagnostics
 
 
 def _json_error(message, *, status):
@@ -130,6 +133,116 @@ def _build_urls_json_response(urls, serializer, *, applied_filter=None, contract
     }
     response = JsonResponse(data)
     return _apply_lifecycle_headers(response, contract)
+
+
+def _get_display_package_version():
+    """Return the installed package version or a useful placeholder."""
+    package_version = _get_package_version()
+    if package_version:
+        return package_version
+    return "Unknown"
+
+
+def _build_lifecycle_detail(contract: APIVersionContract):
+    """Render lifecycle detail text for diagnostics output."""
+    details = []
+    if contract.deprecated_on is not None:
+        details.append(f"Deprecated on {contract.deprecated_on.isoformat()}")
+    if contract.sunset_on is not None:
+        details.append(f"Sunsets on {contract.sunset_on.isoformat()}")
+    if not details:
+        return "Current stable contract."
+    return ". ".join(details)
+
+
+def _build_settings_report_context():
+    """Build diagnostics content for the settings page."""
+    contract = get_latest_stable_api_contract()
+    api_key = get_api_key()
+    return {
+        "package_settings": get_setting_diagnostics(),
+        "runtime_entries": [
+            {
+                "label": "DEBUG",
+                "value": repr(settings.DEBUG),
+                "detail": "Controls access to the HTML reports.",
+            },
+            {
+                "label": "HTML report access",
+                "value": "Enabled" if settings.DEBUG else "Disabled",
+                "detail": "Report pages require a superuser and DEBUG=True.",
+            },
+            {
+                "label": "Superuser session API access",
+                "value": "Enabled" if settings.DEBUG else "Disabled",
+                "detail": "Session-based JSON access is only allowed for superusers when DEBUG=True.",
+            },
+            {
+                "label": "Bearer API auth",
+                "value": "Configured" if api_key else "Not configured",
+                "detail": "Uses WAGTAIL_UNVEIL_API_KEY.",
+            },
+        ],
+        "version_entries": [
+            {
+                "label": "wagtail-unveil",
+                "value": _get_display_package_version(),
+                "detail": "Installed package version metadata.",
+            },
+            {
+                "label": "Django",
+                "value": get_django_version(),
+                "detail": "Runtime framework version.",
+            },
+            {
+                "label": "Wagtail",
+                "value": wagtail.__version__,
+                "detail": "Runtime CMS version.",
+            },
+            {
+                "label": "Python",
+                "value": platform.python_version(),
+                "detail": "Interpreter version used by this process.",
+            },
+        ],
+        "url_entries": [
+            {
+                "label": "Latest stable API version",
+                "value": contract.version,
+                "detail": "Selected from API_VERSION_REGISTRY.",
+            },
+            {
+                "label": "API lifecycle",
+                "value": contract.status,
+                "detail": _build_lifecycle_detail(contract),
+            },
+            {
+                "label": "Backend API",
+                "value": reverse(f"wagtail_unveil:{contract.backend_url_name}"),
+                "detail": f"URL name: wagtail_unveil:{contract.backend_url_name}",
+            },
+            {
+                "label": "Frontend API",
+                "value": reverse(f"wagtail_unveil:{contract.frontend_url_name}"),
+                "detail": f"URL name: wagtail_unveil:{contract.frontend_url_name}",
+            },
+            {
+                "label": "Admin URLs report",
+                "value": reverse("wagtail_unveil:report_backend_urls"),
+                "detail": "URL name: wagtail_unveil:report_backend_urls",
+            },
+            {
+                "label": "Frontend URLs report",
+                "value": reverse("wagtail_unveil:report_frontend_urls"),
+                "detail": "URL name: wagtail_unveil:report_frontend_urls",
+            },
+            {
+                "label": "Settings report",
+                "value": reverse("wagtail_unveil:report_settings"),
+                "detail": "URL name: wagtail_unveil:report_settings",
+            },
+        ],
+    }
 
 
 def _get_backend_urls_for_version(api_version):
@@ -245,6 +358,7 @@ def admin_urls_report(request):
     context = {
         "api_url": reverse(f"wagtail_unveil:{contract.backend_url_name}"),
         "report_kind": "backend",
+        "active_report": "backend",
     }
     return render(request, "wagtail_unveil/admin_urls_report.html", context)
 
@@ -261,5 +375,19 @@ def frontend_urls_report(request):
         "api_url": reverse(f"wagtail_unveil:{contract.frontend_url_name}"),
         "report_kind": "frontend",
         "pages_per_type": pages_per_type,
+        "active_report": "frontend",
     }
     return render(request, "wagtail_unveil/frontend_urls_report.html", context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def settings_report(request):
+    """Render an HTML settings and diagnostics page. Only available when DEBUG=True."""
+    if not settings.DEBUG:
+        return HttpResponseNotFound()
+
+    context = {
+        **_build_settings_report_context(),
+        "active_report": "settings",
+    }
+    return render(request, "wagtail_unveil/settings_report.html", context)

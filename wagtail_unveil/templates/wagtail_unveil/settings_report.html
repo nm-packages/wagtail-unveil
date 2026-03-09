@@ -1,0 +1,125 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wagtail Unveil Settings - wagtail-unveil</title>
+    <link rel="stylesheet" href="{% static 'wagtail_unveil/css/admin_urls_report.min.css' %}">
+</head>
+<body>
+    {% include "wagtail_unveil/includes/report_nav.html" %}
+    <div class="container">
+        <h1>Wagtail Unveil Settings</h1>
+        <p class="summary">
+            Current wagtail-unveil configuration and related runtime diagnostics.
+            This page is only available to superusers when <code>DEBUG=True</code>,
+            and the API key is shown in full for debugging.
+        </p>
+
+        <div class="help-panel">
+            <div class="help-intro">
+                <h3>Package Settings</h3>
+                <p>Configured inputs, effective values, and any fallback or normalization notes.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Source</th>
+                        <th>Raw Value</th>
+                        <th>Effective Value</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for setting in package_settings %}
+                    <tr>
+                        <td><code>{{ setting.name }}</code></td>
+                        <td>{{ setting.source_label }}</td>
+                        <td><code>{{ setting.raw_display }}</code></td>
+                        <td><code>{{ setting.effective_display }}</code></td>
+                        <td>{{ setting.notes }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="help-panel">
+            <div class="help-intro">
+                <h3>Runtime Access</h3>
+                <p>Checks that influence whether the reports and API are reachable in this process.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in runtime_entries %}
+                    <tr>
+                        <td>{{ entry.label }}</td>
+                        <td><code>{{ entry.value }}</code></td>
+                        <td>{{ entry.detail }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="help-panel">
+            <div class="help-intro">
+                <h3>Versions</h3>
+                <p>Runtime versions for the package and framework stack.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in version_entries %}
+                    <tr>
+                        <td>{{ entry.label }}</td>
+                        <td><code>{{ entry.value }}</code></td>
+                        <td>{{ entry.detail }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="help-panel">
+            <div class="help-intro">
+                <h3>URL Diagnostics</h3>
+                <p>Resolved API and report endpoints exposed by the installed package.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in url_entries %}
+                    <tr>
+                        <td>{{ entry.label }}</td>
+                        <td><code>{{ entry.value }}</code></td>
+                        <td>{{ entry.detail }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

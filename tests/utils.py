@@ -261,6 +261,11 @@ class BaseReportViewTestMixin:
         self.assertContains(response, "testable")
         self.assertContains(response, "untestable")
 
+    def test_report_has_settings_nav_link(self):
+        response = self.client.get(self.report_url)
+        self.assertContains(response, 'href="/unveil/report/settings/"')
+        self.assertContains(response, ">Settings<")
+
     def test_report_starts_with_empty_table_body(self):
         response = self.client.get(self.report_url)
         content = response.content.decode()

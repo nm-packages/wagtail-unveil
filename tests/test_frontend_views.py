@@ -151,6 +151,8 @@ class TestDashboardPanelFrontendLink(TestCase):
         html = self.panel.render_html({"request": request})
         self.assertIn("View Frontend URLs Report", html)
         self.assertIn("/unveil/report/frontend-urls/", html)
+        self.assertIn("View Unveil Settings", html)
+        self.assertIn("/unveil/report/settings/", html)
 
 
 @override_settings(DEBUG=True)

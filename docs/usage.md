@@ -162,6 +162,7 @@ The report URLs are included automatically when you add `wagtail_unveil.urls` (s
 Reports require **superuser login** and **`DEBUG=True`**.
 The HTML page then fetches its data from the matching versioned JSON endpoint using the current session.
 JavaScript is required, and the report stays behind a full-screen loading state until the data and UI controls are ready.
+The dedicated settings page below is server-rendered instead of using the JavaScript report shell.
 
 Contributor note: frontend report asset source/build/test workflow is documented in [frontend-assets.md](frontend-assets.md).
 
@@ -194,6 +195,18 @@ Visit `/unveil/report/frontend-urls/` while logged into the Wagtail admin.
 - Searchable and sortable columns (URL, Source, Page Type, Title, Name)
 - Self-contained — no external CSS or JS dependencies
 
+### Settings Report
+
+Visit `/unveil/report/settings/` while logged into the Wagtail admin.
+
+**Features:**
+
+- Shows the current raw and effective values for `WAGTAIL_UNVEIL_API_KEY`, `WAGTAIL_UNVEIL_PAGES_PER_TYPE`, and `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES`
+- Indicates whether each setting came from the environment, Django settings, or package defaults
+- Shows related runtime diagnostics such as `DEBUG`, HTML report access, session API access, and Bearer auth configuration
+- Lists package/runtime versions and the resolved Unveil API/report URLs exposed by the installed package
+- Displays the full `WAGTAIL_UNVEIL_API_KEY` value for superusers while `DEBUG=True`, to support local debugging
+
 ## Dashboard Widget
 
-A panel on the Wagtail admin home page links directly to both reports. Only visible to superusers when `DEBUG=True`.
+A panel on the Wagtail admin home page links directly to the admin report, frontend report, and settings page. Only visible to superusers when `DEBUG=True`.

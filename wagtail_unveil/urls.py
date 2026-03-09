@@ -6,6 +6,7 @@ from wagtail_unveil.views import (
     build_admin_urls_json_view,
     build_frontend_urls_json_view,
     frontend_urls_report,
+    settings_report,
 )
 
 app_name = "wagtail_unveil"
@@ -33,5 +34,6 @@ urlpatterns.extend(
     [
         path("report/backend-urls/", admin_urls_report, name="report_backend_urls"),
         path("report/frontend-urls/", frontend_urls_report, name="report_frontend_urls"),
+        path("report/settings/", settings_report, name="report_settings"),
     ],
 )

@@ -1,0 +1,7 @@
+<nav class="report-nav">
+    <a href="/">Home</a>
+    <a{% if active_report == "backend" %} class="active"{% endif %} href="{% url 'wagtail_unveil:report_backend_urls' %}">Admin URLs</a>
+    <a{% if active_report == "frontend" %} class="active"{% endif %} href="{% url 'wagtail_unveil:report_frontend_urls' %}">Frontend URLs</a>
+    <a{% if active_report == "settings" %} class="active"{% endif %} href="{% url 'wagtail_unveil:report_settings' %}">Settings</a>
+    <a href="{% url 'wagtailadmin_home' %}">Wagtail Admin</a>
+</nav>

@@ -4,8 +4,9 @@
         <h2 class="w-panel__heading" id="unveil-panel-heading">Wagtail Unveil</h2>
     </div>
     <div class="w-panel__content" style="padding: 0.5em 1em;">
-        <p>View the reports:</p>
+        <p>View the reports and diagnostics:</p>
         <a href="{% url 'wagtail_unveil:report_backend_urls' %}" rel="noopener noreferrer" class="button button-small button-secondary">View Admin URLs Report</a>
         <a href="{% url 'wagtail_unveil:report_frontend_urls' %}" rel="noopener noreferrer" class="button button-small button-secondary">View Frontend URLs Report</a>
+        <a href="{% url 'wagtail_unveil:report_settings' %}" rel="noopener noreferrer" class="button button-small button-secondary">View Unveil Settings</a>
     </div>
 </section>
