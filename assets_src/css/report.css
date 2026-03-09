@@ -406,6 +406,9 @@ unveil-reset-button {
   border-radius: 3px;
   font-size: 0.8rem;
 }
+.settings-report-page .help-panel code {
+  background: #e0e0e0;
+}
 .help-intro {
   margin-bottom: 12px;
 }

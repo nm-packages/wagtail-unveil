@@ -29,6 +29,10 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Wagtail Unveil Settings")
 
+    def test_report_has_settings_page_body_class(self):
+        response = self.client.get(self.report_url)
+        self.assertContains(response, '<body class="settings-report-page">')
+
     def test_report_shows_diagnostics_sections(self):
         response = self.client.get(self.report_url)
         self.assertContains(response, "Package Settings")
