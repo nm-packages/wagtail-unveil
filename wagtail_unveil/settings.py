@@ -53,6 +53,11 @@ def _get_configured_source_and_raw_value(name):
     return "default", _UNSET
 
 
+def _is_blank_string(value):
+    """Return True when a value is a string containing only whitespace."""
+    return isinstance(value, str) and not value.strip()
+
+
 def get_pages_per_type():
     """Return `WAGTAIL_UNVEIL_PAGES_PER_TYPE` as a non-negative integer.
 
@@ -137,7 +142,7 @@ def inspect_pages_per_type_setting():
 
     if source == "default":
         notes.append("Defaults to 1 when omitted.")
-    elif source == "env" and raw_value == "":
+    elif source == "env" and _is_blank_string(raw_value):
         notes.append("Blank environment values are ignored.")
     elif raw_value != effective_value:
         notes.append("Effective value is normalized to a non-negative integer.")
@@ -163,7 +168,7 @@ def inspect_skip_url_prefixes_setting():
     if source == "default":
         notes.append("Defaults to an empty list when omitted.")
     elif source == "env":
-        if raw_value == "":
+        if _is_blank_string(raw_value):
             notes.append("Blank environment values clear all exclusions.")
         else:
             notes.append("Environment values use comma-separated prefixes.")

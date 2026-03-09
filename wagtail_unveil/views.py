@@ -349,8 +349,8 @@ frontend_urls_json = build_frontend_urls_json_view(get_latest_stable_api_version
 
 
 @user_passes_test(lambda u: u.is_superuser)
-def admin_urls_report(request):
-    """Render an HTML report of all admin URLs. Only available when DEBUG=True."""
+def backend_urls_report(request):
+    """Render an HTML report of all backend URLs. Only available when DEBUG=True."""
     if not settings.DEBUG:
         return HttpResponseNotFound()
 
@@ -360,7 +360,7 @@ def admin_urls_report(request):
         "report_kind": "backend",
         "active_report": "backend",
     }
-    return render(request, "wagtail_unveil/admin_urls_report.html", context)
+    return render(request, "wagtail_unveil/backend_urls_report.html", context)
 
 
 @user_passes_test(lambda u: u.is_superuser)

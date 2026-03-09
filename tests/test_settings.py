@@ -295,6 +295,15 @@ class TestSettingDiagnostics(TestCase):
         self.assertEqual(diagnostic.effective_value, 1)
         self.assertIn("Blank environment values are ignored.", diagnostic.notes)
 
+    def test_whitespace_only_env_pages_per_type_value_is_ignored(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "   "}):
+            diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_PAGES_PER_TYPE")
+
+        self.assertEqual(diagnostic.source, "env")
+        self.assertEqual(diagnostic.raw_value, "   ")
+        self.assertEqual(diagnostic.effective_value, 1)
+        self.assertIn("Blank environment values are ignored.", diagnostic.notes)
+
     def test_zero_pages_per_type_value_is_reported_as_no_limit(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "0"}):
             diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_PAGES_PER_TYPE")
@@ -316,6 +325,15 @@ class TestSettingDiagnostics(TestCase):
             diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_SKIP_URL_PREFIXES")
 
         self.assertEqual(diagnostic.source, "env")
+        self.assertEqual(diagnostic.effective_value, [])
+        self.assertIn("clear all exclusions", diagnostic.notes)
+
+    def test_whitespace_only_skip_prefix_env_value_clears_exclusions(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_SKIP_URL_PREFIXES": "   "}):
+            diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_SKIP_URL_PREFIXES")
+
+        self.assertEqual(diagnostic.source, "env")
+        self.assertEqual(diagnostic.raw_value, "   ")
         self.assertEqual(diagnostic.effective_value, [])
         self.assertIn("clear all exclusions", diagnostic.notes)
 
