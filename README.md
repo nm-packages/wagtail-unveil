@@ -1,5 +1,7 @@
 # wagtail-unveil
 
+> Currently in active development. You should consider this package could be unstable and subject to breaking changes.
+
 > Discover and test every URL in your Wagtail site - frontend and admin.
 
 [![PyPI version](https://img.shields.io/pypi/v/wagtail-unveil.svg)](https://pypi.org/project/wagtail-unveil/)
@@ -22,6 +24,12 @@ It exposes discovery through:
 
 ```bash
 pip install wagtail-unveil
+```
+
+> This package is currently in development and not yet released on PyPI. To install the latest development version, use:
+
+```bash
+pip install git+https://github.com/nm-packages/wagtail-unveil.git
 ```
 
 Add to your `INSTALLED_APPS`:
