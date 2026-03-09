@@ -299,7 +299,6 @@ unveil-toggle-untestable-button,
 unveil-test-all-button,
 unveil-pause-button,
 unveil-cancel-button,
-unveil-help-button,
 unveil-test-button,
 unveil-open-button {
   display: contents;
@@ -336,23 +335,6 @@ unveil-reset-button {
 }
 .toggle-untestable-btn.active {
   background: #007d7e;
-  color: #fff;
-}
-.help-btn {
-  padding: 6px 14px;
-  border: none;
-  background: #e3f2fd;
-  color: #1565c0;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-.help-btn:hover {
-  background: #bbdefb;
-}
-.help-btn.active {
-  background: #1565c0;
   color: #fff;
 }
 .report-retry-btn {

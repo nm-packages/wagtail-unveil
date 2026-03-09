@@ -26,26 +26,6 @@
     }
   }
 
-  class UnveilHelpButton extends HTMLElement {
-    connectedCallback() {
-      var button;
-
-      if (this.querySelector("button")) {
-        return;
-      }
-
-      button = document.createElement("button");
-      button.type = "button";
-      button.className = "help-btn";
-      button.textContent = "Help";
-      button.addEventListener("click", () => {
-        button.classList.toggle("active");
-        document.querySelector(".help-panel").classList.toggle("hidden");
-      });
-      this.appendChild(button);
-    }
-  }
-
   class UnveilToggleUntestableButton extends HTMLElement {
     connectedCallback() {
       var button;
@@ -218,7 +198,6 @@
 
   function defineCustomElements() {
     defineCustomElement("unveil-reset-button", UnveilResetButton);
-    defineCustomElement("unveil-help-button", UnveilHelpButton);
     defineCustomElement(
       "unveil-toggle-untestable-button",
       UnveilToggleUntestableButton,

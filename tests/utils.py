@@ -246,12 +246,6 @@ class BaseReportViewTestMixin:
         content = response.content.decode()
         self.assertIn("wagtail_unveil/js/report.bundle.min.js", content)
 
-    def test_report_has_help_panel(self):
-        response = self.client.get(self.report_url)
-        self.assertContains(response, "help-panel")
-        self.assertContains(response, "Django URL name")
-        self.assertContains(response, "How It Works")
-
     def test_report_has_toggle_untestable_button(self):
         response = self.client.get(self.report_url)
         self.assertContains(response, "unveil-toggle-untestable-button")

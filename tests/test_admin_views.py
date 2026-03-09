@@ -202,9 +202,10 @@ class TestAdminUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, TestCas
         self.assertNotIn('data-has-parameters="true"', content)
         self.assertNotIn('data-has-parameters="false"', content)
 
-    def test_report_has_help_button(self):
+    def test_report_does_not_render_inline_help(self):
         response = self.client.get("/unveil/report/backend-urls/")
-        self.assertContains(response, "unveil-help-button")
+        self.assertNotContains(response, "unveil-help-button")
+        self.assertNotContains(response, "How It Works")
 
 
 @override_settings(DEBUG=True)

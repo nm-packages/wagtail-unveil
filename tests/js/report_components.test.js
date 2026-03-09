@@ -15,7 +15,6 @@ describe("report components", () => {
     expect(document.querySelector(".test-all-btn")).toBeTruthy();
     expect(document.querySelector(".pause-btn")).toBeTruthy();
     expect(document.querySelector(".cancel-btn")).toBeTruthy();
-    expect(document.querySelector(".help-btn")).toBeTruthy();
     expect(document.querySelector(".reset-btn")).toBeTruthy();
   });
 

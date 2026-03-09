@@ -35,10 +35,8 @@ function setFixtureBody(options = {}) {
             <unveil-test-all-button></unveil-test-all-button>
             <unveil-pause-button></unveil-pause-button>
             <unveil-cancel-button></unveil-cancel-button>
-            <unveil-help-button></unveil-help-button>
             <unveil-reset-button></unveil-reset-button>
         </div>
-        <div class="help-panel hidden">Help</div>
         <button type="button" id="report-retry-button">Retry</button>
         <p class="test-all-summary hidden" id="test-all-summary"></p>
         <p>Total: <span id="report-total"></span></p>

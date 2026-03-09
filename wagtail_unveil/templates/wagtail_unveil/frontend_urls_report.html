@@ -12,62 +12,6 @@ Total: <span id="report-total">…</span> URLs (<span id="report-testable">…</
 
 {% block search_placeholder %}Filter by URL, title or name…{% endblock %}
 
-{% block help_panel %}
-<div class="help-panel hidden">
-    <div class="help-intro">
-        <h3>How It Works</h3>
-        <p>
-            This report combines two sources of frontend URLs: <strong>Page URLs</strong>
-            discovered from live Wagtail pages via <code>Page.objects.live().specific()</code>,
-            and <strong>Resolver URLs</strong> discovered by walking Django's URL resolver
-            for non-admin routes. Page URLs are concrete paths derived from the page tree.
-            Resolver URLs with parameters are marked as non-testable. Testing sends a
-            browser-side <code>fetch()</code> GET request using your current session.
-        </p>
-    </div>
-    <div class="help-columns">
-        <div>
-            <h3>Columns</h3>
-            <dl>
-                <dt>URL</dt>
-                <dd>The frontend URL path.</dd>
-                <dt>Source</dt>
-                <dd>"page" for Wagtail page URLs, "resolver" for Django URL patterns.</dd>
-                <dt>Page Type</dt>
-                <dd>The page model class (e.g. <code>home.HomePage</code>). Blank for resolver URLs.</dd>
-                <dt>Title</dt>
-                <dd>The page title. Blank for resolver URLs.</dd>
-                <dt>Name</dt>
-                <dd>Django URL name. Blank for page URLs.</dd>
-            </dl>
-        </div>
-        <div>
-            <h3>Testing</h3>
-            <dl>
-                <dt>Test</dt>
-                <dd>Sends a GET request and shows the HTTP status code.</dd>
-                <dt>Test All</dt>
-                <dd>Runs through all visible testable URLs sequentially.</dd>
-                <dt>Hide / Show Untestable</dt>
-                <dd>Toggles visibility of rows that can't be tested (parameterized, regex). Preference is saved in a cookie.</dd>
-                <dt>Pause / Continue / Cancel</dt>
-                <dd>Controls for the Test All run. Failed URLs move to the top.</dd>
-            </dl>
-
-            <h3>Status Codes</h3>
-            <dl>
-                <dt>2xx (green)</dt>
-                <dd>Success — the URL responded normally.</dd>
-                <dt>3xx (amber)</dt>
-                <dd>Redirect — the URL redirects elsewhere.</dd>
-                <dt>4xx / 5xx (red)</dt>
-                <dd>Error — client or server error.</dd>
-            </dl>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
 {% block table %}
 <table>
     <thead>

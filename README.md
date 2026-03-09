@@ -19,7 +19,7 @@ It exposes discovery through:
 - JSON API endpoints (Bearer token auth)
 - interactive HTML reports in Wagtail admin (superuser + `DEBUG=True`)
 - a dedicated settings and diagnostics page in Wagtail admin (superuser + `DEBUG=True`)
-- a dashboard panel linking to all three pages
+- a dashboard panel linking to the admin report, frontend report, and settings page
 
 ## Quick Start
 
@@ -57,7 +57,7 @@ Try the reports (HTML admin views; requires superuser session and `DEBUG=True`):
 - `/unveil/report/frontend-urls/`
 - `/unveil/report/settings/`
 
-You can open all three pages from links in the Wagtail admin dashboard panel.
+You can open the report and settings pages from links in the Wagtail admin dashboard panel.
 
 The settings page shows the current effective `wagtail-unveil` configuration and related runtime diagnostics.
 Because it is intended for local debugging, it also shows the full `WAGTAIL_UNVEIL_API_KEY` value to superusers while `DEBUG=True`.

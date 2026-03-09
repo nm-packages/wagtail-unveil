@@ -137,6 +137,11 @@ class TestFrontendUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, Test
         self.assertNotIn('data-source="page"', content)
         self.assertNotIn('data-source="resolver"', content)
 
+    def test_report_does_not_render_inline_help(self):
+        response = self.client.get("/unveil/report/frontend-urls/")
+        self.assertNotContains(response, "unveil-help-button")
+        self.assertNotContains(response, "How It Works")
+
 
 class TestDashboardPanelFrontendLink(TestCase):
     def setUp(self):
