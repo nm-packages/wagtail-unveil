@@ -154,10 +154,16 @@ class TestDashboardPanelFrontendLink(TestCase):
         request = self.factory.get("/admin/")
         request.user = self.superuser
         html = self.panel.render_html({"request": request})
-        self.assertIn("View Frontend URLs Report", html)
+        self.assertIn("Frontend URLs", html)
         self.assertIn("/unveil/report/frontend-urls/", html)
-        self.assertIn("View Unveil Settings", html)
+        self.assertIn("Inspect discovered public page and resolver URLs.", html)
+        self.assertIn("Settings", html)
         self.assertIn("/unveil/report/settings/", html)
+        self.assertIn("listing listing--dashboard", html)
+        self.assertIn("Open report", html)
+        self.assertIn("Open settings", html)
+        self.assertIn('id="unveil-section"', html)
+        self.assertIn("data-panel-toggle", html)
 
 
 @override_settings(DEBUG=True)

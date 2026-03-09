@@ -223,11 +223,25 @@ class TestDashboardPanel(TestCase):
 
     def test_panel_visible_for_superuser(self):
         html = self._render(self.superuser)
-        self.assertIn("View Backend URLs Report", html)
+        self.assertIn("Backend URLs", html)
         self.assertIn("/unveil/report/backend-urls/", html)
-        self.assertIn("View Unveil Settings", html)
+        self.assertIn("Frontend URLs", html)
+        self.assertIn("/unveil/report/frontend-urls/", html)
+        self.assertIn("Settings", html)
         self.assertIn("/unveil/report/settings/", html)
+        self.assertIn("Inspect discovered backend and admin routes.", html)
+        self.assertIn("Inspect discovered public page and resolver URLs.", html)
+        self.assertIn("Review active Unveil settings and runtime diagnostics.", html)
+        self.assertIn("Open report", html)
+        self.assertIn("Open settings", html)
         self.assertIn("w-panel w-panel--dashboard", html)
+        self.assertIn("listing listing--dashboard", html)
+        self.assertIn('id="unveil-section"', html)
+        self.assertIn('id="unveil-heading"', html)
+        self.assertIn('id="unveil-content"', html)
+        self.assertIn("data-panel", html)
+        self.assertIn("data-panel-toggle", html)
+        self.assertIn('aria-controls="unveil-content"', html)
 
     def test_panel_hidden_for_non_superuser(self):
         html = self._render(self.regular_user)
