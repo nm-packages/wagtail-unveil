@@ -59,10 +59,10 @@ Use `0` explicitly for no limit.
 Applies to both frontend resolver and admin URL discovery. Leading slashes are stripped,
 so `"/__debug__/"` and `"__debug__/"` are equivalent. Invalid values are silently ignored.
 
-### Admin URLs API
+### Backend URLs API
 
 ```bash
-# All admin URLs
+# All backend URLs
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/backend-urls/
 
 # Static URLs only
@@ -166,7 +166,7 @@ The dedicated settings page below is server-rendered instead of using the JavaSc
 
 Contributor note: frontend report asset source/build/test workflow is documented in [frontend-assets.md](frontend-assets.md).
 
-### Admin URLs Report
+### Backend URLs Report
 
 Visit `/unveil/report/backend-urls/` while logged into the Wagtail admin.
 

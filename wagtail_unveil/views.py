@@ -227,7 +227,7 @@ def _build_settings_report_context():
                 "detail": f"URL name: wagtail_unveil:{contract.frontend_url_name}",
             },
             {
-                "label": "Admin URLs report",
+                "label": "Backend URLs report",
                 "value": reverse("wagtail_unveil:report_backend_urls"),
                 "detail": "URL name: wagtail_unveil:report_backend_urls",
             },

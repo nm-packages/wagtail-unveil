@@ -178,7 +178,7 @@ class TestAdminAPIViewHelpers(TestCase):
 @override_settings(DEBUG=True)
 class TestAdminUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, TestCase):
     report_url = "/unveil/report/backend-urls/"
-    report_title = "Admin URLs Report"
+    report_title = "Backend URLs Report"
 
     def setUp(self):
         self.login()
@@ -223,7 +223,7 @@ class TestDashboardPanel(TestCase):
 
     def test_panel_visible_for_superuser(self):
         html = self._render(self.superuser)
-        self.assertIn("View Admin URLs Report", html)
+        self.assertIn("View Backend URLs Report", html)
         self.assertIn("/unveil/report/backend-urls/", html)
         self.assertIn("View Unveil Settings", html)
         self.assertIn("/unveil/report/settings/", html)
