@@ -21,7 +21,7 @@ from wagtail_unveil.api_contract import (
 )
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.frontend import get_frontend_urls
-from wagtail_unveil.settings import get_api_key, get_pages_per_type, get_setting_diagnostics
+from wagtail_unveil.settings import get_api_key, get_setting_diagnostics
 
 
 def _json_error(message, *, status):
@@ -370,11 +370,9 @@ def frontend_urls_report(request):
         return HttpResponseNotFound()
 
     contract = get_latest_stable_api_contract()
-    pages_per_type = get_pages_per_type()
     context = {
         "api_url": reverse(f"wagtail_unveil:{contract.frontend_url_name}"),
         "report_kind": "frontend",
-        "pages_per_type": pages_per_type,
         "active_report": "frontend",
     }
     return render(request, "wagtail_unveil/frontend_urls_report.html", context)

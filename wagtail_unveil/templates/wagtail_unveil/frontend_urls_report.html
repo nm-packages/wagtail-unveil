@@ -5,9 +5,6 @@
 
 {% block summary %}
 Total: <span id="report-total">…</span> URLs (<span id="report-testable">…</span> testable, <span id="report-untestable">…</span> untestable)
-{% if pages_per_type %}
-— Showing {{ pages_per_type }} page{{ pages_per_type|pluralize }} per type (<code>WAGTAIL_UNVEIL_PAGES_PER_TYPE</code>)
-{% endif %}
 {% endblock %}
 
 {% block search_placeholder %}Filter by URL, title or name…{% endblock %}

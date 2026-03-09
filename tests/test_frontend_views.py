@@ -167,22 +167,18 @@ class TestDashboardPanelFrontendLink(TestCase):
 
 
 @override_settings(DEBUG=True)
-class TestFrontendReportPagesPerType(WagtailTestUtils, TestCase):
+class TestFrontendReportSettingsMessage(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
-    def test_no_limit_message_by_default(self):
+    def test_does_not_show_limit_setting_when_unlimited(self):
         response = self.client.get("/unveil/report/frontend-urls/")
         self.assertNotContains(response, "WAGTAIL_UNVEIL_PAGES_PER_TYPE")
+        self.assertNotContains(response, "Showing 0 pages per type")
 
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1)
-    def test_shows_limit_message(self):
+    def test_does_not_show_limit_setting_when_limited(self):
         response = self.client.get("/unveil/report/frontend-urls/")
-        self.assertContains(response, "Showing 1 page per type")
-        self.assertContains(response, "WAGTAIL_UNVEIL_PAGES_PER_TYPE")
-
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=3)
-    def test_shows_plural_limit_message(self):
-        response = self.client.get("/unveil/report/frontend-urls/")
-        self.assertContains(response, "Showing 3 pages per type")
+        self.assertNotContains(response, "WAGTAIL_UNVEIL_PAGES_PER_TYPE")
+        self.assertNotContains(response, "Showing 1 page per type")
