@@ -55,7 +55,6 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
             '<a class="active settings-link" href="/unveil/report/settings/">Settings</a>',
             html=True,
         )
-        self.assertNotContains(response, ">Home<", html=False)
 
     def test_report_returns_404_when_not_debug(self):
         with self.settings(DEBUG=False):

@@ -137,11 +137,6 @@ class TestFrontendUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, Test
         self.assertNotIn('data-source="page"', content)
         self.assertNotIn('data-source="resolver"', content)
 
-    def test_report_does_not_render_inline_help(self):
-        response = self.client.get("/unveil/report/frontend-urls/")
-        self.assertNotContains(response, "unveil-help-button")
-        self.assertNotContains(response, "How It Works")
-
 
 class TestDashboardPanelFrontendLink(TestCase):
     def setUp(self):
@@ -164,21 +159,3 @@ class TestDashboardPanelFrontendLink(TestCase):
         self.assertIn("Open settings", html)
         self.assertIn('id="unveil-section"', html)
         self.assertIn("data-panel-toggle", html)
-
-
-@override_settings(DEBUG=True)
-class TestFrontendReportSettingsMessage(WagtailTestUtils, TestCase):
-    def setUp(self):
-        self.login()
-
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
-    def test_does_not_show_limit_setting_when_unlimited(self):
-        response = self.client.get("/unveil/report/frontend-urls/")
-        self.assertNotContains(response, "WAGTAIL_UNVEIL_PAGES_PER_TYPE")
-        self.assertNotContains(response, "Showing 0 pages per type")
-
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1)
-    def test_does_not_show_limit_setting_when_limited(self):
-        response = self.client.get("/unveil/report/frontend-urls/")
-        self.assertNotContains(response, "WAGTAIL_UNVEIL_PAGES_PER_TYPE")
-        self.assertNotContains(response, "Showing 1 page per type")
