@@ -36,7 +36,7 @@ Frontend asset formatting and linting for contributor-owned files is managed by 
 
 - URLconf inclusion via `wagtail_unveil.urls`
 - JSON API endpoints
-- HTML report views
+- HTML report and settings views
 - Wagtail dashboard integration
 
 Do not document or assume package management commands unless they are reintroduced in code.
@@ -58,6 +58,7 @@ The package exports one URL namespace:
 - `wagtail_unveil:api_v1_frontend_urls`
 - `wagtail_unveil:report_backend_urls`
 - `wagtail_unveil:report_frontend_urls`
+- `wagtail_unveil:report_settings`
 
 Versioned API path segments, URL names, and `metadata.api_version` should be
 driven by `wagtail_unveil.api_contract.API_VERSION_REGISTRY` and helper accessors.
@@ -98,7 +99,8 @@ When adding a new API version:
 For detailed rationale, breaking-change decision rules, lifecycle defaults, and
 worked examples, see `../docs/api-versioning.md`.
 
-The HTML reports are shell views that fetch this JSON on page load rather than rendering discovery results directly in the Django template. They stay hidden behind a full-screen loading state until the API data and client-side controls are ready, so JavaScript is required for report use.
+The admin/frontend HTML reports are shell views that fetch this JSON on page load rather than rendering discovery results directly in the Django template. They stay hidden behind a full-screen loading state until the API data and client-side controls are ready, so JavaScript is required for report use.
+The settings page is server-rendered and is intended for local diagnostics while `DEBUG=True`.
 
 ## Discovery Notes
 

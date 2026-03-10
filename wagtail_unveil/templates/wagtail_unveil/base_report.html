@@ -42,12 +42,7 @@
         </div>
     </noscript>
     <div class="report-shell">
-        <nav class="report-nav">
-            <a href="/">Home</a>
-            <a class="{% block admin_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil:report_backend_urls' %}">Admin URLs</a>
-            <a class="{% block frontend_nav_class %}{% endblock %}" href="{% url 'wagtail_unveil:report_frontend_urls' %}">Frontend URLs</a>
-            <a href="{% url 'wagtailadmin_home' %}">Wagtail Admin</a>
-        </nav>
+        {% include "wagtail_unveil/includes/report_nav.html" %}
         <div class="container">
             <h1>{% block heading %}{% endblock %}</h1>
             <p class="summary">
@@ -60,12 +55,9 @@
                 <unveil-test-all-button></unveil-test-all-button>
                 <unveil-pause-button></unveil-pause-button>
                 <unveil-cancel-button></unveil-cancel-button>
-                <unveil-help-button></unveil-help-button>
                 <unveil-reset-button></unveil-reset-button>
             </div>
             <p class="test-all-summary hidden" id="test-all-summary"></p>
-
-            {% block help_panel %}{% endblock %}
 
             {% block table %}{% endblock %}
         </div>

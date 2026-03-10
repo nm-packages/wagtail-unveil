@@ -2,10 +2,11 @@ from django.urls import path
 
 from wagtail_unveil.api_contract import get_api_contract, get_supported_api_versions
 from wagtail_unveil.views import (
-    admin_urls_report,
+    backend_urls_report,
     build_admin_urls_json_view,
     build_frontend_urls_json_view,
     frontend_urls_report,
+    settings_report,
 )
 
 app_name = "wagtail_unveil"
@@ -31,7 +32,8 @@ for api_version in get_supported_api_versions():
 
 urlpatterns.extend(
     [
-        path("report/backend-urls/", admin_urls_report, name="report_backend_urls"),
+        path("report/backend-urls/", backend_urls_report, name="report_backend_urls"),
         path("report/frontend-urls/", frontend_urls_report, name="report_frontend_urls"),
+        path("report/settings/", settings_report, name="report_settings"),
     ],
 )

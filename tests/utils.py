@@ -246,12 +246,6 @@ class BaseReportViewTestMixin:
         content = response.content.decode()
         self.assertIn("wagtail_unveil/js/report.bundle.min.js", content)
 
-    def test_report_has_help_panel(self):
-        response = self.client.get(self.report_url)
-        self.assertContains(response, "help-panel")
-        self.assertContains(response, "Django URL name")
-        self.assertContains(response, "How It Works")
-
     def test_report_has_toggle_untestable_button(self):
         response = self.client.get(self.report_url)
         self.assertContains(response, "unveil-toggle-untestable-button")
@@ -260,6 +254,11 @@ class BaseReportViewTestMixin:
         response = self.client.get(self.report_url)
         self.assertContains(response, "testable")
         self.assertContains(response, "untestable")
+
+    def test_report_has_settings_nav_link(self):
+        response = self.client.get(self.report_url)
+        self.assertContains(response, 'href="/unveil/report/settings/"')
+        self.assertContains(response, ">Settings<")
 
     def test_report_starts_with_empty_table_body(self):
         response = self.client.get(self.report_url)

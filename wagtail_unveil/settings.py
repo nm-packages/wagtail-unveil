@@ -1,6 +1,61 @@
 import os
+from dataclasses import dataclass
 
 from django.conf import settings
+
+_UNSET = object()
+
+
+@dataclass(frozen=True)
+class SettingDiagnostic:
+    """Describe a wagtail-unveil setting for the diagnostics page."""
+
+    name: str
+    source: str
+    raw_value: object
+    effective_value: object
+    notes: str
+
+    @property
+    def source_label(self):
+        labels = {
+            "env": "Environment variable",
+            "django": "Django setting",
+            "default": "Default",
+        }
+        return labels[self.source]
+
+    @property
+    def raw_display(self):
+        return _format_setting_value(self.raw_value)
+
+    @property
+    def effective_display(self):
+        return _format_setting_value(self.effective_value)
+
+
+def _format_setting_value(value):
+    """Render a setting value consistently for diagnostics templates."""
+    if value is _UNSET:
+        return "Not set"
+    return repr(value)
+
+
+def _get_configured_source_and_raw_value(name):
+    """Return the highest-precedence configured source, even if the value is unusable."""
+    if name in os.environ:
+        return "env", os.environ.get(name)
+
+    django_value = getattr(settings, name, _UNSET)
+    if django_value is not _UNSET:
+        return "django", django_value
+
+    return "default", _UNSET
+
+
+def _is_blank_string(value):
+    """Return True when a value is a string containing only whitespace."""
+    return isinstance(value, str) and not value.strip()
 
 
 def get_pages_per_type():
@@ -77,3 +132,89 @@ def get_api_key():
     if not isinstance(value, str):
         return ""
     return value.strip()
+
+
+def inspect_pages_per_type_setting():
+    """Describe the configured and effective page-per-type setting."""
+    source, raw_value = _get_configured_source_and_raw_value("WAGTAIL_UNVEIL_PAGES_PER_TYPE")
+    effective_value = get_pages_per_type()
+    notes = []
+
+    if source == "default":
+        notes.append("Defaults to 1 when omitted.")
+    elif source == "env" and _is_blank_string(raw_value):
+        notes.append("Blank environment values are ignored.")
+    elif raw_value != effective_value:
+        notes.append("Effective value is normalized to a non-negative integer.")
+
+    if effective_value == 0:
+        notes.append("0 means no limit.")
+
+    return SettingDiagnostic(
+        name="WAGTAIL_UNVEIL_PAGES_PER_TYPE",
+        source=source,
+        raw_value=raw_value,
+        effective_value=effective_value,
+        notes=" ".join(notes) or "Value used as-is.",
+    )
+
+
+def inspect_skip_url_prefixes_setting():
+    """Describe the configured and effective skip-prefix setting."""
+    source, raw_value = _get_configured_source_and_raw_value("WAGTAIL_UNVEIL_SKIP_URL_PREFIXES")
+    effective_value = get_skip_url_prefixes()
+    notes = []
+
+    if source == "default":
+        notes.append("Defaults to an empty list when omitted.")
+    elif source == "env":
+        if _is_blank_string(raw_value):
+            notes.append("Blank environment values clear all exclusions.")
+        else:
+            notes.append("Environment values use comma-separated prefixes.")
+    if source != "default" and raw_value != effective_value:
+        notes.append("Effective prefixes strip leading slashes and drop invalid entries.")
+
+    return SettingDiagnostic(
+        name="WAGTAIL_UNVEIL_SKIP_URL_PREFIXES",
+        source=source,
+        raw_value=raw_value,
+        effective_value=effective_value,
+        notes=" ".join(notes) or "Value used as-is.",
+    )
+
+
+def inspect_api_key_setting():
+    """Describe the configured and effective API key setting."""
+    source, raw_value = _get_configured_source_and_raw_value("WAGTAIL_UNVEIL_API_KEY")
+    effective_value = get_api_key()
+    notes = []
+
+    if source == "default":
+        notes.append("Bearer authentication is not configured.")
+    elif source == "env" and raw_value == "":
+        notes.append("Blank environment values are ignored.")
+    elif not isinstance(raw_value, str):
+        notes.append("Non-string values are ignored.")
+    else:
+        if raw_value != raw_value.strip():
+            notes.append("Leading and trailing whitespace is stripped from the effective value.")
+        if effective_value == "":
+            notes.append("Blank values leave Bearer authentication unconfigured.")
+
+    return SettingDiagnostic(
+        name="WAGTAIL_UNVEIL_API_KEY",
+        source=source,
+        raw_value=raw_value,
+        effective_value=effective_value,
+        notes=" ".join(notes) or "Value used as-is.",
+    )
+
+
+def get_setting_diagnostics():
+    """Return diagnostics for all public wagtail-unveil settings."""
+    return (
+        inspect_api_key_setting(),
+        inspect_pages_per_type_setting(),
+        inspect_skip_url_prefixes_setting(),
+    )

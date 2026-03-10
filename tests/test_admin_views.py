@@ -15,7 +15,13 @@ from wagtail_unveil.api_contract import (
     get_latest_stable_api_contract,
 )
 from wagtail_unveil.discovery.backend import BackendURL
-from wagtail_unveil.views import _authenticate_api_request, _get_package_version, _serialize_backend_url
+from wagtail_unveil.views import (
+    _authenticate_api_request,
+    _build_lifecycle_detail,
+    _get_display_package_version,
+    _get_package_version,
+    _serialize_backend_url,
+)
 from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 V1_CONTRACT = get_api_contract("v1")
@@ -151,11 +157,28 @@ class TestAdminAPIViewHelpers(TestCase):
         with patch("wagtail_unveil.views.version", side_effect=PackageNotFoundError):
             self.assertEqual(_get_package_version(), "")
 
+    def test_get_display_package_version_returns_unknown_when_lookup_is_empty(self):
+        with patch("wagtail_unveil.views._get_package_version", return_value=""):
+            self.assertEqual(_get_display_package_version(), "Unknown")
+
+    def test_build_lifecycle_detail_returns_dates_when_present(self):
+        deprecated_contract = replace(
+            V1_CONTRACT,
+            status="deprecated",
+            deprecated_on=date(2026, 1, 1),
+            sunset_on=date(2026, 12, 31),
+        )
+
+        detail = _build_lifecycle_detail(deprecated_contract)
+
+        self.assertIn("Deprecated on 2026-01-01", detail)
+        self.assertIn("Sunsets on 2026-12-31", detail)
+
 
 @override_settings(DEBUG=True)
 class TestAdminUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, TestCase):
     report_url = "/unveil/report/backend-urls/"
-    report_title = "Admin URLs Report"
+    report_title = "Backend URLs Report"
 
     def setUp(self):
         self.login()
@@ -179,10 +202,6 @@ class TestAdminUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, TestCas
         self.assertNotIn('data-has-parameters="true"', content)
         self.assertNotIn('data-has-parameters="false"', content)
 
-    def test_report_has_help_button(self):
-        response = self.client.get("/unveil/report/backend-urls/")
-        self.assertContains(response, "unveil-help-button")
-
 
 @override_settings(DEBUG=True)
 class TestDashboardPanel(TestCase):
@@ -199,9 +218,25 @@ class TestDashboardPanel(TestCase):
 
     def test_panel_visible_for_superuser(self):
         html = self._render(self.superuser)
-        self.assertIn("View Admin URLs Report", html)
+        self.assertIn("Backend URLs", html)
         self.assertIn("/unveil/report/backend-urls/", html)
+        self.assertIn("Frontend URLs", html)
+        self.assertIn("/unveil/report/frontend-urls/", html)
+        self.assertIn("Settings", html)
+        self.assertIn("/unveil/report/settings/", html)
+        self.assertIn("Inspect discovered backend and admin routes.", html)
+        self.assertIn("Inspect discovered public page and resolver URLs.", html)
+        self.assertIn("Review active Unveil settings and runtime diagnostics.", html)
+        self.assertIn("Open report", html)
+        self.assertIn("Open settings", html)
         self.assertIn("w-panel w-panel--dashboard", html)
+        self.assertIn("listing listing--dashboard", html)
+        self.assertIn('id="unveil-section"', html)
+        self.assertIn('id="unveil-heading"', html)
+        self.assertIn('id="unveil-content"', html)
+        self.assertIn("data-panel", html)
+        self.assertIn("data-panel-toggle", html)
+        self.assertIn('aria-controls="unveil-content"', html)
 
     def test_panel_hidden_for_non_superuser(self):
         html = self._render(self.regular_user)

@@ -82,6 +82,9 @@ body[data-loading-feedback=hidden] .report-screen-loading .report-screen-card {
   padding: 4px 12px;
   border-radius: 4px;
 }
+.report-nav .settings-link {
+  margin-left: auto;
+}
 .report-nav a:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.15);
@@ -303,7 +306,6 @@ unveil-toggle-untestable-button,
 unveil-test-all-button,
 unveil-pause-button,
 unveil-cancel-button,
-unveil-help-button,
 unveil-test-button,
 unveil-open-button {
   display: contents;
@@ -340,23 +342,6 @@ unveil-reset-button {
 }
 .toggle-untestable-btn.active {
   background: #007d7e;
-  color: #fff;
-}
-.help-btn {
-  padding: 6px 14px;
-  border: none;
-  background: #e3f2fd;
-  color: #1565c0;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-.help-btn:hover {
-  background: #bbdefb;
-}
-.help-btn.active {
-  background: #1565c0;
   color: #fff;
 }
 .report-retry-btn {
@@ -409,6 +394,9 @@ unveil-reset-button {
   padding: 1px 4px;
   border-radius: 3px;
   font-size: 0.8rem;
+}
+.settings-report-page .help-panel code {
+  background: #e0e0e0;
 }
 .help-intro {
   margin-bottom: 12px;

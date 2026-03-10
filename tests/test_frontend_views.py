@@ -149,27 +149,13 @@ class TestDashboardPanelFrontendLink(TestCase):
         request = self.factory.get("/admin/")
         request.user = self.superuser
         html = self.panel.render_html({"request": request})
-        self.assertIn("View Frontend URLs Report", html)
+        self.assertIn("Frontend URLs", html)
         self.assertIn("/unveil/report/frontend-urls/", html)
-
-
-@override_settings(DEBUG=True)
-class TestFrontendReportPagesPerType(WagtailTestUtils, TestCase):
-    def setUp(self):
-        self.login()
-
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
-    def test_no_limit_message_by_default(self):
-        response = self.client.get("/unveil/report/frontend-urls/")
-        self.assertNotContains(response, "WAGTAIL_UNVEIL_PAGES_PER_TYPE")
-
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1)
-    def test_shows_limit_message(self):
-        response = self.client.get("/unveil/report/frontend-urls/")
-        self.assertContains(response, "Showing 1 page per type")
-        self.assertContains(response, "WAGTAIL_UNVEIL_PAGES_PER_TYPE")
-
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=3)
-    def test_shows_plural_limit_message(self):
-        response = self.client.get("/unveil/report/frontend-urls/")
-        self.assertContains(response, "Showing 3 pages per type")
+        self.assertIn("Inspect discovered public page and resolver URLs.", html)
+        self.assertIn("Settings", html)
+        self.assertIn("/unveil/report/settings/", html)
+        self.assertIn("listing listing--dashboard", html)
+        self.assertIn("Open report", html)
+        self.assertIn("Open settings", html)
+        self.assertIn('id="unveil-section"', html)
+        self.assertIn("data-panel-toggle", html)

@@ -1,23 +1,22 @@
 {% extends "wagtail_unveil/base_report.html" %}
 
-{% block title %}Frontend URLs Report{% endblock %}
-{% block heading %}Frontend URLs Report{% endblock %}
+{% block title %}Backend URLs Report{% endblock %}
+{% block heading %}Backend URLs Report{% endblock %}
 
 {% block summary %}
 Total: <span id="report-total">…</span> URLs (<span id="report-testable">…</span> testable, <span id="report-untestable">…</span> untestable)
 {% endblock %}
 
-{% block search_placeholder %}Filter by URL, title or name…{% endblock %}
+{% block search_placeholder %}Filter by name or namespace…{% endblock %}
 
 {% block table %}
 <table>
     <thead>
         <tr>
-            <th data-sort-col="0">URL</th>
-            <th data-sort-col="1">Source</th>
-            <th data-sort-col="2">Page Type</th>
-            <th data-sort-col="3">Title</th>
-            <th data-sort-col="4">Name</th>
+            <th data-sort-col="0">Route (admin/…)</th>
+            <th data-sort-col="1">Name</th>
+            <th data-sort-col="2">Namespace</th>
+            <th data-sort-col="3">View</th>
             <th>Test</th>
             <th>Status</th>
         </tr>

@@ -1,11 +1,48 @@
 {% load wagtailadmin_tags %}
-<section class="w-panel w-panel--dashboard" aria-labelledby="unveil-panel-heading">
-    <div class="w-panel__header">
-        <h2 class="w-panel__heading" id="unveil-panel-heading">Wagtail Unveil</h2>
-    </div>
-    <div class="w-panel__content" style="padding: 0.5em 1em;">
-        <p>View the reports:</p>
-        <a href="{% url 'wagtail_unveil:report_backend_urls' %}" rel="noopener noreferrer" class="button button-small button-secondary">View Admin URLs Report</a>
-        <a href="{% url 'wagtail_unveil:report_frontend_urls' %}" rel="noopener noreferrer" class="button button-small button-secondary">View Frontend URLs Report</a>
-    </div>
-</section>
+{% panel id="unveil" heading="Wagtail Unveil" classname="w-panel--dashboard" %}
+    <table class="listing listing--dashboard listing-page">
+        <col />
+        <col width="18%" />
+        <thead class="w-sr-only">
+            <tr>
+                <th class="title">Destination</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="title">
+                    <div class="title-wrapper">
+                        <a href="{% url 'wagtail_unveil:report_backend_urls' %}" rel="noopener noreferrer">Backend URLs</a>
+                    </div>
+                    <div><small>Inspect discovered backend and admin routes.</small></div>
+                </td>
+                <td class="actions-container">
+                    <a href="{% url 'wagtail_unveil:report_backend_urls' %}" rel="noopener noreferrer" class="button button-small button-secondary">Open report</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    <div class="title-wrapper">
+                        <a href="{% url 'wagtail_unveil:report_frontend_urls' %}" rel="noopener noreferrer">Frontend URLs</a>
+                    </div>
+                    <div><small>Inspect discovered public page and resolver URLs.</small></div>
+                </td>
+                <td class="actions-container">
+                    <a href="{% url 'wagtail_unveil:report_frontend_urls' %}" rel="noopener noreferrer" class="button button-small button-secondary">Open report</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    <div class="title-wrapper">
+                        <a href="{% url 'wagtail_unveil:report_settings' %}" rel="noopener noreferrer">Settings</a>
+                    </div>
+                    <div><small>Review active Unveil settings and runtime diagnostics.</small></div>
+                </td>
+                <td class="actions-container">
+                    <a href="{% url 'wagtail_unveil:report_settings' %}" rel="noopener noreferrer" class="button button-small button-secondary">Open settings</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+{% endpanel %}
