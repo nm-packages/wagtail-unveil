@@ -101,13 +101,17 @@ Defaults to `[]`. Leading slashes are normalized.
 
 ## Documentation
 
-- Full usage reference: [docs/usage.md](docs/usage.md)
-- Contributor/developer guide: [docs/development.md](docs/development.md)
+- Documentation index: [docs/index.md](docs/index.md)
+- Installation guide: [docs/getting-started/installation.md](docs/getting-started/installation.md)
+- Settings reference: [docs/configuration/settings-reference.md](docs/configuration/settings-reference.md)
+- API endpoints: [docs/api/endpoints.md](docs/api/endpoints.md)
+- Report features: [docs/features/index.md](docs/features/index.md)
+- Contributor/developer guide: [docs/contributing/development.md](docs/contributing/development.md)
 - Coding conventions: [CONVENTIONS.md](CONVENTIONS.md)
-- API versioning policy: [docs/api-versioning.md](docs/api-versioning.md)
-- Discovery internals: [docs/discovery-architecture.md](docs/discovery-architecture.md)
-- Frontend asset workflow: [docs/frontend-assets.md](docs/frontend-assets.md)
-- Release runbook: [docs/releasing.md](docs/releasing.md)
+- API versioning policy: [docs/contributing/api-versioning.md](docs/contributing/api-versioning.md)
+- Discovery internals: [docs/contributing/discovery-architecture.md](docs/contributing/discovery-architecture.md)
+- Frontend asset workflow: [docs/contributing/frontend-assets.md](docs/contributing/frontend-assets.md)
+- Release runbook: [docs/contributing/releasing.md](docs/contributing/releasing.md)
 - Agent-facing project guidance: [AGENTS.md](AGENTS.md)
 
 ## License

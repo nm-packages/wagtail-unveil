@@ -13,7 +13,7 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 - `apps.py` — Django app config
 - `api_contract.py` — internal API version registry and lifecycle metadata constants
 - `models.py` — package models
-- `../docs/discovery-architecture.md` — contributor reference for discovery internals, fallbacks, and limitations
+- `../docs/contributing/discovery-architecture.md` — contributor reference for discovery internals, fallbacks, and limitations
 - `settings.py` — settings helpers for page limits, skip prefixes, and API key lookup
 - `urls.py` — package URL config with app name `wagtail_unveil`
 - `views.py` — JSON and HTML report views
@@ -26,7 +26,7 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 - `../assets_src/js/` — report JavaScript source modules
 - `static/wagtail_unveil/css/` — generated report CSS assets (`admin_urls_report.css`, `admin_urls_report.min.css`)
 - `static/wagtail_unveil/js/` — generated report JS bundle assets (`report.bundle.js`, `report.bundle.min.js`)
-- `../docs/frontend-assets.md` — canonical contributor guide for frontend asset build/test workflow and CI expectations
+- `../docs/contributing/frontend-assets.md` — canonical contributor guide for frontend asset build/test workflow and CI expectations
 
 Frontend asset formatting and linting for contributor-owned files is managed by Biome via `npm run lint:assets` and `npm run lint:assets:fix` (hooked into pre-commit and CI).
 
@@ -65,7 +65,7 @@ driven by `wagtail_unveil.api_contract.API_VERSION_REGISTRY` and helper accessor
 The package should support explicit parallel versions (`v1`, `v2`, ...) with deprecation windows.
 Additional `wagtail_unveil:api_vN_*` names may be present when newer versions are introduced.
 Canonical contributor policy for deciding and implementing API versions:
-`../docs/api-versioning.md`.
+`../docs/contributing/api-versioning.md`.
 
 Do not document or reintroduce the old split `api_urls.py` / `report_urls.py` namespace layout unless the code changes back to that design.
 
@@ -97,14 +97,14 @@ When adding a new API version:
 4. Update README/docs with lifecycle timeline and version-specific notes
 
 For detailed rationale, breaking-change decision rules, lifecycle defaults, and
-worked examples, see `../docs/api-versioning.md`.
+worked examples, see `../docs/contributing/api-versioning.md`.
 
 The admin/frontend HTML reports are shell views that fetch this JSON on page load rather than rendering discovery results directly in the Django template. They stay hidden behind a full-screen loading state until the API data and client-side controls are ready, so JavaScript is required for report use.
 The settings page is server-rendered and is intended for local diagnostics while `DEBUG=True`.
 
 ## Discovery Notes
 
-The full discovery flow, resolution fallbacks, special cases, and intentional limitations are documented in `../docs/discovery-architecture.md`. Keep that document as the canonical explanation of discovery internals and use the notes below as a brief orientation only.
+The full discovery flow, resolution fallbacks, special cases, and intentional limitations are documented in `../docs/contributing/discovery-architecture.md`. Keep that document as the canonical explanation of discovery internals and use the notes below as a brief orientation only.
 
 ### Admin URLs
 

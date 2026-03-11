@@ -19,7 +19,7 @@ Scope:
 Out of scope:
 
 - package release versioning (`package_version`)
-- discovery internals (see `docs/discovery-architecture.md`)
+- discovery internals (see [discovery-architecture.md](discovery-architecture.md))
 
 ## Why Explicit Versioning
 
@@ -30,7 +30,7 @@ Explicit API versions let us:
 - ship breaking improvements in parallel under a new version
 - provide predictable deprecation windows before removal
 
-This policy prioritizes contract stability over “silent replacement” of behavior.
+This policy prioritizes contract stability over "silent replacement" of behavior.
 
 ## Core Concepts
 
@@ -140,7 +140,7 @@ For every version introduction/deprecation update:
 
 1. Update:
 - `README.md`
-- `docs/usage.md`
+- `docs/index.md`
 - `AGENTS.md`
 - `wagtail_unveil/AGENTS.md`
 

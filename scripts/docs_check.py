@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MAKEFILE_PATH = ROOT / "Makefile"
 README_PATH = ROOT / "README.md"
 AGENTS_PATH = ROOT / "AGENTS.md"
-DEVELOPMENT_DOC_PATH = ROOT / "docs/development.md"
+DEVELOPMENT_DOC_PATH = ROOT / "docs/contributing/development.md"
 
 # This list is the single source of truth for contributor-facing Makefile
 # targets that must be discoverable in both AGENTS.md and docs/development.md.
@@ -34,7 +34,7 @@ REQUIRED_TARGETS = [
 ]
 
 README_GUIDE_LINK_RE = re.compile(
-    r"Contributor/developer guide:\s*\[docs/development\.md\]\(docs/development\.md\)",
+    r"Contributor/developer guide:\s*\[docs/contributing/development\.md\]\(docs/contributing/development\.md\)",
     re.IGNORECASE,
 )
 SETUP_SUPERUSER_LINE_RE = re.compile(r"make\s+setup[^\n]*superuser", re.IGNORECASE)
@@ -75,7 +75,7 @@ def main() -> int:
 
     if README_GUIDE_LINK_RE.search(readme_text) is None:
         errors.append(
-            "README check: missing required 'Contributor/developer guide' link to docs/development.md.",
+            "README check: missing required 'Contributor/developer guide' link to docs/contributing/development.md.",
         )
 
     agents_missing = _missing_command_mentions(agents_text, REQUIRED_TARGETS)
@@ -89,7 +89,7 @@ def main() -> int:
     development_missing = _missing_command_mentions(development_doc_text, REQUIRED_TARGETS)
     if development_missing:
         errors.append(
-            "Development docs check: missing make command mentions in docs/development.md: "
+            "Development docs check: missing make command mentions in docs/contributing/development.md: "
             + ", ".join(f"'make {target}'" for target in development_missing)
             + ".",
         )
@@ -125,7 +125,7 @@ def main() -> int:
             print(error)
         return 1
 
-    print("docs-check passed: Makefile, README, AGENTS, and docs/development.md are in sync.")
+    print("docs-check passed: Makefile, README, AGENTS, and docs/contributing/development.md are in sync.")
     return 0
 
 
