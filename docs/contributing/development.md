@@ -61,7 +61,7 @@ make pre-commit
 ## CI Expectations
 
 - Pull requests run lint, docs-check, JS checks, coverage, and smoke tox jobs.
-- Pushes to `main` also run the full tox matrix on CI schedule/dispatch policies.
+- The full tox matrix runs on pushes to `main`, manual dispatch, and the weekly scheduled CI run.
 
 See `.github/workflows/ci.yml` for exact job definitions.
 

@@ -64,7 +64,10 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
       "name": "wagtailadmin_home",
       "namespace": "wagtailadmin",
       "has_parameters": false,
-      "view_name": "wagtail.admin.views.home.HomeView"
+      "view_name": "wagtail.admin.views.home.HomeView",
+      "is_testable": true,
+      "skip_reason": "",
+      "resolved_route": ""
     }
   ],
   "count": 190,
@@ -84,6 +87,19 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
   }
 }
 ```
+
+**Item fields:**
+
+| Field | Description |
+|---|---|
+| `route` | The discovered admin route as registered in Django/Wagtail |
+| `name` | The route name |
+| `namespace` | The Django namespace for the route |
+| `has_parameters` | Whether the discovered route contains path parameters |
+| `view_name` | The dotted Python view path when available |
+| `is_testable` | Whether the route can be directly tested with a GET request |
+| `skip_reason` | Empty string for testable routes, otherwise the reason the route is not directly testable |
+| `resolved_route` | A concrete resolved admin path when parameter resolution succeeded, otherwise an empty string |
 
 ## Frontend URLs Endpoint
 
@@ -114,6 +130,51 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
 curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/api/v1/frontend-urls/?filter=resolver"
 ```
 
+**Response:**
+
+```json
+{
+  "urls": [
+    {
+      "url": "/contact/",
+      "source": "page",
+      "page_type": "forms.FormPage",
+      "page_title": "Contact",
+      "name": "",
+      "is_testable": false,
+      "skip_reason": "Requires POST submission"
+    }
+  ],
+  "count": 42,
+  "metadata": {
+    "api_version": "v1",
+    "api_lifecycle": {
+      "status": "stable",
+      "deprecated_on": null,
+      "sunset_on": null
+    },
+    "generated_at": "2026-03-02T12:34:56+00:00",
+    "applied_filter": "pages",
+    "total_count": 42,
+    "testable_count": 31,
+    "untestable_count": 11,
+    "package_version": "0.2.0"
+  }
+}
+```
+
+**Item fields:**
+
+| Field | Description |
+|---|---|
+| `url` | The discovered frontend path |
+| `source` | `page` for Wagtail page-derived URLs or `resolver` for Django resolver URLs |
+| `page_type` | The `app_label.ModelName` for page-derived URLs, otherwise an empty string |
+| `page_title` | The Wagtail page title for page-derived URLs, otherwise an empty string |
+| `name` | The Django route name when available, otherwise an empty string |
+| `is_testable` | Whether the URL can be directly tested with a GET request |
+| `skip_reason` | Empty string for testable URLs, otherwise the reason the URL is not directly testable |
+
 ## Metadata
 
 Both endpoints include a `metadata` object alongside the top-level `urls` and `count` fields:
@@ -124,10 +185,12 @@ Both endpoints include a `metadata` object alongside the top-level `urls` and `c
 | `api_lifecycle` | Lifecycle status (`stable` or `deprecated`) with optional `deprecated_on` / `sunset_on` dates |
 | `generated_at` | ISO 8601 timestamp for when the response was generated |
 | `applied_filter` | The recognised filter value that was applied, or `null` |
-| `total_count` | Total URLs in the response |
+| `total_count` | Total URLs in the response after filtering; this matches the top-level `count` field |
 | `testable_count` | Number of URLs marked testable |
 | `untestable_count` | Number of URLs marked untestable |
 | `package_version` | Installed `wagtail-unveil` package version (not the API version) |
+
+If a `filter` query parameter is unrecognised, the response is not filtered and `metadata.applied_filter` is `null`.
 
 ## Deprecation Headers
 

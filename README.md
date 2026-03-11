@@ -24,13 +24,14 @@ It exposes discovery through:
 ## Quick Start
 
 ```bash
-pip install wagtail-unveil
+pip install git+https://github.com/nm-packages/wagtail-unveil.git
 ```
 
-> This package is currently in development and not yet released on PyPI. To install the latest development version, use:
+> This package is currently in development and is not yet published on PyPI.
+> Once PyPI releases begin, install it with:
 
 ```bash
-pip install git+https://github.com/nm-packages/wagtail-unveil.git
+pip install wagtail-unveil
 ```
 
 Add to your `INSTALLED_APPS`:

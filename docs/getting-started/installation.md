@@ -9,13 +9,14 @@
 ## Install the Package
 
 ```bash
-pip install wagtail-unveil
+pip install git+https://github.com/nm-packages/wagtail-unveil.git
 ```
 
-> This package is currently in development. To install the latest development version:
+> This package is currently in development and is not yet published on PyPI.
+> Once PyPI releases begin, install it with:
 >
 > ```bash
-> pip install git+https://github.com/nm-packages/wagtail-unveil.git
+> pip install wagtail-unveil
 > ```
 
 ## Add to INSTALLED_APPS
