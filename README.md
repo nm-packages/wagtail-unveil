@@ -70,29 +70,14 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/frontend-urls/
 ```
 
-## Configuration
+## Key Configuration
 
-### `WAGTAIL_UNVEIL_PAGES_PER_TYPE`
+Most projects only need `WAGTAIL_UNVEIL_API_KEY` from the quickstart to use the JSON API.
 
-Controls how many page instances per page type are included in frontend URL discovery.
+- `WAGTAIL_UNVEIL_PAGES_PER_TYPE` — controls how many page instances per type are included in frontend URL discovery; defaults to `1`
+- `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES` — excludes matching URL prefixes from frontend and admin discovery; defaults to `[]`
 
-```python
-WAGTAIL_UNVEIL_PAGES_PER_TYPE = 1  # default behavior
-WAGTAIL_UNVEIL_PAGES_PER_TYPE = 3  # test up to 3 pages per type
-WAGTAIL_UNVEIL_PAGES_PER_TYPE = 0  # no limit
-```
-
-Defaults to `1` when omitted. Invalid/negative values fall back to `1`.
-
-### `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES`
-
-Excludes URL path prefixes from discovery.
-
-```python
-WAGTAIL_UNVEIL_SKIP_URL_PREFIXES = ["__debug__/", "/silk/"]
-```
-
-Defaults to `[]`. Leading slashes are normalized.
+For full setting details, including environment variable usage, normalization rules, and edge cases, see [docs/configuration/settings-reference.md](docs/configuration/settings-reference.md).
 
 ## Compatibility
 
