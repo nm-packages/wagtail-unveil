@@ -23,6 +23,8 @@ It exposes discovery through:
 
 ## Quick Start
 
+Detailed setup docs: [docs/getting-started/installation.md](docs/getting-started/installation.md)
+
 ```bash
 pip install git+https://github.com/nm-packages/wagtail-unveil.git
 ```
@@ -54,16 +56,16 @@ urlpatterns = [
 ```
 
 Try the reports (HTML admin views; requires superuser session and `DEBUG=True`):
-- `/unveil/report/backend-urls/`
-- `/unveil/report/frontend-urls/`
-- `/unveil/report/settings/`
+- `/unveil/report/backend-urls/` — [Backend URLs Report docs](docs/features/backend-urls-report.md)
+- `/unveil/report/frontend-urls/` — [Frontend URLs Report docs](docs/features/frontend-urls-report.md)
+- `/unveil/report/settings/` — [Settings Page docs](docs/features/settings-page.md)
 
-You can open the report and settings pages from links in the Wagtail admin dashboard panel.
+You can open the report and settings pages from links in the Wagtail admin [dashboard panel](docs/features/dashboard-panel.md).
 
 The settings page shows the current effective `wagtail-unveil` configuration and related runtime diagnostics.
 Because it is intended for local debugging, it also shows the full `WAGTAIL_UNVEIL_API_KEY` value to superusers while `DEBUG=True`.
 
-Try the API:
+Try the API. Detailed endpoint docs: [docs/api/endpoints.md](docs/api/endpoints.md)
 
 ```bash
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/backend-urls/
