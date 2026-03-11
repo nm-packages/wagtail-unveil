@@ -16,7 +16,7 @@ This file is the canonical guidance for coding agents working in this repository
 ## Docs Map
 
 - `README.md` — user-facing package overview, install, quickstart, and key configuration
-- `docs/development.md` — human contributor setup, day-to-day workflow, and CI-aligned dev commands
+- `docs/contributing/development.md` — human contributor setup, day-to-day workflow, and CI-aligned dev commands
 - `AGENTS.md` files — canonical agent-facing guidance and documentation contract
 
 ## Development Commands
@@ -67,7 +67,7 @@ uvx twine check /tmp/wagtail-unveil-dist-check/*
 ```
 
 Maintainer release publishing is CI-driven from GitHub Releases via `.github/workflows/release.yml`.
-Use `docs/releasing.md` as the canonical release runbook.
+Use `docs/contributing/releasing.md` as the canonical release runbook.
 
 ## Architecture Summary
 
@@ -78,7 +78,7 @@ The core discovery logic lives in `wagtail_unveil/discovery/`.
 - `discovery/backend.py` — `BackendURL` dataclass and `get_admin_urls()`
 - `discovery/frontend.py` — `FrontendURL` dataclass and `get_frontend_urls()`
 - `discovery/utils.py` — shared resolver walking and route normalization helpers
-- `docs/discovery-architecture.md` — canonical contributor-facing explanation of discovery, normalization, parameter resolution, and testability rules
+- `docs/contributing/discovery-architecture.md` — canonical contributor-facing explanation of discovery, normalization, parameter resolution, and testability rules
 
 Admin URL discovery walks Django's resolver tree, filters to admin routes, and attempts to resolve parameterized URLs against real database objects where possible.
 
