@@ -6,6 +6,8 @@ wagtail-unveil adds a panel to the Wagtail admin home page with quick links to t
 
 The panel is visible on the Wagtail admin home page to superusers when `DEBUG=True`.
 
+![Dashboard Panel](wagtail_admin.jpg)
+
 ## What It Links To
 
 - [Backend URLs Report](backend-urls-report.md) — admin URL discovery report

@@ -6,6 +6,8 @@ The backend URLs report discovers and displays all Wagtail admin URLs registered
 
 Visit `/unveil/report/backend-urls/` while logged in as a superuser with `DEBUG=True`.
 
+![Backend URLs Report](backend_report.jpg)
+
 You can also reach it from the Wagtail admin dashboard panel.
 
 ## Features

@@ -6,6 +6,8 @@ The frontend URLs report discovers and displays all frontend URLs in your projec
 
 Visit `/unveil/report/frontend-urls/` while logged in as a superuser with `DEBUG=True`.
 
+![Frontend URLs Report](frontend_report.jpg)
+
 You can also reach it from the Wagtail admin dashboard panel.
 
 ## Features

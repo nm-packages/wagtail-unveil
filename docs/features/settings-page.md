@@ -6,6 +6,8 @@ The settings page is a server-rendered diagnostic view showing the effective wag
 
 Visit `/unveil/report/settings/` while logged in as a superuser with `DEBUG=True`.
 
+![Settings Page](settings_pane.jpg)
+
 You can also reach it from the Wagtail admin dashboard panel.
 
 ## What It Shows
