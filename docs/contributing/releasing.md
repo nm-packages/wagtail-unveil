@@ -7,6 +7,7 @@ This is the maintainer runbook for publishing package releases to PyPI via GitHu
 - Workflow file: `.github/workflows/release.yml`
 - Trigger: GitHub Release event `published`
 - Authentication: PyPI Trusted Publisher (OIDC), no API token secret
+- Publish environment: GitHub Environment `pypi`
 
 The release workflow:
 
@@ -14,7 +15,7 @@ The release workflow:
 2. validates the tagged commit is contained in `origin/main`
 3. builds `sdist` + `wheel` with `uv build`
 4. runs `twine check` on built artifacts
-5. publishes artifacts to PyPI using `pypa/gh-action-pypi-publish`
+5. publishes artifacts to PyPI using `pypa/gh-action-pypi-publish` from the `pypi` GitHub Environment
 
 ## One-Time Setup (PyPI Trusted Publisher)
 
@@ -23,9 +24,18 @@ In the PyPI project settings for `wagtail-unveil`, add a Trusted Publisher with:
 - Owner or organization: `nm-packages`
 - Repository: `wagtail-unveil`
 - Workflow: `release.yml`
-- Environment: unset (unless intentionally adding GitHub Environments later)
+- Environment: `pypi`
 
 The GitHub repository and workflow identity must match exactly, or publish will fail.
+
+The expected OIDC claims for a successful publish include values equivalent to:
+
+- `repository`: `nm-packages/wagtail-unveil`
+- `workflow_ref`: `nm-packages/wagtail-unveil/.github/workflows/release.yml@refs/tags/<tag>`
+- `job_workflow_ref`: `nm-packages/wagtail-unveil/.github/workflows/release.yml@refs/tags/<tag>`
+- `environment`: `pypi`
+
+If you are recovering from an existing `invalid-publisher` failure, first verify there is no stale or mis-keyed PyPI Trusted Publisher entry using a different owner, repository, workflow filename, or environment requirement.
 
 ## Maintainer Release Steps
 
@@ -33,8 +43,9 @@ The GitHub repository and workflow identity must match exactly, or publish will 
 2. Merge the version bump to `main`.
 3. Ensure normal CI on `main` is green (`CI` workflow).
 4. Create a GitHub Release with a tag that matches the package version with `v` prefix.
-5. Publish the GitHub Release.
-6. Confirm `.github/workflows/release.yml` succeeds and the version appears on PyPI.
+5. Confirm the repository has a GitHub Environment named `pypi`, with any required protection rules configured before publishing.
+6. Publish the GitHub Release.
+7. Confirm `.github/workflows/release.yml` succeeds and the version appears on PyPI.
 
 For local sandbox/test command workflows before a release, use:
 - [`development.md`](development.md) for canonical developer workflow and quickstart commands
@@ -64,7 +75,10 @@ uvx twine check /tmp/wagtail-unveil-dist-check/*
   - Fix: retag a commit that is on `main`
 - Trusted Publisher identity mismatch:
   - Symptom: PyPI publish step reports authorization/trust failure
-  - Fix: verify owner/repo/workflow values in PyPI Trusted Publisher settings
+  - Fix: verify owner/repo/workflow/environment values in PyPI Trusted Publisher settings
+- `invalid-publisher` with `environment: MISSING`:
+  - Symptom: PyPI reports a valid token but no corresponding publisher, and the rendered claims show `environment: MISSING`
+  - Fix: either remove the environment requirement from the matching PyPI Trusted Publisher entry for an immediate retry, or update `.github/workflows/release.yml` to publish through the `pypi` GitHub Environment and make the PyPI entry require `pypi`
 - Duplicate version:
   - Symptom: publish step fails because version already exists on PyPI
   - Fix: bump `pyproject.toml` version and publish a new tag/release
