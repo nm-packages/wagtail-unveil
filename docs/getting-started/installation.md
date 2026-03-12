@@ -9,14 +9,14 @@
 ## Install the Package
 
 ```bash
-pip install git+https://github.com/nm-packages/wagtail-unveil.git
+pip install wagtail-unveil==0.1.0a1
 ```
 
-> This package is currently in development and is not yet published on PyPI.
-> Once PyPI releases begin, install it with:
+> `0.1.0a1` is the first public alpha release. It is intended for early adopters and real-world testing, and breaking changes may still happen before a stable release.
+> To try the latest unreleased changes from GitHub instead:
 >
 > ```bash
-> pip install wagtail-unveil
+> pip install git+https://github.com/nm-packages/wagtail-unveil.git
 > ```
 
 ## Add to INSTALLED_APPS

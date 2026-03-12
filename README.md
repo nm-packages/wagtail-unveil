@@ -26,14 +26,14 @@ It exposes discovery through:
 Detailed setup docs: [docs/getting-started/installation.md](docs/getting-started/installation.md)
 
 ```bash
-pip install git+https://github.com/nm-packages/wagtail-unveil.git
+pip install wagtail-unveil==0.1.0a1
 ```
 
-> This package is currently in development and is not yet published on PyPI.
-> Once PyPI releases begin, install it with:
+> `0.1.0a1` is the first public alpha release. It is intended for early adopters and real-world testing, and breaking changes may still happen before a stable release.
+> To track unreleased changes from GitHub instead, use:
 
 ```bash
-pip install wagtail-unveil
+pip install git+https://github.com/nm-packages/wagtail-unveil.git
 ```
 
 Add to your `INSTALLED_APPS`:

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "wagtail-unveil"
-version = "0.2.0"
+version = "0.1.0a1"
 description = "Discover and test all URLs in your Wagtail site — frontend and admin."
 readme = "README.md"
 requires-python = ">=3.10"
