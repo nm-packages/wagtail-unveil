@@ -17,7 +17,7 @@ You can also reach it from the Wagtail admin dashboard panel.
 - **One-click URL testing** — test static URLs with colour-coded status codes (green=2xx, yellow=3xx, red=4xx/5xx)
 - **Parameterised URL resolution** — admin URLs with parameters (snippets, redirects, images, documents, users, groups) are automatically resolved using real database instances, making them testable via the report
 - **Test All** button — runs all testable (static and resolved) URLs sequentially with a progress indicator and pass/fail summary
-- **Hide Untestable toggle** — hides non-testable rows (parameterized, POST-only, regex) to focus on testable URLs; preference is saved in a cookie across sessions
+- **Hide Untestable toggle** — hides non-testable rows (parameterised, POST-only, regex) to focus on testable URLs; preference is saved in a cookie across sessions
 - **Self-contained** — no external CSS or JS dependencies
 
 ## Untestable URLs

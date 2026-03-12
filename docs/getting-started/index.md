@@ -9,7 +9,7 @@ Install wagtail-unveil and get up and running quickly.
 ## Quick Reference
 
 ```bash
-pip install wagtail-unveil
+pip install git+https://github.com/nm-packages/wagtail-unveil.git
 ```
 
 ## Related

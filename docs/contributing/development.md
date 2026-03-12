@@ -79,7 +79,7 @@ When changing contributor commands or Make targets:
 - User-facing package overview: [../../README.md](../../README.md)
 - Coding conventions: [../../CONVENTIONS.md](../../CONVENTIONS.md)
 - Agent project guidance: [../../AGENTS.md](../../AGENTS.md)
-- Usage reference: [../index.md](../index.md)
+- Documentation index: [../index.md](../index.md)
 - Frontend assets: [frontend-assets.md](frontend-assets.md)
 - API lifecycle/versioning: [api-versioning.md](api-versioning.md)
 - Discovery internals: [discovery-architecture.md](discovery-architecture.md)
