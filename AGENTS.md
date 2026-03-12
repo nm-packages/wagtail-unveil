@@ -16,7 +16,7 @@ This file is the canonical guidance for coding agents working in this repository
 ## Docs Map
 
 - `README.md` — user-facing package overview, install, quickstart, and key configuration
-- `docs/development.md` — human contributor setup, day-to-day workflow, and CI-aligned dev commands
+- `docs/contributing/development.md` — human contributor setup, day-to-day workflow, and CI-aligned dev commands
 - `AGENTS.md` files — canonical agent-facing guidance and documentation contract
 
 ## Development Commands
@@ -67,7 +67,7 @@ uvx twine check /tmp/wagtail-unveil-dist-check/*
 ```
 
 Maintainer release publishing is CI-driven from GitHub Releases via `.github/workflows/release.yml`.
-Use `docs/releasing.md` as the canonical release runbook.
+Use `docs/contributing/releasing.md` as the canonical release runbook.
 
 ## Architecture Summary
 
@@ -78,7 +78,7 @@ The core discovery logic lives in `wagtail_unveil/discovery/`.
 - `discovery/backend.py` — `BackendURL` dataclass and `get_admin_urls()`
 - `discovery/frontend.py` — `FrontendURL` dataclass and `get_frontend_urls()`
 - `discovery/utils.py` — shared resolver walking and route normalization helpers
-- `docs/discovery-architecture.md` — canonical contributor-facing explanation of discovery, normalization, parameter resolution, and testability rules
+- `docs/contributing/discovery-architecture.md` — canonical contributor-facing explanation of discovery, normalization, parameter resolution, and testability rules
 
 Admin URL discovery walks Django's resolver tree, filters to admin routes, and attempts to resolve parameterized URLs against real database objects where possible.
 
@@ -111,7 +111,7 @@ internal `wagtail_unveil.api_contract.API_VERSION_REGISTRY`.
 New API versions should be added in parallel and deprecate older versions over a documented window.
 Additional `api/vN/...` routes may be present when newer versions are introduced.
 Canonical contributor policy for versioning decisions and implementation workflow:
-`docs/api-versioning.md`.
+`docs/contributing/api-versioning.md`.
 
 JSON endpoints use Bearer token auth via `WAGTAIL_UNVEIL_API_KEY`. HTML report views require a superuser and `DEBUG=True`.
 
@@ -150,10 +150,10 @@ More focused guidance lives in:
 - `AGENTS.md` files are the canonical agent-facing project guidance
 - Root `AGENTS.md` owns repo-wide guidance
 - Nested `AGENTS.md` files own only directory-local guidance
-- `docs/discovery-architecture.md` is the canonical contributor-facing reference for discovery and resolution behavior; AGENTS files should point to it rather than duplicating detailed flow logic
-- `docs/development.md` is the canonical human contributor workflow guide for local setup, validation loops, and CI-oriented dev commands
-- `docs/frontend-assets.md` is the canonical contributor-facing reference for frontend asset source, build/test workflow, and CI expectations
-- `docs/api-versioning.md` is the canonical contributor-facing reference for API version lifecycle policy and version-bump workflow
-- `docs/releasing.md` is the canonical contributor-facing reference for release workflow, PyPI Trusted Publisher setup, and maintainer release troubleshooting
-- Command-level docs must stay in sync with `Makefile`; when targets change, update `AGENTS.md` and `docs/development.md` in the same PR. `README.md` should link to this contributor workflow, not duplicate command lists.
+- `docs/contributing/discovery-architecture.md` is the canonical contributor-facing reference for discovery and resolution behavior; AGENTS files should point to it rather than duplicating detailed flow logic
+- `docs/contributing/development.md` is the canonical human contributor workflow guide for local setup, validation loops, and CI-oriented dev commands
+- `docs/contributing/frontend-assets.md` is the canonical contributor-facing reference for frontend asset source, build/test workflow, and CI expectations
+- `docs/contributing/api-versioning.md` is the canonical contributor-facing reference for API version lifecycle policy and version-bump workflow
+- `docs/contributing/releasing.md` is the canonical contributor-facing reference for release workflow, PyPI Trusted Publisher setup, and maintainer release troubleshooting
+- Command-level docs must stay in sync with `Makefile`; when targets change, update `AGENTS.md` and `docs/contributing/development.md` in the same PR. `README.md` should link to this contributor workflow, not duplicate command lists.
 - Run `make docs-check` before merging docs or workflow changes that touch development commands

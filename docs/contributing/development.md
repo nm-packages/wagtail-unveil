@@ -61,7 +61,7 @@ make pre-commit
 ## CI Expectations
 
 - Pull requests run lint, docs-check, JS checks, coverage, and smoke tox jobs.
-- Pushes to `main` also run the full tox matrix on CI schedule/dispatch policies.
+- The full tox matrix runs on pushes to `main`, manual dispatch, and the weekly scheduled CI run.
 
 See `.github/workflows/ci.yml` for exact job definitions.
 
@@ -76,10 +76,10 @@ When changing contributor commands or Make targets:
 
 ## Related Docs
 
-- User-facing package overview: [../README.md](../README.md)
-- Coding conventions: [../CONVENTIONS.md](../CONVENTIONS.md)
-- Agent project guidance: [../AGENTS.md](../AGENTS.md)
-- Usage reference: [usage.md](usage.md)
+- User-facing package overview: [../../README.md](../../README.md)
+- Coding conventions: [../../CONVENTIONS.md](../../CONVENTIONS.md)
+- Agent project guidance: [../../AGENTS.md](../../AGENTS.md)
+- Documentation index: [../index.md](../index.md)
 - Frontend assets: [frontend-assets.md](frontend-assets.md)
 - API lifecycle/versioning: [api-versioning.md](api-versioning.md)
 - Discovery internals: [discovery-architecture.md](discovery-architecture.md)
