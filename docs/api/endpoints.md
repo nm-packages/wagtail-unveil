@@ -141,6 +141,7 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
       "page_type": "forms.FormPage",
       "page_title": "Contact",
       "name": "",
+      "resolved_url": "",
       "is_testable": false,
       "skip_reason": "Requires POST submission"
     }
@@ -172,6 +173,7 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
 | `page_type` | The `app_label.ModelName` for page-derived URLs, otherwise an empty string |
 | `page_title` | The Wagtail page title for page-derived URLs, otherwise an empty string |
 | `name` | The Django route name when available, otherwise an empty string |
+| `resolved_url` | A concrete frontend path used for testing when parameter resolution succeeded, otherwise an empty string |
 | `is_testable` | Whether the URL can be directly tested with a GET request |
 | `skip_reason` | Empty string for testable URLs, otherwise the reason the URL is not directly testable |
 

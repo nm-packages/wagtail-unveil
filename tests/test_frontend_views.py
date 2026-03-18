@@ -86,6 +86,7 @@ class TestFrontendAPIViewHelpers(TestCase):
             page_type="core.ContactPage",
             page_title="Contact",
             name="",
+            resolved_url="",
             is_testable=False,
             skip_reason="Requires POST submission",
         )
@@ -98,6 +99,7 @@ class TestFrontendAPIViewHelpers(TestCase):
                 "page_type": "core.ContactPage",
                 "page_title": "Contact",
                 "name": "",
+                "resolved_url": "",
                 "is_testable": False,
                 "skip_reason": "Requires POST submission",
             },

@@ -119,4 +119,46 @@ describe("report bundle", () => {
     expect(document.body.dataset.reportState).toBe("ready");
     expect(document.querySelectorAll("tbody tr").length).toBe(1);
   });
+
+  test("frontend rows use resolved_url for test and open actions when present", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/frontend-urls/",
+      reportKind: "frontend",
+    });
+
+    stubFetchResponse({
+      count: 1,
+      metadata: {
+        total_count: 1,
+        testable_count: 1,
+        untestable_count: 0,
+      },
+      urls: [
+        {
+          url: "/events/year/<int:year>/",
+          source: "page",
+          page_type: "events.EventIndexPage",
+          page_title: "Events",
+          name: "events_for_year",
+          resolved_url: "/events/year/2025/",
+          is_testable: true,
+          skip_reason: "",
+        },
+      ],
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(document.querySelector(".route").textContent).toBe(
+      "/events/year/<int:year>/",
+    );
+    expect(document.querySelector(".test-btn").dataset.url).toBe(
+      "/events/year/2025/",
+    );
+    expect(document.querySelector(".open-btn").getAttribute("href")).toBe(
+      "/events/year/2025/",
+    );
+  });
 });

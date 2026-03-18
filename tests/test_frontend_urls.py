@@ -1,11 +1,14 @@
+from datetime import date
+from types import SimpleNamespace
+from unittest import mock
 from unittest.mock import patch
 from urllib.parse import urlparse
 
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from wagtail.models import Page, Site
 
 from sandbox.core.models import StandardPage
-from sandbox.events.models import EventIndexPage
+from sandbox.events.models import EventIndexPage, EventPage
 from sandbox.forms.models import FormPage
 from sandbox.home.models import HomePage
 from wagtail_unveil.discovery.frontend import (
@@ -13,7 +16,15 @@ from wagtail_unveil.discovery.frontend import (
     _build_frontend_url,
     _classify_frontend_candidate,
     _discover_routable_page_candidates,
+    _format_cross_site_skip_reason,
     _FrontendCandidate,
+    _get_descendant_date_years,
+    _get_descendant_page_candidates,
+    _get_routable_parameter_candidates,
+    _iter_routable_parameters,
+    _join_frontend_paths,
+    _resolve_routable_page_url,
+    _unique_values,
     get_frontend_urls,
 )
 
@@ -33,6 +44,7 @@ class TestGetFrontendUrls(TestCase):
         self.assertIsInstance(url.page_type, str)
         self.assertIsInstance(url.page_title, str)
         self.assertIsInstance(url.name, str)
+        self.assertIsInstance(url.resolved_url, str)
         self.assertIsInstance(url.is_testable, bool)
 
     def test_sources_are_valid(self):
@@ -94,8 +106,18 @@ class TestRoutableSubUrls(TestCase):
         self.event_index = EventIndexPage(title="Events", slug="events")
         home.add_child(instance=self.event_index)
         self.event_index.save_revision().publish()
+        self.event_page = EventPage(
+            title="Spring Conference",
+            slug="spring-conference",
+            event_date=date(2025, 4, 15),
+            location="Convention Centre",
+            body="<p>Event details.</p>",
+        )
+        self.event_index.add_child(instance=self.event_page)
+        self.event_page.save_revision().publish()
         self.urls = get_frontend_urls()
         self.page_type = "events.EventIndexPage"
+        self.factory = RequestFactory()
 
     def _get_event_urls(self):
         return [u for u in self.urls if u.source == "page" and u.page_type == self.page_type]
@@ -113,14 +135,61 @@ class TestRoutableSubUrls(TestCase):
         self.assertFalse(past.skip_reason)
         self.assertEqual(past.name, "past_events")
 
-    def test_parameterized_sub_route_discovered_and_not_testable(self):
+    def test_parameterized_sub_route_is_resolved_and_testable(self):
         event_urls = self._get_event_urls()
         year_urls = [u for u in event_urls if "year/" in u.url]
         self.assertEqual(len(year_urls), 1)
         year = year_urls[0]
-        self.assertFalse(year.is_testable)
-        self.assertEqual(year.skip_reason, "URL requires parameters")
+        self.assertEqual(year.url, "/events/year/<int:year>/")
+        self.assertTrue(year.is_testable)
+        self.assertEqual(year.skip_reason, "")
+        self.assertEqual(year.resolved_url, "/events/year/2025/")
         self.assertEqual(year.name, "events_for_year")
+
+    def test_static_regex_family_sub_route_discovered_and_testable(self):
+        event_urls = self._get_event_urls()
+        tag_urls = [u for u in event_urls if u.url.endswith("/tags/")]
+        self.assertEqual(len(tag_urls), 1)
+        tag_index = tag_urls[0]
+        self.assertTrue(tag_index.is_testable)
+        self.assertEqual(tag_index.skip_reason, "")
+        self.assertEqual(tag_index.name, "tag_archive")
+
+    def test_regex_sub_route_discovered_and_not_testable(self):
+        event_urls = self._get_event_urls()
+        regex_urls = [u for u in event_urls if "([\\w-]+)" in u.url]
+        self.assertEqual(len(regex_urls), 1)
+        regex_url = regex_urls[0]
+        self.assertEqual(regex_url.url, "/events/tags/([\\w-]+)/")
+        self.assertEqual(regex_url.source, "page")
+        self.assertFalse(regex_url.is_testable)
+        self.assertEqual(regex_url.skip_reason, "URL contains regex patterns")
+        self.assertEqual(regex_url.name, "tag_archive")
+
+    def test_static_tag_route_invokes_render_with_default_title(self):
+        request = self.factory.get("/events/tags/")
+        response = object()
+
+        with patch.object(self.event_index, "render", return_value=response) as render:
+            result = self.event_index.tag_archive(request)
+
+        self.assertIs(result, response)
+        self.assertEqual(render.call_args.kwargs["context_overrides"]["filter_title"], "Tagged Events")
+        self.assertEqual(render.call_args.kwargs["context_overrides"]["active_tag"], "")
+
+    def test_concrete_regex_tag_route_invokes_render_with_tag_context(self):
+        request = self.factory.get("/events/tags/sourdough/")
+        response = object()
+
+        with patch.object(self.event_index, "render", return_value=response) as render:
+            result = self.event_index.tag_archive(request, "sourdough")
+
+        self.assertIs(result, response)
+        self.assertEqual(
+            render.call_args.kwargs["context_overrides"]["filter_title"],
+            "Events tagged sourdough",
+        )
+        self.assertEqual(render.call_args.kwargs["context_overrides"]["active_tag"], "sourdough")
 
     def test_index_route_not_duplicated(self):
         event_urls = self._get_event_urls()
@@ -213,6 +282,48 @@ class TestFrontendPageLimitPerformance(TestCase):
 
 
 class TestFrontendDiscoveryPhases(TestCase):
+    def test_regex_routable_candidate_records_contains_regex(self):
+        pattern = SimpleNamespace(
+            name="tag_archive",
+            pattern=SimpleNamespace(_regex="^tags/([\\w-]+)/$"),
+        )
+
+        class RegexRoutablePage:
+            title = "Events"
+
+            @classmethod
+            def get_subpage_urls(cls):
+                return [pattern]
+
+        result = _discover_routable_page_candidates(
+            RegexRoutablePage(),
+            "/events/",
+            "events.EventIndexPage",
+        )
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].url, "/events/tags/([\\w-]+)/")
+        self.assertFalse(result[0].has_parameters)
+        self.assertTrue(result[0].contains_regex)
+
+    def test_parameterized_routable_candidate_with_resolved_url_is_testable(self):
+        candidate = _FrontendCandidate(
+            url="/events/year/<int:year>/",
+            source="page",
+            page_type="events.EventIndexPage",
+            page_title="Events",
+            name="events_for_year",
+            has_parameters=True,
+            resolved_url="/events/year/2025/",
+        )
+
+        classification = _classify_frontend_candidate(candidate)
+        result = _build_frontend_url(candidate, classification)
+
+        self.assertTrue(result.is_testable)
+        self.assertEqual(result.skip_reason, "")
+        self.assertEqual(result.resolved_url, "/events/year/2025/")
+
     def test_plain_page_candidate_is_testable(self):
         candidate = _FrontendCandidate(
             url="/about/",
@@ -306,6 +417,137 @@ class TestFrontendDiscoveryPhases(TestCase):
         self.assertEqual(
             classification.skip_reason,
             "Belongs to non-default site host: sub.localhost:8080",
+        )
+
+
+class TestFrontendDiscoveryHelpers(TestCase):
+    def test_format_cross_site_skip_reason_with_standard_port_omits_port(self):
+        candidate = _FrontendCandidate(
+            url="/about/",
+            source="page",
+            page_type="core.StandardPage",
+            page_title="About",
+            name="",
+            site_hostname="sub.localhost",
+            site_port=80,
+            is_cross_site=True,
+        )
+
+        self.assertEqual(
+            _format_cross_site_skip_reason(candidate),
+            "Belongs to non-default site host: sub.localhost",
+        )
+
+    def test_join_frontend_paths_normalizes_root_and_relative_subpath(self):
+        self.assertEqual(_join_frontend_paths("/", "events/"), "/events/")
+        self.assertEqual(_join_frontend_paths("/events/", "year/2025/"), "/events/year/2025/")
+
+    def test_iter_routable_parameters_preserves_order_and_defaults_str_converter(self):
+        self.assertEqual(
+            list(_iter_routable_parameters("tags/<slug:slug>/<value>/")),
+            [("slug", "slug"), ("value", "str")],
+        )
+
+    def test_unique_values_drops_blanks_and_duplicates(self):
+        self.assertEqual(_unique_values([None, "", "alpha", "alpha", "beta"]), ["alpha", "beta"])
+
+    def test_get_descendant_date_years_returns_empty_when_descendants_fail(self):
+        page = mock.Mock()
+        page.get_descendants.side_effect = RuntimeError("boom")
+
+        self.assertEqual(_get_descendant_date_years(page), [])
+
+    def test_get_descendant_page_candidates_skips_callables_and_duplicates(self):
+        page = mock.Mock()
+        page.get_descendants.return_value.live.return_value.specific.return_value = [
+            SimpleNamespace(slug="alpha"),
+            SimpleNamespace(slug=lambda: "ignored"),
+            SimpleNamespace(slug="alpha"),
+            SimpleNamespace(slug="beta"),
+        ]
+
+        self.assertEqual(_get_descendant_page_candidates(page, "slug"), ["alpha", "beta"])
+
+    @mock.patch("wagtail_unveil.discovery.frontend._get_descendant_date_years", return_value=[2025])
+    def test_get_routable_parameter_candidates_prefers_year_values(self, get_years):
+        page = SimpleNamespace(year=None)
+
+        self.assertEqual(_get_routable_parameter_candidates(page, "year", "int"), [2025])
+        get_years.assert_called_once_with(page)
+
+    @mock.patch("wagtail_unveil.discovery.frontend._get_descendant_page_candidates", return_value=["alpha"])
+    def test_get_routable_parameter_candidates_supports_slug_and_uuid(self, get_candidates):
+        page = SimpleNamespace(slug=None, uuid=None)
+
+        self.assertEqual(_get_routable_parameter_candidates(page, "slug", "slug"), ["alpha"])
+        self.assertEqual(_get_routable_parameter_candidates(page, "uuid", "uuid"), ["alpha"])
+        self.assertEqual(get_candidates.call_count, 2)
+
+    def test_get_routable_parameter_candidates_does_not_use_index_page_slug(self):
+        page = SimpleNamespace(slug="events")
+        page.get_descendants = mock.Mock()
+        page.get_descendants.return_value.live.return_value.specific.return_value = []
+
+        self.assertEqual(_get_routable_parameter_candidates(page, "slug", "slug"), [])
+
+    def test_resolve_routable_page_url_returns_empty_when_reverse_fails(self):
+        page = mock.Mock(year=2025)
+        page.get_descendants.return_value.live.return_value.specific.return_value = []
+        page.reverse_subpage.side_effect = RuntimeError("boom")
+        pattern = SimpleNamespace(
+            name="events_for_year",
+            pattern=SimpleNamespace(_route="year/<int:year>/"),
+        )
+
+        self.assertEqual(
+            _resolve_routable_page_url(page, pattern, "/events/", "year/<int:year>/"),
+            "",
+        )
+
+    def test_resolve_routable_page_url_returns_empty_when_reversed_path_is_still_parameterized(self):
+        page = mock.Mock(year=2025)
+        page.get_descendants.return_value.live.return_value.specific.return_value = []
+        page.reverse_subpage.return_value = "year/<int:year>/"
+        pattern = SimpleNamespace(
+            name="events_for_year",
+            pattern=SimpleNamespace(_route="year/<int:year>/"),
+        )
+
+        self.assertEqual(
+            _resolve_routable_page_url(page, pattern, "/events/", "year/<int:year>/"),
+            "",
+        )
+
+    def test_resolve_routable_page_url_returns_empty_for_multi_parameter_routes(self):
+        page = mock.Mock(year=2025, slug="events")
+        pattern = SimpleNamespace(
+            name="event_detail",
+            pattern=SimpleNamespace(_route="year/<int:year>/<slug:slug>/"),
+        )
+
+        self.assertEqual(
+            _resolve_routable_page_url(page, pattern, "/events/", "year/<int:year>/<slug:slug>/"),
+            "",
+        )
+        page.reverse_subpage.assert_not_called()
+
+    def test_discover_routable_page_candidates_ignores_unknown_pattern_objects(self):
+        pattern = SimpleNamespace(name="broken", pattern=SimpleNamespace())
+
+        class UnknownPatternPage:
+            title = "Events"
+
+            @classmethod
+            def get_subpage_urls(cls):
+                return [pattern]
+
+        self.assertEqual(
+            _discover_routable_page_candidates(
+                UnknownPatternPage(),
+                "/events/",
+                "events.EventIndexPage",
+            ),
+            [],
         )
 
 

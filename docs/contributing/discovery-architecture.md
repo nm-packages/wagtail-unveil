@@ -125,9 +125,11 @@ Each candidate is classified by `_classify_frontend_candidate()` and emitted as 
 - construct a full URL by joining the page path and sub-route
 - apply skip prefixes to the full URL
 - record whether the sub-route contains `<...>` placeholders
+- record whether the normalized sub-route still contains regex constructs such as `(` or `\w`
+- attempt best-effort concrete resolution for single-parameter path-style sub-routes using safe descendant-derived values and store the result in `resolved_url`
 - leave the final testability decision to classification
 
-This means routable pages contribute both their base page URL and any additional sub-routes, but parameterized sub-routes are represented rather than auto-resolved.
+This means routable pages contribute both their base page URL and any additional sub-routes. Path-parameter sub-routes remain visible and become directly testable when a concrete `resolved_url` can be inferred, otherwise they remain visible but untestable with `URL requires parameters`. Regex-backed sub-routes remain visible but untestable with `URL contains regex patterns`.
 
 ## Frontend Resolver Discovery
 
@@ -153,6 +155,7 @@ Classification is the only step that should decide why a route is not directly G
 
 - backend classification owns hard-coded non-testable names and serve-readiness checks
 - frontend classification owns `Requires POST submission`, `URL requires parameters`, and `URL contains regex patterns`
+- frontend classification allows parameterized page routes to remain testable when a concrete `resolved_url` is available
 - frontend classification also marks non-default-site page URLs as untestable to avoid cross-host false positives in report testing
 - backend finalization adds `URL requires parameters` only when a route required resolution and no concrete path could be produced
 

@@ -11,10 +11,15 @@
 <nav>
     <a href="{{ all_url }}">All Events</a>
     | <a href="{{ past_url }}">Past Events</a>
+    | <a href="{{ tags_url }}">Tags</a>
+    | <a href="{{ sample_tag_url }}">Sample Tag</a>
     {% for year, year_url in years %}
     | <a href="{{ year_url }}">{{ year }}</a>
     {% endfor %}
 </nav>
+{% if active_tag %}
+<p>Active tag: {{ active_tag }}</p>
+{% endif %}
 {% if events %}
 <ul>
     {% for event in events %}
