@@ -14,6 +14,7 @@ from wagtail_unveil.discovery.backend import (
     _DiscoveredAdminRoute,
     _finalize_admin_route,
     _get_instance_for_model,
+    _get_model_from_callback,
     _get_model_from_modeladmin_name,
     _get_namespace_specific_instance,
     _normalize_admin_route,
@@ -243,6 +244,22 @@ class TestAdminDiscoveryPhases(TestCase):
         self.assertEqual(result.resolved_route, "")
 
 
+class TestCallbackModelDiscovery(TestCase):
+    def test_get_model_from_callback_supports_callback_cls_mro(self):
+        class BaseView:
+            model = Document
+
+        class DetailView(BaseView):
+            pass
+
+        def callback(request):
+            return None
+
+        callback.cls = DetailView
+
+        self.assertIs(_get_model_from_callback(callback), Document)
+
+
 class TestParameterisedURLResolution(TestCase):
     """Test that parameterised admin URLs are resolved using real model instances."""
 
@@ -324,6 +341,29 @@ class TestParameterisedURLResolution(TestCase):
     def test_user_edit_url_is_testable(self):
         self._assert_namespace_name_testable("wagtailusers_users", "edit")
 
+    def test_admin_api_detail_urls_are_testable_with_resolved_route(self):
+        expected_pks = {
+            "wagtailadmin_api:pages": Site.objects.get(is_default_site=True).root_page.pk,
+            "wagtailadmin_api:documents": self.document.pk,
+            "wagtailadmin_api:images": self.image.pk,
+        }
+
+        for namespace, expected_pk in expected_pks.items():
+            with self.subTest(namespace=namespace):
+                urls = [u for u in self.urls if u.namespace == namespace and u.name == "detail"]
+                self.assertEqual(len(urls), 1)
+                self.assertTrue(urls[0].is_testable, urls[0].route)
+                self.assertEqual(urls[0].skip_reason, "")
+                self.assertTrue(urls[0].resolved_route, urls[0].route)
+                self.assertIn(f"/{expected_pk}/", urls[0].resolved_route)
+
+    def test_admin_api_action_urls_remain_untestable(self):
+        action_urls = [u for u in self.urls if u.namespace == "wagtailadmin_api:pages" and u.name == "action"]
+        self.assertEqual(len(action_urls), 1)
+        self.assertFalse(action_urls[0].is_testable, action_urls[0].route)
+        self.assertEqual(action_urls[0].skip_reason, "URL requires parameters")
+        self.assertEqual(action_urls[0].resolved_route, "")
+
     def test_resolved_route_has_no_angle_brackets(self):
         resolved = [u for u in self.urls if u.resolved_route]
         self.assertGreater(len(resolved), 0)
@@ -345,6 +385,19 @@ class TestParameterisedURLResolution(TestCase):
         for url in unresolvable:
             self.assertFalse(url.is_testable, url.route)
             self.assertIn(url.skip_reason, ("URL requires parameters", "POST-only view"))
+
+    @mock.patch("wagtail_unveil.discovery.backend._get_instance_for_model", return_value=None)
+    def test_admin_api_detail_urls_stay_untestable_without_instances(self, get_instance):
+        urls = get_admin_urls()
+        detail_urls = [u for u in urls if u.namespace.startswith("wagtailadmin_api:") and u.name == "detail"]
+
+        self.assertGreater(len(detail_urls), 0)
+        for url in detail_urls:
+            self.assertFalse(url.is_testable, url.route)
+            self.assertEqual(url.skip_reason, "URL requires parameters")
+            self.assertEqual(url.resolved_route, "")
+
+        self.assertGreaterEqual(get_instance.call_count, 3)
 
 
 class TestParameterizedResolutionStrategies(TestCase):
