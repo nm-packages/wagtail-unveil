@@ -19,6 +19,7 @@ class ProductViewSet(ModelViewSet):
     add_to_admin_menu = False
     inspect_view_enabled = True
     copy_view_enabled = True
+    sort_order_field = "sort_order"
     form_fields = ["name", "sku", "description", "price", "supplier", "is_active"]
     list_display = ["name", "sku", "price", "supplier", "is_active"]
     list_filter = ["is_active", "supplier"]

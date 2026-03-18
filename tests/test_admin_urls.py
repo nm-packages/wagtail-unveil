@@ -243,6 +243,42 @@ class TestAdminDiscoveryPhases(TestCase):
         self.assertEqual(result.skip_reason, "URL requires parameters")
         self.assertEqual(result.resolved_route, "")
 
+    def test_finalization_marks_resolved_post_only_route_untestable(self):
+        class ReorderView:
+            http_method_names = ["post", "options"]
+
+            def post(self, request, *args, **kwargs):
+                return None
+
+        def callback(request):
+            return None
+
+        callback.view_class = ReorderView
+
+        normalized = _normalize_admin_route(
+            _DiscoveredAdminRoute(
+                raw_route="admin/inventory/product/reorder/<int:pk>/",
+                name="reorder",
+                namespace="inventory_product",
+                callback=callback,
+            ),
+            skip_prefixes=[],
+        )
+        classification = _AdminClassification(should_resolve=True)
+
+        with mock.patch(
+            "wagtail_unveil.discovery.backend._resolve_parameterized_url",
+            return_value=mock.Mock(
+                resolved=True,
+                resolved_route="admin/inventory/product/reorder/1/",
+            ),
+        ):
+            result = _finalize_admin_route(normalized, classification)
+
+        self.assertFalse(result.is_testable)
+        self.assertEqual(result.skip_reason, "POST-only view")
+        self.assertEqual(result.resolved_route, "admin/inventory/product/reorder/1/")
+
 
 class TestCallbackModelDiscovery(TestCase):
     def test_get_model_from_callback_supports_callback_cls_mro(self):
@@ -285,8 +321,30 @@ class TestParameterisedURLResolution(TestCase):
         self.user = User.objects.create_user(username="testuser", password="password")
         self.group = Group.objects.create(name="Test group")
 
+        from sandbox.inventory.models import Product, Supplier
         from sandbox.taxonomy.models import Banner, Category, Colour
 
+        self.supplier = Supplier.objects.create(
+            name="Test supplier",
+            email="supplier@example.com",
+            website="https://supplier.example.com",
+        )
+        self.product = Product.objects.create(
+            name="Test product alpha",
+            sku="TEST-ALPHA",
+            description="First reorder candidate",
+            price="9.99",
+            sort_order=0,
+            supplier=self.supplier,
+        )
+        self.second_product = Product.objects.create(
+            name="Test product beta",
+            sku="TEST-BETA",
+            description="Second reorder candidate",
+            price="19.99",
+            sort_order=1,
+            supplier=self.supplier,
+        )
         self.category = Category.objects.create(name="Test category")
         self.colour = Colour.objects.create(name="Test colour")
         self.banner = Banner.objects.create(title="Test banner")
@@ -378,6 +436,16 @@ class TestParameterisedURLResolution(TestCase):
 
     def test_searchpick_edit_url_is_testable(self):
         self._assert_namespace_name_testable("searchpromotions", "edit")
+
+    def test_inventory_reorder_urls_remain_visible_but_untestable(self):
+        reorder_urls = [u for u in self.urls if u.name == "reorder" and "/reorder/" in u.route]
+
+        self.assertGreater(len(reorder_urls), 0)
+        for url in reorder_urls:
+            self.assertFalse(url.is_testable, url.route)
+            self.assertEqual(url.skip_reason, "POST-only view")
+            self.assertTrue(url.resolved_route, url.route)
+            self.assertRegex(url.resolved_route, r"admin/.+/reorder/\d+/")
 
     def test_unresolvable_parameterised_urls_are_untestable(self):
         unresolvable = [u for u in self.urls if u.has_parameters and not u.resolved_route]

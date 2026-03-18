@@ -110,6 +110,7 @@ The full discovery flow, resolution fallbacks, special cases, and intentional li
 
 `get_admin_urls()` follows explicit phases: discover admin candidates, normalize route metadata, classify testability, resolve supported parameterized URLs, then emit `BackendURL` objects.
 Namespace-specific rules may replace an earlier instance choice or invalidate it entirely when the route requires a different model type, such as workflow usage URLs.
+Resolved admin routes are only marked testable when the callback supports GET; POST-only routes such as reorder views remain visible with a skip reason instead of being offered to the report tester.
 
 ### Frontend URLs
 
