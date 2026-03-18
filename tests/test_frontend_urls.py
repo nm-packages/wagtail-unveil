@@ -1,7 +1,8 @@
+from types import SimpleNamespace
 from unittest.mock import patch
 from urllib.parse import urlparse
 
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from wagtail.models import Page, Site
 
 from sandbox.core.models import StandardPage
@@ -96,6 +97,7 @@ class TestRoutableSubUrls(TestCase):
         self.event_index.save_revision().publish()
         self.urls = get_frontend_urls()
         self.page_type = "events.EventIndexPage"
+        self.factory = RequestFactory()
 
     def _get_event_urls(self):
         return [u for u in self.urls if u.source == "page" and u.page_type == self.page_type]
@@ -121,6 +123,51 @@ class TestRoutableSubUrls(TestCase):
         self.assertFalse(year.is_testable)
         self.assertEqual(year.skip_reason, "URL requires parameters")
         self.assertEqual(year.name, "events_for_year")
+
+    def test_static_regex_family_sub_route_discovered_and_testable(self):
+        event_urls = self._get_event_urls()
+        tag_urls = [u for u in event_urls if u.url.endswith("/tags/")]
+        self.assertEqual(len(tag_urls), 1)
+        tag_index = tag_urls[0]
+        self.assertTrue(tag_index.is_testable)
+        self.assertEqual(tag_index.skip_reason, "")
+        self.assertEqual(tag_index.name, "tag_archive")
+
+    def test_regex_sub_route_discovered_and_not_testable(self):
+        event_urls = self._get_event_urls()
+        regex_urls = [u for u in event_urls if "([\\w-]+)" in u.url]
+        self.assertEqual(len(regex_urls), 1)
+        regex_url = regex_urls[0]
+        self.assertEqual(regex_url.url, "/events/tags/([\\w-]+)/")
+        self.assertEqual(regex_url.source, "page")
+        self.assertFalse(regex_url.is_testable)
+        self.assertEqual(regex_url.skip_reason, "URL contains regex patterns")
+        self.assertEqual(regex_url.name, "tag_archive")
+
+    def test_static_tag_route_invokes_render_with_default_title(self):
+        request = self.factory.get("/events/tags/")
+        response = object()
+
+        with patch.object(self.event_index, "render", return_value=response) as render:
+            result = self.event_index.tag_archive(request)
+
+        self.assertIs(result, response)
+        self.assertEqual(render.call_args.kwargs["context_overrides"]["filter_title"], "Tagged Events")
+        self.assertEqual(render.call_args.kwargs["context_overrides"]["active_tag"], "")
+
+    def test_concrete_regex_tag_route_invokes_render_with_tag_context(self):
+        request = self.factory.get("/events/tags/sourdough/")
+        response = object()
+
+        with patch.object(self.event_index, "render", return_value=response) as render:
+            result = self.event_index.tag_archive(request, "sourdough")
+
+        self.assertIs(result, response)
+        self.assertEqual(
+            render.call_args.kwargs["context_overrides"]["filter_title"],
+            "Events tagged sourdough",
+        )
+        self.assertEqual(render.call_args.kwargs["context_overrides"]["active_tag"], "sourdough")
 
     def test_index_route_not_duplicated(self):
         event_urls = self._get_event_urls()
@@ -213,6 +260,30 @@ class TestFrontendPageLimitPerformance(TestCase):
 
 
 class TestFrontendDiscoveryPhases(TestCase):
+    def test_regex_routable_candidate_records_contains_regex(self):
+        pattern = SimpleNamespace(
+            name="tag_archive",
+            pattern=SimpleNamespace(_regex="^tags/([\\w-]+)/$"),
+        )
+
+        class RegexRoutablePage:
+            title = "Events"
+
+            @classmethod
+            def get_subpage_urls(cls):
+                return [pattern]
+
+        result = _discover_routable_page_candidates(
+            RegexRoutablePage(),
+            "/events/",
+            "events.EventIndexPage",
+        )
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].url, "/events/tags/([\\w-]+)/")
+        self.assertFalse(result[0].has_parameters)
+        self.assertTrue(result[0].contains_regex)
+
     def test_plain_page_candidate_is_testable(self):
         candidate = _FrontendCandidate(
             url="/about/",

@@ -194,6 +194,7 @@ def _discover_routable_page_candidates(
                 site_port=site_port,
                 is_cross_site=is_cross_site,
                 has_parameters=route_has_parameters(sub_route),
+                contains_regex=route_contains_regex(sub_route),
             )
         )
     return results

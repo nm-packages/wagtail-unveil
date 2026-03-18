@@ -125,9 +125,10 @@ Each candidate is classified by `_classify_frontend_candidate()` and emitted as 
 - construct a full URL by joining the page path and sub-route
 - apply skip prefixes to the full URL
 - record whether the sub-route contains `<...>` placeholders
+- record whether the normalized sub-route still contains regex constructs such as `(` or `\w`
 - leave the final testability decision to classification
 
-This means routable pages contribute both their base page URL and any additional sub-routes, but parameterized sub-routes are represented rather than auto-resolved.
+This means routable pages contribute both their base page URL and any additional sub-routes. Path-parameter sub-routes remain visible but untestable with `URL requires parameters`, while regex-backed sub-routes remain visible but untestable with `URL contains regex patterns`.
 
 ## Frontend Resolver Discovery
 

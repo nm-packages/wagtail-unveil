@@ -119,7 +119,7 @@ Namespace-specific rules may replace an earlier instance choice or invalidate it
 - additional page-derived routes for forms and `RoutablePageMixin`
 - non-admin resolver routes
 
-Frontend discovery also follows explicit phases: discover candidates, normalize route metadata, classify testability, then emit `FrontendURL` objects. Parameterized routable sub-routes are discovered but marked non-testable during classification.
+Frontend discovery also follows explicit phases: discover candidates, normalize route metadata, classify testability, then emit `FrontendURL` objects. Routable sub-routes remain visible in output, while path-parameter variants are marked non-testable for required parameters and regex-backed variants are marked non-testable for regex patterns.
 
 ## Constraints
 

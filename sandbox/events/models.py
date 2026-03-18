@@ -2,7 +2,7 @@ from datetime import date
 
 from django.db import models
 from wagtail.admin.panels import FieldPanel
-from wagtail.contrib.routable_page.models import RoutablePageMixin, path
+from wagtail.contrib.routable_page.models import RoutablePageMixin, path, route
 from wagtail.fields import RichTextField
 from wagtail.models import Page
 
@@ -50,6 +50,8 @@ class EventIndexPage(RoutablePageMixin, Page):
             "past_url": self.url + self.reverse_subpage("past_events"),
             "all_url": self.url.rstrip("/") + "/",
             "years": [(year, self.url + self.reverse_subpage("events_for_year", args=[year])) for year in years],
+            "tags_url": self.url + self.reverse_subpage("tag_archive"),
+            "sample_tag_url": self.url + self.reverse_subpage("tag_archive", args=["sourdough"]),
         }
 
     @path("")
@@ -82,6 +84,25 @@ class EventIndexPage(RoutablePageMixin, Page):
             context_overrides={
                 "events": events,
                 "filter_title": f"Events in {year}",
+                **self._get_nav_context(),
+            },
+        )
+
+    @route(r"^tags/$", name="tag_archive")
+    @route(r"^tags/([\w-]+)/$", name="tag_archive")
+    def tag_archive(self, request, tag=None):
+        """Regex routes used to exercise routable discovery edge cases."""
+        events = self._get_events()
+        filter_title = "Tagged Events"
+        if tag:
+            filter_title = f"Events tagged {tag}"
+
+        return self.render(
+            request,
+            context_overrides={
+                "events": events,
+                "filter_title": filter_title,
+                "active_tag": tag or "",
                 **self._get_nav_context(),
             },
         )
