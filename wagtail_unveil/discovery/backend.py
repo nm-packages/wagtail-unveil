@@ -132,25 +132,24 @@ def _get_model_from_modeladmin_name(name):
         return None
 
 
-def _get_model_from_callback(callback):
-    """Extract a Django model class from a view callback.
+def _get_model_from_view_class(view_class):
+    """Extract a Django model class from a view class or its MRO."""
+    if not view_class:
+        return None
 
-    Checks three sources in order:
-    1. view_initkwargs["model"] — ModelViewSet views (as_view(model=Model))
-    2. view_class.__dict__["model"] as a plain class attribute
-    3. view_class.__dict__["model"] as a cached_property (calls func(None))
-    """
-    # Source 1: initkwargs (ModelViewSet pattern)
-    initkwargs = getattr(callback, "initkwargs", None) or getattr(callback, "view_initkwargs", None)
-    if initkwargs:
-        model = initkwargs.get("model")
-        if _is_django_model(model):
-            return model
+    model_attr = view_class.__dict__.get("model")
+    if _is_django_model(model_attr):
+        return model_attr
+    if isinstance(model_attr, (cached_property, django_cached_property)):
+        try:
+            model = model_attr.func(None)
+            if _is_django_model(model):
+                return model
+        except Exception:
+            pass
 
-    # Sources 2 & 3: class attribute or cached_property on view_class
-    view_class = getattr(callback, "view_class", None)
-    if view_class:
-        model_attr = view_class.__dict__.get("model")
+    for cls in view_class.__mro__:
+        model_attr = cls.__dict__.get("model")
         if _is_django_model(model_attr):
             return model_attr
         if isinstance(model_attr, (cached_property, django_cached_property)):
@@ -161,18 +160,28 @@ def _get_model_from_callback(callback):
             except Exception:
                 pass
 
-        # Source 4: model inherited from a parent class (e.g. search promotions mixin)
-        for cls in view_class.__mro__:
-            model_attr = cls.__dict__.get("model")
-            if _is_django_model(model_attr):
-                return model_attr
-            if isinstance(model_attr, (cached_property, django_cached_property)):
-                try:
-                    model = model_attr.func(None)
-                    if _is_django_model(model):
-                        return model
-                except Exception:
-                    pass
+    return None
+
+
+def _get_model_from_callback(callback):
+    """Extract a Django model class from a view callback.
+
+    Checks callback metadata in order:
+    1. view_initkwargs["model"] — ModelViewSet views (as_view(model=Model))
+    2. callback.view_class and its MRO
+    3. callback.cls and its MRO
+    """
+    # Source 1: initkwargs (ModelViewSet pattern)
+    initkwargs = getattr(callback, "initkwargs", None) or getattr(callback, "view_initkwargs", None)
+    if initkwargs:
+        model = initkwargs.get("model")
+        if _is_django_model(model):
+            return model
+
+    for view_class in (getattr(callback, "view_class", None), getattr(callback, "cls", None)):
+        model = _get_model_from_view_class(view_class)
+        if model is not None:
+            return model
 
     return None
 

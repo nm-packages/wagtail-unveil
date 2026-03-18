@@ -69,7 +69,7 @@ Backend parameter resolution is phase 4 only. `_resolve_parameterized_url()` att
 6. Reverse the URL with `_reverse_with_instance()` using the selected instance.
 7. If no instance can be selected, keep the route visible but untestable.
 
-`_get_model_from_callback()` still checks callback init kwargs first, then `view_class.model`, then cached-property and MRO-based variants of `model`. For treebeard-backed models, `_get_instance_for_model()` excludes the root node (`depth=1`) before selecting the first instance.
+`_get_model_from_callback()` still checks callback init kwargs first, then inspects classes exposed on `callback.view_class` and `callback.cls`, including direct `model` attributes plus cached-property and MRO-based variants of `model`. For treebeard-backed models, `_get_instance_for_model()` excludes the root node (`depth=1`) before selecting the first instance.
 
 Internal resolution returns a `_ParameterizedURLResolution` object with `resolved_route`, `resolved`, `method`, `detail`, and `attempts`. This metadata is internal only. It exists to make the fallback order and failure path easier to debug and test. Public JSON responses still expose only the existing `BackendURL` fields.
 
