@@ -126,7 +126,7 @@ Each candidate is classified by `_classify_frontend_candidate()` and emitted as 
 - apply skip prefixes to the full URL
 - record whether the sub-route contains `<...>` placeholders
 - record whether the normalized sub-route still contains regex constructs such as `(` or `\w`
-- attempt best-effort concrete resolution for path-style parameterized sub-routes and store the result in `resolved_url`
+- attempt best-effort concrete resolution for single-parameter path-style sub-routes using safe descendant-derived values and store the result in `resolved_url`
 - leave the final testability decision to classification
 
 This means routable pages contribute both their base page URL and any additional sub-routes. Path-parameter sub-routes remain visible and become directly testable when a concrete `resolved_url` can be inferred, otherwise they remain visible but untestable with `URL requires parameters`. Regex-backed sub-routes remain visible but untestable with `URL contains regex patterns`.

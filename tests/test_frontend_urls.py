@@ -483,6 +483,13 @@ class TestFrontendDiscoveryHelpers(TestCase):
         self.assertEqual(_get_routable_parameter_candidates(page, "uuid", "uuid"), ["alpha"])
         self.assertEqual(get_candidates.call_count, 2)
 
+    def test_get_routable_parameter_candidates_does_not_use_index_page_slug(self):
+        page = SimpleNamespace(slug="events")
+        page.get_descendants = mock.Mock()
+        page.get_descendants.return_value.live.return_value.specific.return_value = []
+
+        self.assertEqual(_get_routable_parameter_candidates(page, "slug", "slug"), [])
+
     def test_resolve_routable_page_url_returns_empty_when_reverse_fails(self):
         page = mock.Mock(year=2025)
         page.get_descendants.return_value.live.return_value.specific.return_value = []
@@ -510,6 +517,19 @@ class TestFrontendDiscoveryHelpers(TestCase):
             _resolve_routable_page_url(page, pattern, "/events/", "year/<int:year>/"),
             "",
         )
+
+    def test_resolve_routable_page_url_returns_empty_for_multi_parameter_routes(self):
+        page = mock.Mock(year=2025, slug="events")
+        pattern = SimpleNamespace(
+            name="event_detail",
+            pattern=SimpleNamespace(_route="year/<int:year>/<slug:slug>/"),
+        )
+
+        self.assertEqual(
+            _resolve_routable_page_url(page, pattern, "/events/", "year/<int:year>/<slug:slug>/"),
+            "",
+        )
+        page.reverse_subpage.assert_not_called()
 
     def test_discover_routable_page_candidates_ignores_unknown_pattern_objects(self):
         pattern = SimpleNamespace(name="broken", pattern=SimpleNamespace())

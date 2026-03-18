@@ -137,9 +137,14 @@ def _get_routable_parameter_candidates(page, parameter_name, converter_name):
     """Return best-effort candidate values for a routable page parameter."""
     values = []
 
-    page_value = getattr(page, parameter_name, None)
-    if not callable(page_value):
-        values.append(page_value)
+    if not (
+        parameter_name in {"pk", "id", "slug", "uuid"}
+        or parameter_name.endswith("_id")
+        or parameter_name.endswith("_slug")
+    ):
+        page_value = getattr(page, parameter_name, None)
+        if not callable(page_value):
+            values.append(page_value)
 
     if parameter_name == "year":
         values.extend(_get_descendant_date_years(page))
@@ -163,8 +168,12 @@ def _resolve_routable_page_url(page, pattern, page_path, sub_route):
     if not pattern.name or not route_has_parameters(sub_route) or route_contains_regex(sub_route):
         return ""
 
+    parameters = list(_iter_routable_parameters(sub_route))
+    if len(parameters) != 1:
+        return ""
+
     args = []
-    for parameter_name, converter_name in _iter_routable_parameters(sub_route):
+    for parameter_name, converter_name in parameters:
         candidates = _get_routable_parameter_candidates(page, parameter_name, converter_name)
         if not candidates:
             return ""
