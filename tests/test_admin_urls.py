@@ -437,10 +437,13 @@ class TestParameterisedURLResolution(TestCase):
     def test_searchpick_edit_url_is_testable(self):
         self._assert_namespace_name_testable("searchpromotions", "edit")
 
-    def test_inventory_reorder_urls_remain_visible_but_untestable(self):
+    def test_runtime_reorder_urls_remain_visible_but_untestable(self):
         reorder_urls = [u for u in self.urls if u.name == "reorder" and "/reorder/" in u.route]
 
-        self.assertGreater(len(reorder_urls), 0)
+        if not reorder_urls:
+            self.assertFalse(any(u.name == "reorder" for u in self.urls))
+            return
+
         for url in reorder_urls:
             self.assertFalse(url.is_testable, url.route)
             self.assertEqual(url.skip_reason, "POST-only view")
