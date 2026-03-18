@@ -726,7 +726,7 @@
       if (reportKind === "backend") {
         return "/" + (item.resolved_route || item.route);
       }
-      return item.url;
+      return item.resolved_url || item.url;
     }
     function createActionCell(item, reportKind) {
       var cell = document.createElement("td");

@@ -13,7 +13,7 @@ You can also reach it from the Wagtail admin dashboard panel.
 ## Features
 
 - **Two URL sources** — Wagtail page URLs (from `Page.objects.live().specific()`) and Django resolver URLs (non-admin routes)
-- **RoutablePageMixin support** — automatically discovers `@path()` and regex `@route()` sub-routes on routable pages; static sub-routes are testable, path-parameter sub-routes are marked non-testable, and regex literal patterns remain visible but non-testable
+- **RoutablePageMixin support** — automatically discovers `@path()` and regex `@route()` sub-routes on routable pages; static sub-routes are testable, supported path-parameter sub-routes use inferred concrete URLs for testing, and regex literal patterns remain visible but non-testable
 - **Configurable page limit** — control how many page instances per type are included via [`WAGTAIL_UNVEIL_PAGES_PER_TYPE`](../configuration/settings-reference.md#wagtail_unveil_pages_per_type)
 - **One-click URL testing** — colour-coded status codes (green=2xx, yellow=3xx, red=4xx/5xx)
 - **Test All** button — runs all testable URLs sequentially with a progress indicator and pass/fail summary
@@ -48,7 +48,7 @@ Some frontend URLs cannot be tested directly:
 - Pages belonging to non-default Wagtail sites
 - Form landing pages (POST-only)
 
-These remain visible in the report with a reason.
+When a routable page path parameter can be resolved safely, the row stays visible with its canonical pattern while the Test/Open actions use the inferred concrete URL. URLs that still cannot be resolved remain visible in the report with a reason.
 
 ## Related
 
