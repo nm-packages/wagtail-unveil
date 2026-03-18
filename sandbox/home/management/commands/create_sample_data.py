@@ -405,7 +405,7 @@ class Command(BaseCommand):
             ("Gadget Beta", "GAD-002", "An improved gadget.", "49.99"),
             ("Widget Standard", "WID-001", "A standard widget.", "9.99"),
         ]
-        for name, sku, description, price in products:
+        for sort_order, (name, sku, description, price) in enumerate(products):
             full_name = f"{SAMPLE_PREFIX} {name}"
             full_sku = f"{SAMPLE_PREFIX}-{sku}"
             if Product.objects.filter(name=full_name).exists():
@@ -416,6 +416,7 @@ class Command(BaseCommand):
                 sku=full_sku,
                 description=description,
                 price=price,
+                sort_order=sort_order,
                 supplier=supplier,
             )
             self.stdout.write(f"Created product: {full_name}")

@@ -20,6 +20,7 @@ class Product(models.Model):
     sku = models.CharField(max_length=50, unique=True, verbose_name="SKU")
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    sort_order = models.IntegerField(null=True, blank=True)
     supplier = models.ForeignKey(
         Supplier,
         on_delete=models.CASCADE,

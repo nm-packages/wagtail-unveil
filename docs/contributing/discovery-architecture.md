@@ -38,7 +38,8 @@ Normalization is intentionally partial. Some routes still contain regex construc
 2. `_normalize_admin_route()` cleans the route with `clean_regex_route()`, drops routes that still contain unsafe regex metacharacters after cleanup, applies `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES`, and computes normalized metadata such as `has_parameters` and `view_name`.
 3. `_classify_admin_route()` assigns testability for hard-coded non-testable names and serve-readiness checks, and marks parameterized routes as needing resolution without immediately assigning `URL requires parameters`.
 4. `_finalize_admin_route()` attempts backend parameter resolution for routes that need it.
-5. `_finalize_admin_route()` emits the final `BackendURL`, assigning `URL requires parameters` only if resolution fails.
+5. `_finalize_admin_route()` applies a final GET-compatibility check so routes that only support non-GET methods remain visible but untestable.
+6. `_finalize_admin_route()` emits the final `BackendURL`, assigning `URL requires parameters` only if resolution fails.
 
 Current hard-coded non-testable names:
 
@@ -151,9 +152,10 @@ Resolver-derived URLs are still included when untestable so they remain visible 
 
 Discovery and testability are separate concepts in this package. A URL can be discovered successfully and still be intentionally marked untestable. Untestable URLs remain in the output with a `skip_reason` so contributors can see why they are excluded from direct GET testing.
 
-Classification is the only step that should decide why a route is not directly GET-testable:
+Classification is the main step that should decide why a route is not directly GET-testable:
 
 - backend classification owns hard-coded non-testable names and serve-readiness checks
+- backend finalization owns the final GET-compatibility check for resolved admin routes such as POST-only reorder views
 - frontend classification owns `Requires POST submission`, `URL requires parameters`, and `URL contains regex patterns`
 - frontend classification allows parameterized page routes to remain testable when a concrete `resolved_url` is available
 - frontend classification also marks non-default-site page URLs as untestable to avoid cross-host false positives in report testing

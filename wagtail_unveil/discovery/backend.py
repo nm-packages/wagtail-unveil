@@ -81,6 +81,49 @@ def _get_view_name(callback):
     return repr(callback)
 
 
+def _iter_callback_view_classes(callback):
+    """Yield distinct view classes exposed by a callback."""
+    seen = set()
+    for attr_name in ("view_class", "cls"):
+        view_class = getattr(callback, attr_name, None)
+        if view_class is None or view_class in seen:
+            continue
+        seen.add(view_class)
+        yield view_class
+
+
+def _get_callback_allowed_http_methods(callback):
+    """Return declared HTTP methods for the callback when discoverable."""
+    allowed_methods = set()
+    callback_actions = getattr(callback, "actions", None)
+    if callback_actions:
+        allowed_methods.update(str(method_name).upper() for method_name in callback_actions)
+
+    for view_class in _iter_callback_view_classes(callback):
+        declared_methods = getattr(view_class, "http_method_names", None)
+        if declared_methods is None:
+            continue
+        for method_name in declared_methods:
+            if hasattr(view_class, method_name):
+                allowed_methods.add(method_name.upper())
+
+    callback_allowed_methods = getattr(callback, "allowed_methods", None)
+    if callback_allowed_methods:
+        allowed_methods.update(str(method_name).upper() for method_name in callback_allowed_methods)
+
+    return allowed_methods
+
+
+def _get_method_skip_reason(callback):
+    """Return a skip reason when the callback does not support GET."""
+    allowed_methods = _get_callback_allowed_http_methods(callback)
+    if not allowed_methods or "GET" in allowed_methods:
+        return ""
+    if allowed_methods.issubset({"POST", "OPTIONS"}):
+        return "POST-only view"
+    return "GET not supported"
+
+
 WORKFLOW_USAGE_NAMES = ("usage", "usage_results")
 NON_TESTABLE_NAMES = {
     "wagtailadmin_logout": "POST-only view",
@@ -329,6 +372,12 @@ def _finalize_admin_route(normalized_route, classification):
         else:
             is_testable = False
             skip_reason = "URL requires parameters"
+
+    if is_testable:
+        method_skip_reason = _get_method_skip_reason(normalized_route.callback)
+        if method_skip_reason:
+            is_testable = False
+            skip_reason = method_skip_reason
 
     return BackendURL(
         route=normalized_route.route,
