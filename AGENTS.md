@@ -117,7 +117,7 @@ JSON endpoints use Bearer token auth via `WAGTAIL_UNVEIL_API_KEY`. HTML report v
 
 ### Sandbox
 
-The sandbox project mounts the package at `/unveil/` and serves Wagtail pages from `/`.
+The sandbox project mounts the package at `/unveil/`, exposes Wagtail API v2 routes at `/api/v2/`, and serves Wagtail pages from `/`.
 
 ## Coding Conventions
 

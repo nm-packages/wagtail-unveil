@@ -27,6 +27,7 @@ The sandbox mounts:
 
 - Django admin at `/django-admin/`
 - Wagtail admin at `/admin/`
+- Wagtail API v2 at `/api/v2/`
 - documents at `/documents/`
 - images at `/images/`
 - search at `/search/`

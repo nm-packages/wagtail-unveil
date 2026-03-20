@@ -5,6 +5,10 @@ from unittest.mock import patch
 from urllib.parse import urlparse
 
 from django.test import RequestFactory, TestCase, override_settings
+from wagtail.contrib.redirects.models import Redirect
+from wagtail.documents.models import Document
+from wagtail.images.models import Image
+from wagtail.images.tests.utils import get_test_image_file
 from wagtail.models import Page, Site
 
 from sandbox.core.models import StandardPage
@@ -21,6 +25,8 @@ from wagtail_unveil.discovery.frontend import (
     _get_descendant_date_years,
     _get_descendant_page_candidates,
     _get_routable_parameter_candidates,
+    _get_wagtail_api_find_query_params,
+    _is_supported_wagtail_api_find_route,
     _iter_routable_parameters,
     _join_frontend_paths,
     _resolve_routable_page_url,
@@ -45,6 +51,7 @@ class TestGetFrontendUrls(TestCase):
         self.assertIsInstance(url.page_title, str)
         self.assertIsInstance(url.name, str)
         self.assertIsInstance(url.resolved_url, str)
+        self.assertIsInstance(url.query_params, dict)
         self.assertIsInstance(url.is_testable, bool)
 
     def test_sources_are_valid(self):
@@ -282,6 +289,39 @@ class TestFrontendPageLimitPerformance(TestCase):
 
 
 class TestFrontendDiscoveryPhases(TestCase):
+    def test_query_driven_candidate_with_query_params_is_testable(self):
+        candidate = _FrontendCandidate(
+            url="/api/v2/pages/find/",
+            source="resolver",
+            page_type="",
+            page_title="",
+            name="find",
+            requires_query_params=True,
+            query_params={"id": "2"},
+        )
+
+        classification = _classify_frontend_candidate(candidate)
+        result = _build_frontend_url(candidate, classification)
+
+        self.assertTrue(result.is_testable)
+        self.assertEqual(result.skip_reason, "")
+        self.assertEqual(result.query_params, {"id": "2"})
+
+    def test_query_driven_candidate_without_query_params_is_untestable(self):
+        candidate = _FrontendCandidate(
+            url="/api/v2/pages/find/",
+            source="resolver",
+            page_type="",
+            page_title="",
+            name="find",
+            requires_query_params=True,
+        )
+
+        classification = _classify_frontend_candidate(candidate)
+
+        self.assertFalse(classification.is_testable)
+        self.assertEqual(classification.skip_reason, "Requires query parameters")
+
     def test_regex_routable_candidate_records_contains_regex(self):
         pattern = SimpleNamespace(
             name="tag_archive",
@@ -421,6 +461,16 @@ class TestFrontendDiscoveryPhases(TestCase):
 
 
 class TestFrontendDiscoveryHelpers(TestCase):
+    def test_supported_wagtail_api_find_route_detection_requires_find_view(self):
+        callback = SimpleNamespace(name="find", cls=SimpleNamespace(), actions={"get": "listing_view"})
+
+        self.assertFalse(_is_supported_wagtail_api_find_route("find", callback))
+
+    def test_non_wagtail_find_route_does_not_get_query_params(self):
+        callback = SimpleNamespace(cls=SimpleNamespace(), actions={"get": "find_view"})
+
+        self.assertEqual(_get_wagtail_api_find_query_params(callback), {})
+
     def test_format_cross_site_skip_reason_with_standard_port_omits_port(self):
         candidate = _FrontendCandidate(
             url="/about/",
@@ -549,6 +599,67 @@ class TestFrontendDiscoveryHelpers(TestCase):
             ),
             [],
         )
+
+
+class TestWagtailAPIFindFrontendUrls(TestCase):
+    def setUp(self):
+        self.redirect = Redirect.objects.create(
+            old_path="/test-redirect/",
+            site=Site.objects.get(is_default_site=True),
+            redirect_link="/",
+        )
+        self.image = Image.objects.create(
+            title="Frontend test image",
+            file=get_test_image_file(),
+        )
+        self.document = Document.objects.create(
+            title="Frontend test document",
+            file="frontend-test.pdf",
+        )
+        self.urls = get_frontend_urls()
+
+    def _get_match(self, path):
+        matches = [url for url in self.urls if url.url == path and url.name == "find"]
+        self.assertEqual(len(matches), 1)
+        return matches[0]
+
+    def test_pages_find_route_uses_default_site_root_page_id(self):
+        match = self._get_match("/api/v2/pages/find/")
+
+        self.assertTrue(match.is_testable)
+        self.assertEqual(match.skip_reason, "")
+        self.assertEqual(
+            match.query_params,
+            {"id": str(Site.objects.get(is_default_site=True).root_page_id)},
+        )
+
+    def test_images_find_route_uses_image_id_query_param(self):
+        match = self._get_match("/api/v2/images/find/")
+
+        self.assertTrue(match.is_testable)
+        self.assertEqual(match.query_params, {"id": str(self.image.pk)})
+
+    def test_documents_find_route_uses_document_id_query_param(self):
+        match = self._get_match("/api/v2/documents/find/")
+
+        self.assertTrue(match.is_testable)
+        self.assertEqual(match.query_params, {"id": str(self.document.pk)})
+
+    def test_redirects_find_route_uses_html_path_query_param(self):
+        match = self._get_match("/api/v2/redirects/find/")
+
+        self.assertTrue(match.is_testable)
+        self.assertEqual(match.query_params, {"html_path": self.redirect.old_path})
+
+    @mock.patch("wagtail_unveil.discovery.frontend._get_first_redirect_old_path", return_value="")
+    def test_find_route_without_query_params_stays_visible_but_untestable(self, _mock_old_path):
+        urls = get_frontend_urls()
+        matches = [url for url in urls if url.url == "/api/v2/redirects/find/" and url.name == "find"]
+
+        self.assertEqual(len(matches), 1)
+        self.assertFalse(matches[0].is_testable)
+        self.assertEqual(matches[0].skip_reason, "Requires query parameters")
+        self.assertEqual(matches[0].query_params, {})
 
 
 class TestMultisiteFrontendUrls(TestCase):

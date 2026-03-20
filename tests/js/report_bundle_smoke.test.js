@@ -141,6 +141,7 @@ describe("report bundle", () => {
           page_title: "Events",
           name: "events_for_year",
           resolved_url: "/events/year/2025/",
+          query_params: {},
           is_testable: true,
           skip_reason: "",
         },
@@ -159,6 +160,48 @@ describe("report bundle", () => {
     );
     expect(document.querySelector(".open-btn").getAttribute("href")).toBe(
       "/events/year/2025/",
+    );
+  });
+
+  test("frontend rows append query_params to test and open actions when present", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/frontend-urls/",
+      reportKind: "frontend",
+    });
+
+    stubFetchResponse({
+      count: 1,
+      metadata: {
+        total_count: 1,
+        testable_count: 1,
+        untestable_count: 0,
+      },
+      urls: [
+        {
+          url: "/api/v2/redirects/find/",
+          source: "resolver",
+          page_type: "",
+          page_title: "",
+          name: "find",
+          resolved_url: "",
+          query_params: {
+            html_path: "/sample-old-page-1/",
+          },
+          is_testable: true,
+          skip_reason: "",
+        },
+      ],
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(document.querySelector(".test-btn").dataset.url).toBe(
+      "/api/v2/redirects/find/?html_path=%2Fsample-old-page-1%2F",
+    );
+    expect(document.querySelector(".open-btn").getAttribute("href")).toBe(
+      "/api/v2/redirects/find/?html_path=%2Fsample-old-page-1%2F",
     );
   });
 });

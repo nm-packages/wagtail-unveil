@@ -47,7 +47,17 @@
       return "/" + (item.resolved_route || item.route);
     }
 
-    return item.resolved_url || item.url;
+    var requestUrl = item.resolved_url || item.url;
+    var queryParams = item.query_params || {};
+    var encodedParams = new URLSearchParams(queryParams).toString();
+
+    if (!encodedParams) {
+      return requestUrl;
+    }
+
+    return (
+      requestUrl + (requestUrl.indexOf("?") === -1 ? "?" : "&") + encodedParams
+    );
   }
 
   function createActionCell(item, reportKind) {

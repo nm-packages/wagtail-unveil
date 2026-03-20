@@ -1,5 +1,5 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from urllib.parse import urlparse
 
 from django.db import models
@@ -19,6 +19,7 @@ class FrontendURL:
     page_title: str
     name: str
     resolved_url: str = ""
+    query_params: dict[str, str] = field(default_factory=dict)
     is_testable: bool = True
     skip_reason: str = ""
 
@@ -36,7 +37,9 @@ class _FrontendCandidate:
     has_parameters: bool = False
     contains_regex: bool = False
     requires_post: bool = False
+    requires_query_params: bool = False
     resolved_url: str = ""
+    query_params: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -58,6 +61,14 @@ def _get_default_site():
         return None
 
     return Site.objects.filter(is_default_site=True).first()
+
+
+def _get_default_site_root_page_id():
+    """Return the default site's root page ID when available."""
+    default_site = _get_default_site()
+    if default_site and default_site.root_page_id:
+        return str(default_site.root_page_id)
+    return ""
 
 
 def _format_cross_site_skip_reason(candidate):
@@ -105,12 +116,12 @@ def _get_descendant_date_years(page):
         return years
 
     for descendant in descendants:
-        for field in descendant._meta.fields:
-            if field.model is not descendant.__class__:
+        for model_field in descendant._meta.fields:
+            if model_field.model is not descendant.__class__:
                 continue
-            if not isinstance(field, models.DateField):
+            if not isinstance(model_field, models.DateField):
                 continue
-            value = getattr(descendant, field.name, None)
+            value = getattr(descendant, model_field.name, None)
             if value is None or getattr(value, "year", None) is None:
                 continue
             years.append(value.year)
@@ -188,6 +199,111 @@ def _resolve_routable_page_url(page, pattern, page_path, sub_route):
     if route_has_parameters(resolved_url) or route_contains_regex(resolved_url):
         return ""
     return resolved_url
+
+
+def _get_first_live_page_id():
+    """Return the first live page ID when available."""
+    try:
+        from wagtail.models import Page
+    except ImportError:
+        return ""
+
+    page_id = Page.objects.live().order_by("path").values_list("pk", flat=True).first()
+    return str(page_id) if page_id else ""
+
+
+def _get_first_image_id():
+    """Return the first Wagtail image ID when available."""
+    try:
+        from wagtail.images import get_image_model
+    except ImportError:
+        return ""
+
+    image_model = get_image_model()
+    image_id = image_model.objects.order_by("pk").values_list("pk", flat=True).first()
+    return str(image_id) if image_id else ""
+
+
+def _get_first_document_id():
+    """Return the first Wagtail document ID when available."""
+    try:
+        from wagtail.documents import get_document_model
+    except ImportError:
+        return ""
+
+    document_model = get_document_model()
+    document_id = document_model.objects.order_by("pk").values_list("pk", flat=True).first()
+    return str(document_id) if document_id else ""
+
+
+def _get_first_redirect_old_path():
+    """Return the first redirect old_path when available."""
+    try:
+        from wagtail.contrib.redirects.models import Redirect
+    except ImportError:
+        return ""
+
+    old_path = Redirect.objects.order_by("pk").values_list("old_path", flat=True).first()
+    return str(old_path) if old_path else ""
+
+
+def _get_wagtail_api_find_query_params(callback):
+    """Return representative query params for supported Wagtail API find routes."""
+    callback_cls = getattr(callback, "cls", None)
+    callback_actions = getattr(callback, "actions", {}) or {}
+    if callback_actions.get("get") != "find_view":
+        return {}
+
+    try:
+        from wagtail.api.v2.views import PagesAPIViewSet
+        from wagtail.contrib.redirects.api import RedirectsAPIViewSet
+        from wagtail.documents.api.v2.views import DocumentsAPIViewSet
+        from wagtail.images.api.v2.views import ImagesAPIViewSet
+    except ImportError:
+        return {}
+
+    if callback_cls is PagesAPIViewSet:
+        page_id = _get_default_site_root_page_id() or _get_first_live_page_id()
+        return {"id": page_id} if page_id else {}
+
+    if callback_cls is ImagesAPIViewSet:
+        image_id = _get_first_image_id()
+        return {"id": image_id} if image_id else {}
+
+    if callback_cls is DocumentsAPIViewSet:
+        document_id = _get_first_document_id()
+        return {"id": document_id} if document_id else {}
+
+    if callback_cls is RedirectsAPIViewSet:
+        old_path = _get_first_redirect_old_path()
+        return {"html_path": old_path} if old_path else {}
+
+    return {}
+
+
+def _is_supported_wagtail_api_find_route(name, callback):
+    """Return True for supported Wagtail API GET find routes."""
+    if name != "find":
+        return False
+
+    callback_actions = getattr(callback, "actions", {}) or {}
+    if callback_actions.get("get") != "find_view":
+        return False
+
+    try:
+        from wagtail.api.v2.views import PagesAPIViewSet
+        from wagtail.contrib.redirects.api import RedirectsAPIViewSet
+        from wagtail.documents.api.v2.views import DocumentsAPIViewSet
+        from wagtail.images.api.v2.views import ImagesAPIViewSet
+    except ImportError:
+        return False
+
+    return getattr(callback, "cls", None) in {
+        PagesAPIViewSet,
+        ImagesAPIViewSet,
+        DocumentsAPIViewSet,
+        RedirectsAPIViewSet,
+    }
 
 
 def _discover_page_candidates():
@@ -331,7 +447,7 @@ def _discover_resolver_candidates():
     resolver = get_resolver()
     skip_prefixes = get_skip_url_prefixes()
     results = []
-    for route, name, namespace, _callback in walk_patterns(resolver.url_patterns):
+    for route, name, namespace, callback in walk_patterns(resolver.url_patterns):
         if route.startswith("admin/"):
             continue
         if route.startswith("django-admin/"):
@@ -343,6 +459,8 @@ def _discover_resolver_candidates():
 
         normalized_route = clean_regex_route(route)
         url = normalized_route if normalized_route.startswith("/") else f"/{normalized_route}"
+        requires_query_params = _is_supported_wagtail_api_find_route(name, callback)
+        query_params = _get_wagtail_api_find_query_params(callback) if requires_query_params else {}
         results.append(
             _FrontendCandidate(
                 url=url,
@@ -352,6 +470,8 @@ def _discover_resolver_candidates():
                 name=name,
                 has_parameters=route_has_parameters(normalized_route),
                 contains_regex=route_contains_regex(normalized_route),
+                requires_query_params=requires_query_params,
+                query_params=query_params,
             )
         )
     return results
@@ -368,6 +488,11 @@ def _classify_frontend_candidate(candidate):
         return _FrontendClassification(
             is_testable=False,
             skip_reason="Requires POST submission",
+        )
+    if candidate.requires_query_params and not candidate.query_params:
+        return _FrontendClassification(
+            is_testable=False,
+            skip_reason="Requires query parameters",
         )
     if candidate.has_parameters and not candidate.resolved_url:
         return _FrontendClassification(
@@ -391,6 +516,7 @@ def _build_frontend_url(candidate, classification):
         page_title=candidate.page_title,
         name=candidate.name,
         resolved_url=candidate.resolved_url,
+        query_params=dict(candidate.query_params),
         is_testable=classification.is_testable,
         skip_reason=classification.skip_reason,
     )
