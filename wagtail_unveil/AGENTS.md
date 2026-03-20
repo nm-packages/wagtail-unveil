@@ -121,7 +121,7 @@ Resolved admin routes are only marked testable when the callback supports GET; P
 - additional page-derived routes for forms and `RoutablePageMixin`
 - non-admin resolver routes
 
-Frontend discovery also follows explicit phases: discover candidates, normalize route metadata, classify testability, then emit `FrontendURL` objects. Routable sub-routes remain visible in output; supported path-parameter variants may carry a concrete `resolved_url` and become testable, while unresolved path-parameter variants stay non-testable and regex-backed variants stay non-testable for regex patterns. Supported query-driven Wagtail API `find/` routes may also carry representative `query_params`; if no safe values can be inferred they stay visible but non-testable with `Requires query parameters`.
+Frontend discovery also follows explicit phases: discover candidates, normalize route metadata, classify testability, then emit `FrontendURL` objects. Routable sub-routes remain visible in output; supported path-parameter variants may carry a concrete `resolved_url` and become testable, while unresolved path-parameter variants stay non-testable and regex-backed variants stay non-testable for regex patterns. Supported Wagtail API detail routes may also carry a concrete `resolved_url`; query-driven `find/` routes stay visible but non-testable with `Requires query parameters`.
 
 ## Constraints
 

@@ -236,23 +236,23 @@ def _get_first_document_id():
     return str(document_id) if document_id else ""
 
 
-def _get_first_redirect_old_path():
-    """Return the first redirect old_path when available."""
+def _get_first_redirect_id():
+    """Return the first redirect ID when available."""
     try:
         from wagtail.contrib.redirects.models import Redirect
     except ImportError:
         return ""
 
-    old_path = Redirect.objects.order_by("pk").values_list("old_path", flat=True).first()
-    return str(old_path) if old_path else ""
+    redirect_id = Redirect.objects.order_by("pk").values_list("pk", flat=True).first()
+    return str(redirect_id) if redirect_id else ""
 
 
-def _get_wagtail_api_find_query_params(callback):
-    """Return representative query params for supported Wagtail API find routes."""
+def _get_wagtail_api_detail_resolved_url(callback, url):
+    """Return a concrete resolved URL for supported Wagtail API detail routes."""
     callback_cls = getattr(callback, "cls", None)
     callback_actions = getattr(callback, "actions", {}) or {}
-    if callback_actions.get("get") != "find_view":
-        return {}
+    if callback_actions.get("get") != "detail_view":
+        return ""
 
     try:
         from wagtail.api.v2.views import PagesAPIViewSet
@@ -260,25 +260,25 @@ def _get_wagtail_api_find_query_params(callback):
         from wagtail.documents.api.v2.views import DocumentsAPIViewSet
         from wagtail.images.api.v2.views import ImagesAPIViewSet
     except ImportError:
-        return {}
+        return ""
 
     if callback_cls is PagesAPIViewSet:
         page_id = _get_default_site_root_page_id() or _get_first_live_page_id()
-        return {"id": page_id} if page_id else {}
+        return url.replace("<int:pk>", page_id, 1) if page_id else ""
 
     if callback_cls is ImagesAPIViewSet:
         image_id = _get_first_image_id()
-        return {"id": image_id} if image_id else {}
+        return url.replace("<int:pk>", image_id, 1) if image_id else ""
 
     if callback_cls is DocumentsAPIViewSet:
         document_id = _get_first_document_id()
-        return {"id": document_id} if document_id else {}
+        return url.replace("<int:pk>", document_id, 1) if document_id else ""
 
     if callback_cls is RedirectsAPIViewSet:
-        old_path = _get_first_redirect_old_path()
-        return {"html_path": old_path} if old_path else {}
+        redirect_id = _get_first_redirect_id()
+        return url.replace("<int:pk>", redirect_id, 1) if redirect_id else ""
 
-    return {}
+    return ""
 
 
 def _is_supported_wagtail_api_find_route(name, callback):
@@ -460,7 +460,7 @@ def _discover_resolver_candidates():
         normalized_route = clean_regex_route(route)
         url = normalized_route if normalized_route.startswith("/") else f"/{normalized_route}"
         requires_query_params = _is_supported_wagtail_api_find_route(name, callback)
-        query_params = _get_wagtail_api_find_query_params(callback) if requires_query_params else {}
+        resolved_url = _get_wagtail_api_detail_resolved_url(callback, url)
         results.append(
             _FrontendCandidate(
                 url=url,
@@ -471,7 +471,7 @@ def _discover_resolver_candidates():
                 has_parameters=route_has_parameters(normalized_route),
                 contains_regex=route_contains_regex(normalized_route),
                 requires_query_params=requires_query_params,
-                query_params=query_params,
+                resolved_url=resolved_url,
             )
         )
     return results

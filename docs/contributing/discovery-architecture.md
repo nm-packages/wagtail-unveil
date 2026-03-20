@@ -144,8 +144,10 @@ This means routable pages contribute both their base page URL and any additional
 6. Normalize the route with `clean_regex_route()`.
 7. Record whether the normalized route contains `<...>` placeholders.
 8. Record whether the normalized route still contains regex groups such as `(`.
-9. Detect supported Wagtail API `find_view` routes by callback metadata and infer representative query parameters when possible.
-10. Emit the final `FrontendURL` only after classification and build steps.
+9. Detect supported Wagtail API resolver routes by callback metadata.
+10. Infer concrete `resolved_url` values for supported detail-style endpoints when safe representative objects exist.
+11. Leave query-driven `find_view` routes visible but classify them as requiring query parameters.
+12. Emit the final `FrontendURL` only after classification and build steps.
 
 Resolver-derived URLs are still included when untestable so they remain visible in reports and API responses.
 
@@ -159,7 +161,6 @@ Classification is the main step that should decide why a route is not directly G
 - backend finalization owns the final GET-compatibility check for resolved admin routes such as POST-only reorder views
 - frontend classification owns `Requires POST submission`, `Requires query parameters`, `URL requires parameters`, and `URL contains regex patterns`
 - frontend classification allows parameterized page routes to remain testable when a concrete `resolved_url` is available
-- frontend classification allows query-driven resolver routes to remain testable when representative `query_params` are available
 - frontend classification also marks non-default-site page URLs as untestable to avoid cross-host false positives in report testing
 - backend finalization adds `URL requires parameters` only when a route required resolution and no concrete path could be produced
 
