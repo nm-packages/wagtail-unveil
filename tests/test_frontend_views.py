@@ -51,6 +51,16 @@ class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
         )
         self.assertIsNone(response.json()["metadata"]["applied_filter"])
 
+    def test_response_includes_query_params_field(self):
+        response = self.client.get(
+            self.api_url,
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+
+        for url in response.json()["urls"]:
+            self.assertIn("query_params", url)
+            self.assertIsInstance(url["query_params"], dict)
+
     def test_response_includes_api_version_metadata(self):
         response = self.client.get(
             self.api_url,
@@ -87,6 +97,7 @@ class TestFrontendAPIViewHelpers(TestCase):
             page_title="Contact",
             name="",
             resolved_url="",
+            query_params={},
             is_testable=False,
             skip_reason="Requires POST submission",
         )
@@ -100,6 +111,7 @@ class TestFrontendAPIViewHelpers(TestCase):
                 "page_title": "Contact",
                 "name": "",
                 "resolved_url": "",
+                "query_params": {},
                 "is_testable": False,
                 "skip_reason": "Requires POST submission",
             },

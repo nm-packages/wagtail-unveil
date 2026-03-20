@@ -75,6 +75,7 @@ def _serialize_frontend_url(url):
         "page_title": url.page_title,
         "name": url.name,
         "resolved_url": url.resolved_url,
+        "query_params": url.query_params,
         "is_testable": url.is_testable,
         "skip_reason": url.skip_reason,
     }
