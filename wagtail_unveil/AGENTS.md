@@ -20,7 +20,8 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 - `wagtail_hooks.py` — Wagtail admin integration and dashboard panel
 - `discovery/backend.py` — admin URL discovery pipeline
 - `discovery/backend_resolution.py` — admin parameter resolution helpers
-- `discovery/frontend.py` — frontend URL discovery
+- `discovery/frontend.py` — frontend URL discovery pipeline
+- `discovery/frontend_resolution.py` — frontend routable and API URL resolution helpers
 - `discovery/utils.py` — shared resolver utilities
 - `templates/wagtail_unveil/` — report and dashboard templates
 - `../assets_src/css/` — editable report CSS source

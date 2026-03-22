@@ -78,6 +78,7 @@ The core discovery logic lives in `wagtail_unveil/discovery/`.
 - `discovery/backend.py` — `BackendURL` dataclass and `get_admin_urls()`
 - `discovery/backend_resolution.py` — admin parameter resolution helpers
 - `discovery/frontend.py` — `FrontendURL` dataclass and `get_frontend_urls()`
+- `discovery/frontend_resolution.py` — frontend routable and API URL resolution helpers
 - `discovery/utils.py` — shared resolver walking and route normalization helpers
 - `docs/contributing/discovery-architecture.md` — canonical contributor-facing explanation of discovery, normalization, parameter resolution, and testability rules
 

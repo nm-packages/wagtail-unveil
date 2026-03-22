@@ -9,6 +9,7 @@ Primary implementation files:
 - `wagtail_unveil/discovery/backend.py`
 - `wagtail_unveil/discovery/backend_resolution.py`
 - `wagtail_unveil/discovery/frontend.py`
+- `wagtail_unveil/discovery/frontend_resolution.py`
 - `wagtail_unveil/discovery/utils.py`
 - `wagtail_unveil/settings.py`
 
@@ -199,6 +200,7 @@ If you need to change discovery behavior, start in these files:
 - `wagtail_unveil/discovery/backend.py`
 - `wagtail_unveil/discovery/backend_resolution.py`
 - `wagtail_unveil/discovery/frontend.py`
+- `wagtail_unveil/discovery/frontend_resolution.py`
 - `wagtail_unveil/discovery/utils.py`
 - `wagtail_unveil/settings.py`
 
@@ -206,7 +208,8 @@ Then verify the intended behavior in:
 
 - `tests/test_admin_urls.py`
 - `tests/test_backend_resolution.py`
-- `tests/test_frontend_urls.py`
+- `tests/test_frontend.py`
+- `tests/test_frontend_resolution.py`
 - `tests/test_settings.py`
 
 ## Code And Test Map
@@ -215,7 +218,8 @@ The main behavior is currently implemented in code and verified in tests:
 
 - `wagtail_unveil/discovery/backend.py` and `tests/test_admin_urls.py`
 - `wagtail_unveil/discovery/backend_resolution.py` and `tests/test_backend_resolution.py`
-- `wagtail_unveil/discovery/frontend.py` and `tests/test_frontend_urls.py`
+- `wagtail_unveil/discovery/frontend.py` and `tests/test_frontend.py`
+- `wagtail_unveil/discovery/frontend_resolution.py` and `tests/test_frontend_resolution.py`
 - `wagtail_unveil/settings.py` and `tests/test_settings.py`
 
 Use the tests as verification of current behavior, not as the primary contributor-facing explanation of how discovery works. This document should be the first place a contributor reads when changing discovery and resolution logic.
