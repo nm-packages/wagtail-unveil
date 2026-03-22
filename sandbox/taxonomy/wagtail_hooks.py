@@ -68,7 +68,7 @@ class PersonModelAdmin(ModelAdmin):
 
 @hooks.register("register_unveil_admin_instance_resolvers")
 def register_modeladmin_unveil_extension():
-    """Allow wagtail-unveil to resolve wagtail-modeladmin detail routes."""
+    """Example project-level hook that resolves wagtail-modeladmin detail routes."""
     return AdminInstanceResolver(
         label="extension:wagtail-modeladmin",
         predicate=lambda context: _get_modeladmin_model(context.name) is not None,

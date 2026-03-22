@@ -76,6 +76,7 @@ If you are using `wagtail-unveil` in your own project and want to extend URL res
 5. The currently registered built-in resolver rules cover:
    - `wagtailforms` falls back to the first live form page instance when no earlier instance exists
    - `wagtailadmin_workflows` usage views override earlier model-derived instances with the first `Workflow` instance, and fail closed if no workflow exists
+   - third-party admin packages such as `wagtail-modeladmin` are expected to register their own project-level resolvers rather than relying on built-in package support
 6. Reverse the URL with `_reverse_with_instance()` using the selected instance.
 7. If no instance can be selected, keep the route visible but untestable.
 

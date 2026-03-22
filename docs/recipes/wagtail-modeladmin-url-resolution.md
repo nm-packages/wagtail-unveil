@@ -4,6 +4,8 @@ Use this recipe when `wagtail-unveil` can discover `wagtail-modeladmin` admin ro
 
 `wagtail-unveil` already exposes a public hook for this kind of project-level customization. This guide uses `wagtail-modeladmin` as the worked example, but the same pattern can be adapted for other third-party Wagtail packages that need a representative object before their admin URLs can be tested.
 
+`wagtail-modeladmin` resolution is intentionally configured in the consuming project through this hook. It is not a built-in core resolver inside `wagtail-unveil`.
+
 ## When To Use This
 
 Add this hook when all of the following are true:
