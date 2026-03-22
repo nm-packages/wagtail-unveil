@@ -7,6 +7,7 @@ This document explains how `wagtail_unveil` discovers URLs, normalizes route str
 Primary implementation files:
 
 - `wagtail_unveil/discovery/backend.py`
+- `wagtail_unveil/discovery/backend_resolution.py`
 - `wagtail_unveil/discovery/frontend.py`
 - `wagtail_unveil/discovery/utils.py`
 - `wagtail_unveil/settings.py`
@@ -58,7 +59,8 @@ There are also namespace-specific readiness checks:
 
 ## Parameter Resolution Strategy
 
-Backend parameter resolution is phase 4 only. `_resolve_parameterized_url()` attempts to turn a parameterized admin route into a real path that can be tested. It follows an explicit strategy pipeline:
+Backend parameter resolution lives in `wagtail_unveil/discovery/backend_resolution.py`.
+`_resolve_parameterized_url()` attempts to turn a parameterized admin route into a real path that can be tested. It follows an explicit strategy pipeline:
 
 1. If the namespace is `wagtailsettings`, delegate to `_resolve_settings_url()` and stop there.
 2. Try to infer a model from callback metadata via `_get_model_from_callback()`.
@@ -195,6 +197,7 @@ Current intentional boundaries:
 If you need to change discovery behavior, start in these files:
 
 - `wagtail_unveil/discovery/backend.py`
+- `wagtail_unveil/discovery/backend_resolution.py`
 - `wagtail_unveil/discovery/frontend.py`
 - `wagtail_unveil/discovery/utils.py`
 - `wagtail_unveil/settings.py`
@@ -202,6 +205,7 @@ If you need to change discovery behavior, start in these files:
 Then verify the intended behavior in:
 
 - `tests/test_admin_urls.py`
+- `tests/test_backend_resolution.py`
 - `tests/test_frontend_urls.py`
 - `tests/test_settings.py`
 
@@ -210,6 +214,7 @@ Then verify the intended behavior in:
 The main behavior is currently implemented in code and verified in tests:
 
 - `wagtail_unveil/discovery/backend.py` and `tests/test_admin_urls.py`
+- `wagtail_unveil/discovery/backend_resolution.py` and `tests/test_backend_resolution.py`
 - `wagtail_unveil/discovery/frontend.py` and `tests/test_frontend_urls.py`
 - `wagtail_unveil/settings.py` and `tests/test_settings.py`
 
