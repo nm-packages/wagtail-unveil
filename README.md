@@ -26,10 +26,10 @@ It exposes discovery through:
 Detailed setup docs: [docs/getting-started/installation.md](docs/getting-started/installation.md)
 
 ```bash
-pip install wagtail-unveil==0.1.0a1
+pip install wagtail-unveil==0.1.0a2
 ```
 
-> `0.1.0a1` is the first public alpha release. It is intended for early adopters and real-world testing, and breaking changes may still happen before a stable release.
+> `0.1.0a2` is the current public alpha release. It is intended for early adopters and real-world testing, and breaking changes may still happen before a stable release.
 > To track unreleased changes from GitHub instead, use:
 
 ```bash
@@ -101,6 +101,7 @@ For full setting details, including environment variable usage, normalization ru
 - API versioning policy: [docs/contributing/api-versioning.md](docs/contributing/api-versioning.md)
 - Discovery internals: [docs/contributing/discovery-architecture.md](docs/contributing/discovery-architecture.md)
 - Frontend asset workflow: [docs/contributing/frontend-assets.md](docs/contributing/frontend-assets.md)
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
 - Release runbook: [docs/contributing/releasing.md](docs/contributing/releasing.md)
 - Agent-facing project guidance: [AGENTS.md](AGENTS.md)
 
