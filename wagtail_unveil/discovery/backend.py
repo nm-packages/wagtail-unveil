@@ -143,20 +143,6 @@ IMAGE_GENERATOR_NAMES = {
     "url_generator",
     "url_generator_output",
 }
-NAMESPACE_INSTANCE_RESOLVERS = (
-    {
-        "label": "namespace:wagtailforms",
-        "predicate": lambda namespace, name: namespace == "wagtailforms",
-        "resolver": lambda: _get_form_page_instance(),
-        "override": False,
-    },
-    {
-        "label": "namespace:wagtailadmin_workflows",
-        "predicate": lambda namespace, name: namespace == "wagtailadmin_workflows" and name in WORKFLOW_USAGE_NAMES,
-        "resolver": lambda: _get_workflow_instance(),
-        "override": True,
-    },
-)
 
 
 def _get_model_from_modeladmin_name(name):
@@ -484,33 +470,26 @@ def _resolve_settings_url(name, route):
 
 def _get_namespace_specific_instance(namespace, name, current_instance):
     """Return a namespace-specific instance override when one applies."""
-    selected_method = ""
-    selected_instance = current_instance
-    attempts = []
+    if namespace == "wagtailforms":
+        if current_instance is not None:
+            return "", current_instance, ["namespace:wagtailforms:skipped"]
 
-    for rule in NAMESPACE_INSTANCE_RESOLVERS:
-        if not rule["predicate"](namespace, name):
-            continue
-        if current_instance is not None and not rule["override"]:
-            attempts.append(f"{rule['label']}:skipped")
-            continue
-
-        instance = rule["resolver"]()
+        instance = _get_form_page_instance()
         if instance is None:
-            attempts.append(f"{rule['label']}:no-instance")
-            if rule["override"]:
-                selected_method = rule["label"]
-                selected_instance = None
-                current_instance = None
-                break
-            continue
+            return "", None, ["namespace:wagtailforms:no-instance"]
+        return "namespace:wagtailforms", instance, ["namespace:wagtailforms:instance-found"]
 
-        attempts.append(f"{rule['label']}:instance-found")
-        selected_method = rule["label"]
-        selected_instance = instance
-        current_instance = instance
+    if namespace == "wagtailadmin_workflows" and name in WORKFLOW_USAGE_NAMES:
+        instance = _get_workflow_instance()
+        if instance is None:
+            return "namespace:wagtailadmin_workflows", None, ["namespace:wagtailadmin_workflows:no-instance"]
+        return (
+            "namespace:wagtailadmin_workflows",
+            instance,
+            ["namespace:wagtailadmin_workflows:instance-found"],
+        )
 
-    return selected_method, selected_instance, attempts
+    return "", current_instance, []
 
 
 def _resolve_parameterized_url(namespace, name, callback, route=""):
