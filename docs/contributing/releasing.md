@@ -30,11 +30,13 @@ The GitHub repository and workflow identity must match exactly, or publish will 
 ## Maintainer Release Steps
 
 1. Update `version` in `pyproject.toml` to the intended release version.
-2. Merge the version bump to `main`.
-3. Ensure normal CI on `main` is green (`CI` workflow).
-4. Create a GitHub Release with a tag that matches the package version with `v` prefix.
-5. Publish the GitHub Release.
-6. Confirm `.github/workflows/release.yml` succeeds and the version appears on PyPI.
+2. Update `CHANGELOG.md` with a concise entry for the new release and any migration or alpha-status notes worth calling out.
+3. Merge the release-prep changes to `main`.
+4. Ensure normal CI on `main` is green (`CI` workflow).
+5. Create a GitHub Release with a tag that matches the package version with `v` prefix.
+6. Use the matching `.github/release-*.md` file or the `CHANGELOG.md` entry as the GitHub Release body.
+7. Publish the GitHub Release.
+8. Confirm `.github/workflows/release.yml` succeeds and the version appears on PyPI.
 
 For local sandbox/test command workflows before a release, use:
 - [`development.md`](development.md) for canonical developer workflow and quickstart commands
