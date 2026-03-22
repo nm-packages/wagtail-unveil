@@ -8,6 +8,7 @@ Primary implementation files:
 
 - `wagtail_unveil/discovery/backend.py`
 - `wagtail_unveil/discovery/backend_resolution.py`
+- `wagtail_unveil/discovery/extensions.py`
 - `wagtail_unveil/discovery/frontend.py`
 - `wagtail_unveil/discovery/frontend_resolution.py`
 - `wagtail_unveil/discovery/utils.py`
@@ -66,8 +67,12 @@ Backend parameter resolution lives in `wagtail_unveil/discovery/backend_resoluti
 1. If the namespace is `wagtailsettings`, delegate to `_resolve_settings_url()` and stop there.
 2. Try to infer a model from callback metadata via `_get_model_from_callback()`.
 3. If a callback model is found, select a representative instance with `_get_instance_for_model()`.
-4. If no callback-backed instance is available, fall back to parsing modeladmin-style URL names such as `{app}_{model}_modeladmin_{action}` and again select an instance with `_get_instance_for_model()`.
-5. Apply namespace-specific instance rules from `_get_namespace_specific_instance()`:
+4. Apply registered admin instance resolvers from `get_registered_admin_instance_resolvers()`:
+   - `wagtail_unveil` registers its own built-in Wagtail namespace resolvers through the same hook system
+   - installed Wagtail packages can register `AdminInstanceResolver` objects from `wagtail_unveil.discovery.extensions` via the `register_unveil_admin_instance_resolvers` hook
+   - non-override resolvers act as fallbacks when no earlier instance has been selected
+   - override resolvers can replace an earlier instance choice or intentionally fail closed
+5. The currently registered built-in resolver rules cover:
    - `wagtailforms` falls back to the first live form page instance when no earlier instance exists
    - `wagtailadmin_workflows` usage views override earlier model-derived instances with the first `Workflow` instance, and fail closed if no workflow exists
 6. Reverse the URL with `_reverse_with_instance()` using the selected instance.
@@ -77,7 +82,7 @@ Backend parameter resolution lives in `wagtail_unveil/discovery/backend_resoluti
 
 Internal resolution returns a `_ParameterizedURLResolution` object with `resolved_route`, `resolved`, `method`, `detail`, and `attempts`. This metadata is internal only. It exists to make the fallback order and failure path easier to debug and test. Public JSON responses still expose only the existing `BackendURL` fields.
 
-Resolved URLs are stored in `resolved_route` on `BackendURL`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters` during final emission rather than during initial classification. Namespace-specific overrides can invalidate an earlier candidate instance when the route requires a different model type.
+Resolved URLs are stored in `resolved_route` on `BackendURL`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters` during final emission rather than during initial classification. Override resolvers can invalidate an earlier candidate instance when the route requires a different model type.
 
 ### Settings Resolution Nuances
 
@@ -199,6 +204,7 @@ If you need to change discovery behavior, start in these files:
 
 - `wagtail_unveil/discovery/backend.py`
 - `wagtail_unveil/discovery/backend_resolution.py`
+- `wagtail_unveil/discovery/extensions.py`
 - `wagtail_unveil/discovery/frontend.py`
 - `wagtail_unveil/discovery/frontend_resolution.py`
 - `wagtail_unveil/discovery/utils.py`
@@ -208,6 +214,7 @@ Then verify the intended behavior in:
 
 - `tests/test_admin_urls.py`
 - `tests/test_backend_resolution.py`
+- `tests/test_discovery_extensions.py`
 - `tests/test_frontend.py`
 - `tests/test_frontend_resolution.py`
 - `tests/test_settings.py`

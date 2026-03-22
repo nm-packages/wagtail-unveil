@@ -74,6 +74,8 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 
 The frontend API keeps canonical paths in the `url` field and, when needed, adds optional `resolved_url` or `query_params` data so the report UI can test parameterised and query-driven routes without rewriting the discovered URL itself.
 
+Projects can also extend admin URL parameter resolution for developer-installed Wagtail packages by registering the `register_unveil_admin_instance_resolvers` Wagtail hook and returning `AdminInstanceResolver` objects from `wagtail_unveil.discovery.extensions`.
+
 ## Key Configuration
 
 Most projects only need `WAGTAIL_UNVEIL_API_KEY` from the quickstart to use the JSON API.

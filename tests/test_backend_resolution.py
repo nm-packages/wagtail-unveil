@@ -9,13 +9,14 @@ from wagtail.models import Site
 
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.backend_resolution import (
+    _apply_admin_instance_resolvers,
     _get_instance_for_model,
     _get_model_from_callback,
-    _get_model_from_modeladmin_name,
-    _get_namespace_specific_instance,
     _resolve_parameterized_url,
     _resolve_settings_url,
 )
+from wagtail_unveil.discovery.extensions import AdminInstanceResolver
+from wagtail_unveil.wagtail_hooks import register_unveil_admin_instance_resolvers
 
 
 class TestCallbackModelDiscovery(TestCase):
@@ -227,7 +228,7 @@ class TestParameterizedResolutionStrategies(TestCase):
         self.assertFalse(result.resolved)
         self.assertEqual(result.attempts, ["settings:no-model-instance"])
 
-    def test_callback_model_strategy_wins_before_modeladmin_name(self):
+    def test_callback_model_strategy_wins_before_registered_resolvers(self):
         instance = mock.Mock(pk=42)
         with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=User):
             with mock.patch(
@@ -235,8 +236,9 @@ class TestParameterizedResolutionStrategies(TestCase):
                 return_value=instance,
             ):
                 with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution._get_model_from_modeladmin_name"
-                ) as get_modeladmin:
+                    "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                    return_value=[],
+                ):
                     with mock.patch(
                         "wagtail_unveil.discovery.backend_resolution.reverse",
                         return_value="/admin/users/42/",
@@ -248,7 +250,6 @@ class TestParameterizedResolutionStrategies(TestCase):
                             route="admin/users/<int:pk>/",
                         )
 
-        get_modeladmin.assert_not_called()
         self.assertTrue(result.resolved)
         self.assertEqual(result.method, "callback-model")
         self.assertEqual(
@@ -256,41 +257,40 @@ class TestParameterizedResolutionStrategies(TestCase):
             [
                 "callback-model:model-found",
                 "callback-model:instance-found",
-                "modeladmin-name:skipped",
                 "reverse:resolved",
             ],
         )
 
-    def test_modeladmin_name_fallback_resolves_when_callback_has_no_model(self):
+    def test_registered_admin_resolver_fallback_resolves_when_callback_has_no_model(self):
         instance = mock.Mock(pk=7)
+        resolver = AdminInstanceResolver(
+            label="extension:custom-package",
+            predicate=lambda context: context.name == "taxonomy_person_modeladmin_edit",
+            resolver=lambda context: instance,
+        )
         with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
             with mock.patch(
-                "wagtail_unveil.discovery.backend_resolution._get_model_from_modeladmin_name",
-                return_value=Group,
+                "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                return_value=[resolver],
             ):
                 with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution._get_instance_for_model",
-                    return_value=instance,
+                    "wagtail_unveil.discovery.backend_resolution.reverse",
+                    return_value="/admin/groups/7/",
                 ):
-                    with mock.patch(
-                        "wagtail_unveil.discovery.backend_resolution.reverse",
-                        return_value="/admin/groups/7/",
-                    ):
-                        result = _resolve_parameterized_url(
-                            "",
-                            "taxonomy_person_modeladmin_edit",
-                            callback=object(),
-                            route="admin/taxonomy/person/<int:pk>/",
-                        )
+                    result = _resolve_parameterized_url(
+                        "",
+                        "taxonomy_person_modeladmin_edit",
+                        callback=object(),
+                        route="admin/taxonomy/person/<int:pk>/",
+                    )
 
         self.assertTrue(result.resolved)
-        self.assertEqual(result.method, "modeladmin-name")
+        self.assertEqual(result.method, "extension:custom-package")
         self.assertEqual(
             result.attempts,
             [
                 "callback-model:no-model",
-                "modeladmin-name:model-found",
-                "modeladmin-name:instance-found",
+                "extension:custom-package:instance-found",
                 "reverse:resolved",
             ],
         )
@@ -299,8 +299,8 @@ class TestParameterizedResolutionStrategies(TestCase):
         instance = mock.Mock(pk=9)
         with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
             with mock.patch(
-                "wagtail_unveil.discovery.backend_resolution._get_model_from_modeladmin_name",
-                return_value=None,
+                "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                return_value=register_unveil_admin_instance_resolvers(),
             ):
                 with mock.patch(
                     "wagtail_unveil.discovery.backend_resolution._get_form_page_instance",
@@ -323,7 +323,6 @@ class TestParameterizedResolutionStrategies(TestCase):
             result.attempts,
             [
                 "callback-model:no-model",
-                "modeladmin-name:no-model",
                 "namespace:wagtailforms:instance-found",
                 "reverse:resolved",
             ],
@@ -338,19 +337,23 @@ class TestParameterizedResolutionStrategies(TestCase):
                 return_value=callback_instance,
             ):
                 with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution._get_workflow_instance",
-                    return_value=workflow_instance,
+                    "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                    return_value=register_unveil_admin_instance_resolvers(),
                 ):
                     with mock.patch(
-                        "wagtail_unveil.discovery.backend_resolution.reverse",
-                        return_value="/admin/workflows/usage/99/",
-                    ) as reverse_mock:
-                        result = _resolve_parameterized_url(
-                            "wagtailadmin_workflows",
-                            "usage",
-                            callback=object(),
-                            route="admin/workflows/usage/<int:pk>/",
-                        )
+                        "wagtail_unveil.discovery.backend_resolution._get_workflow_instance",
+                        return_value=workflow_instance,
+                    ):
+                        with mock.patch(
+                            "wagtail_unveil.discovery.backend_resolution.reverse",
+                            return_value="/admin/workflows/usage/99/",
+                        ) as reverse_mock:
+                            result = _resolve_parameterized_url(
+                                "wagtailadmin_workflows",
+                                "usage",
+                                callback=object(),
+                                route="admin/workflows/usage/<int:pk>/",
+                            )
 
         self.assertTrue(result.resolved)
         self.assertEqual(result.method, "namespace:wagtailadmin_workflows")
@@ -360,7 +363,6 @@ class TestParameterizedResolutionStrategies(TestCase):
             [
                 "callback-model:model-found",
                 "callback-model:instance-found",
-                "modeladmin-name:skipped",
                 "namespace:wagtailadmin_workflows:instance-found",
                 "reverse:resolved",
             ],
@@ -374,16 +376,20 @@ class TestParameterizedResolutionStrategies(TestCase):
                 return_value=callback_instance,
             ):
                 with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution._get_workflow_instance",
-                    return_value=None,
+                    "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                    return_value=register_unveil_admin_instance_resolvers(),
                 ):
-                    with mock.patch("wagtail_unveil.discovery.backend_resolution.reverse") as reverse_mock:
-                        result = _resolve_parameterized_url(
-                            "wagtailadmin_workflows",
-                            "usage",
-                            callback=object(),
-                            route="admin/workflows/usage/<int:pk>/",
-                        )
+                    with mock.patch(
+                        "wagtail_unveil.discovery.backend_resolution._get_workflow_instance",
+                        return_value=None,
+                    ):
+                        with mock.patch("wagtail_unveil.discovery.backend_resolution.reverse") as reverse_mock:
+                            result = _resolve_parameterized_url(
+                                "wagtailadmin_workflows",
+                                "usage",
+                                callback=object(),
+                                route="admin/workflows/usage/<int:pk>/",
+                            )
 
         self.assertFalse(result.resolved)
         self.assertEqual(result.method, "namespace:wagtailadmin_workflows")
@@ -393,7 +399,6 @@ class TestParameterizedResolutionStrategies(TestCase):
             [
                 "callback-model:model-found",
                 "callback-model:instance-found",
-                "modeladmin-name:skipped",
                 "namespace:wagtailadmin_workflows:no-instance",
             ],
         )
@@ -421,10 +426,19 @@ class TestParameterizedResolutionStrategies(TestCase):
                 return_value=instance,
             ):
                 with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution.reverse",
-                    side_effect=RuntimeError("boom"),
+                    "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                    return_value=[],
                 ):
-                    result = _resolve_parameterized_url("", "edit", callback=object(), route="admin/users/<int:pk>/")
+                    with mock.patch(
+                        "wagtail_unveil.discovery.backend_resolution.reverse",
+                        side_effect=RuntimeError("boom"),
+                    ):
+                        result = _resolve_parameterized_url(
+                            "",
+                            "edit",
+                            callback=object(),
+                            route="admin/users/<int:pk>/",
+                        )
 
         self.assertFalse(result.resolved)
         self.assertEqual(result.method, "callback-model")
@@ -434,8 +448,8 @@ class TestParameterizedResolutionStrategies(TestCase):
     def test_attempts_record_full_fallback_order_when_unresolved(self):
         with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
             with mock.patch(
-                "wagtail_unveil.discovery.backend_resolution._get_model_from_modeladmin_name",
-                return_value=None,
+                "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                return_value=register_unveil_admin_instance_resolvers(),
             ):
                 with mock.patch(
                     "wagtail_unveil.discovery.backend_resolution._get_form_page_instance",
@@ -453,7 +467,6 @@ class TestParameterizedResolutionStrategies(TestCase):
             result.attempts,
             [
                 "callback-model:no-model",
-                "modeladmin-name:no-model",
                 "namespace:wagtailforms:no-instance",
             ],
         )
@@ -542,17 +555,24 @@ class TestParameterizedResolutionStrategies(TestCase):
         self.assertEqual(result.attempts, ["settings:no-model-instance"])
         self.assertEqual(result.detail, "No settings instances exist for the registered settings models")
 
-    def test_namespace_specific_forms_rule_skips_when_instance_already_exists(self):
+    def test_builtin_forms_resolver_skips_when_instance_already_exists(self):
         instance = mock.Mock(pk=1)
 
-        method, selected_instance, attempts = _get_namespace_specific_instance("wagtailforms", "edit", instance)
+        with mock.patch(
+            "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+            return_value=register_unveil_admin_instance_resolvers(),
+        ):
+            method, selected_instance, attempts = _apply_admin_instance_resolvers(
+                "wagtailforms",
+                "edit",
+                callback=object(),
+                route="admin/forms/<int:page_id>/",
+                current_instance=instance,
+            )
 
         self.assertEqual(method, "")
         self.assertIs(selected_instance, instance)
         self.assertEqual(attempts, ["namespace:wagtailforms:skipped"])
-
-    def test_modeladmin_name_helpers_return_none_for_unknown_models(self):
-        self.assertIsNone(_get_model_from_modeladmin_name("not_a_modeladmin_route"))
 
 
 class TestModeladminURLDiscovery(TestCase):

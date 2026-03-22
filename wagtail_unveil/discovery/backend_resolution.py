@@ -1,10 +1,13 @@
-import re
 from dataclasses import dataclass, field
 from functools import cached_property
 
-from django.apps import apps
 from django.urls import reverse
 from django.utils.functional import cached_property as django_cached_property
+
+from wagtail_unveil.discovery.extensions import (
+    AdminInstanceResolverContext,
+    get_registered_admin_instance_resolvers,
+)
 
 WORKFLOW_USAGE_NAMES = ("usage", "usage_results")
 
@@ -26,22 +29,6 @@ class _ParameterizedURLResolution:
 
     def add_attempt(self, strategy, outcome):
         self.attempts.append(f"{strategy}:{outcome}")
-
-
-def _get_model_from_modeladmin_name(name):
-    """Extract a Django model from a modeladmin-style URL name.
-
-    Modeladmin URL names follow the pattern ``{app}_{model}_modeladmin_{action}``.
-    Returns the model class or None.
-    """
-    match = re.match(r"^(\w+)_(\w+)_modeladmin_\w+$", name)
-    if not match:
-        return None
-    app_label, model_name = match.groups()
-    try:
-        return apps.get_model(app_label, model_name)
-    except LookupError:
-        return None
 
 
 def _get_model_from_view_class(view_class):
@@ -217,28 +204,40 @@ def _resolve_settings_url(name, route):
     return result
 
 
-def _get_namespace_specific_instance(namespace, name, current_instance):
-    """Return a namespace-specific instance override when one applies."""
-    if namespace == "wagtailforms":
-        if current_instance is not None:
-            return "", current_instance, ["namespace:wagtailforms:skipped"]
+def _apply_admin_instance_resolvers(namespace, name, callback, route, current_instance):
+    """Return an instance selected by registered admin resolver extensions."""
+    selected_method = ""
+    selected_instance = current_instance
+    attempts = []
 
-        instance = _get_form_page_instance()
-        if instance is None:
-            return "", None, ["namespace:wagtailforms:no-instance"]
-        return "namespace:wagtailforms", instance, ["namespace:wagtailforms:instance-found"]
-
-    if namespace == "wagtailadmin_workflows" and name in WORKFLOW_USAGE_NAMES:
-        instance = _get_workflow_instance()
-        if instance is None:
-            return "namespace:wagtailadmin_workflows", None, ["namespace:wagtailadmin_workflows:no-instance"]
-        return (
-            "namespace:wagtailadmin_workflows",
-            instance,
-            ["namespace:wagtailadmin_workflows:instance-found"],
+    for resolver in get_registered_admin_instance_resolvers():
+        context = AdminInstanceResolverContext(
+            namespace=namespace,
+            name=name,
+            callback=callback,
+            route=route,
+            current_instance=selected_instance,
         )
+        if not resolver.predicate(context):
+            continue
+        if selected_instance is not None and not resolver.override:
+            attempts.append(f"{resolver.label}:skipped")
+            continue
 
-    return "", current_instance, []
+        instance = resolver.resolver(context)
+        if instance is None:
+            attempts.append(f"{resolver.label}:no-instance")
+            if resolver.override:
+                selected_method = resolver.label
+                selected_instance = None
+                break
+            continue
+
+        attempts.append(f"{resolver.label}:instance-found")
+        selected_method = resolver.label
+        selected_instance = instance
+
+    return selected_method, selected_instance, attempts
 
 
 def _resolve_parameterized_url(namespace, name, callback, route=""):
@@ -263,30 +262,17 @@ def _resolve_parameterized_url(namespace, name, callback, route=""):
     else:
         result.add_attempt("callback-model", "no-model")
 
-    if selected_instance is None:
-        model = _get_model_from_modeladmin_name(name)
-        if model is not None:
-            result.add_attempt("modeladmin-name", "model-found")
-            selected_instance = _get_instance_for_model(model)
-            if selected_instance is not None:
-                selected_method = "modeladmin-name"
-                result.add_attempt("modeladmin-name", "instance-found")
-            else:
-                result.add_attempt("modeladmin-name", "no-instance")
-        else:
-            result.add_attempt("modeladmin-name", "no-model")
-    else:
-        result.add_attempt("modeladmin-name", "skipped")
-
-    namespace_method, namespace_instance, namespace_attempts = _get_namespace_specific_instance(
+    resolver_method, resolver_instance, resolver_attempts = _apply_admin_instance_resolvers(
         namespace,
         name,
+        callback,
+        route,
         selected_instance,
     )
-    result.attempts.extend(namespace_attempts)
-    if namespace_method:
-        selected_method = namespace_method
-        selected_instance = namespace_instance
+    result.attempts.extend(resolver_attempts)
+    if resolver_method:
+        selected_method = resolver_method
+        selected_instance = resolver_instance
 
     if selected_instance is None:
         result.method = selected_method

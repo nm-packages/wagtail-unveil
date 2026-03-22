@@ -77,12 +77,14 @@ The core discovery logic lives in `wagtail_unveil/discovery/`.
 
 - `discovery/backend.py` — `BackendURL` dataclass and `get_admin_urls()`
 - `discovery/backend_resolution.py` — admin parameter resolution helpers
+- `discovery/extensions.py` — hookable admin instance resolver extensions for installed Wagtail packages
 - `discovery/frontend.py` — `FrontendURL` dataclass and `get_frontend_urls()`
 - `discovery/frontend_resolution.py` — frontend routable and API URL resolution helpers
 - `discovery/utils.py` — shared resolver walking and route normalization helpers
 - `docs/contributing/discovery-architecture.md` — canonical contributor-facing explanation of discovery, normalization, parameter resolution, and testability rules
 
 Admin URL discovery walks Django's resolver tree, filters to admin routes, and attempts to resolve parameterized URLs against real database objects where possible.
+Developer-installed Wagtail packages can extend that parameter resolution through the `register_unveil_admin_instance_resolvers` Wagtail hook instead of adding package-specific logic directly to `wagtail_unveil`.
 
 Frontend URL discovery combines:
 
