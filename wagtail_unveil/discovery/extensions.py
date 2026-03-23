@@ -18,7 +18,7 @@ class AdminInstanceResolverContext:
     current_instance: object | None = None
 
 
-AdminInstancePredicate = Callable[[AdminInstanceResolverContext], bool]
+AdminInstanceMatcher = Callable[[AdminInstanceResolverContext], bool]
 AdminInstanceResolverFunc = Callable[[AdminInstanceResolverContext], object | None]
 
 
@@ -27,7 +27,7 @@ class AdminInstanceResolver:
     """Describe a hookable strategy for resolving admin URL parameters."""
 
     label: str
-    predicate: AdminInstancePredicate
+    matches: AdminInstanceMatcher
     resolver: AdminInstanceResolverFunc
     override: bool = False
 
@@ -41,9 +41,9 @@ def _describe_hook_fn(hook_fn):
 
 def _validate_admin_instance_resolver(resolver, hook_name):
     """Ensure a hook-provided admin resolver exposes callable entry points."""
-    if not callable(resolver.predicate):
+    if not callable(resolver.matches):
         raise TypeError(
-            f"{hook_name} registered AdminInstanceResolver '{resolver.label}' with a non-callable predicate."
+            f"{hook_name} registered AdminInstanceResolver '{resolver.label}' with a non-callable matches function."
         )
     if not callable(resolver.resolver):
         raise TypeError(

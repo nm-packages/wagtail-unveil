@@ -71,6 +71,6 @@ def register_modeladmin_unveil_extension():
     """Example project-level hook that resolves wagtail-modeladmin detail routes."""
     return AdminInstanceResolver(
         label="extension:wagtail-modeladmin",
-        predicate=lambda context: _get_modeladmin_model(context.name) is not None,
+        matches=lambda context: _get_modeladmin_model(context.name) is not None,
         resolver=_get_modeladmin_instance,
     )

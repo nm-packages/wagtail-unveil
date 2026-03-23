@@ -67,14 +67,14 @@ def _get_modeladmin_instance(context):
 def register_modeladmin_unveil_extension():
     return AdminInstanceResolver(
         label="extension:wagtail-modeladmin",
-        predicate=lambda context: _get_modeladmin_model(context.name) is not None,
+        matches=lambda context: _get_modeladmin_model(context.name) is not None,
         resolver=_get_modeladmin_instance,
     )
 ```
 
 ### Why This Shape Works
 
-- `predicate` decides whether the resolver should handle the current admin URL
+- `matches` decides whether the resolver should handle the current admin URL
 - `resolver` returns the object that should be used to reverse that URL
 - the default `override=False` is correct for `wagtail-modeladmin`, because this is a fallback when `wagtail-unveil` does not already have a usable instance from callback metadata
 
@@ -98,7 +98,7 @@ You can also inspect the backend API response at `/unveil/api/v1/backend-urls/` 
 
 ### The route is still marked `URL requires parameters`
 
-The resolver probably is not matching the route name you expect, or it is returning `None`. Check the route names in the backend report or API output and make sure your `predicate` matches those names.
+The resolver probably is not matching the route name you expect, or it is returning `None`. Check the route names in the backend report or API output and make sure your `matches` function matches those names.
 
 ### The resolver matches, but no route becomes testable
 

@@ -71,7 +71,7 @@ If you are using `wagtail-unveil` in your own project and want to extend URL res
 4. Apply registered admin instance resolvers from `get_registered_admin_instance_resolvers()`:
    - `wagtail_unveil` registers its own built-in Wagtail namespace resolvers through the same hook system
    - installed Wagtail packages can register `AdminInstanceResolver` objects from `wagtail_unveil.discovery.extensions` via the `register_unveil_admin_instance_resolvers` hook
-   - hook-provided `predicate` and `resolver` fields must be callable; invalid hook results are logged and skipped without aborting discovery
+   - hook-provided `matches` and `resolver` fields must be callable; invalid hook results are logged and skipped without aborting discovery
    - non-override resolvers act as fallbacks when no earlier instance has been selected
    - override resolvers can replace an earlier instance choice or intentionally fail closed
 5. The currently registered built-in resolver rules cover:
@@ -85,7 +85,7 @@ If you are using `wagtail-unveil` in your own project and want to extend URL res
 
 Internal resolution returns a `_ParameterizedURLResolution` object with `resolved_route`, `resolved`, `method`, `detail`, and `attempts`. This metadata is internal only. It exists to make the fallback order and failure path easier to debug and test. Public JSON responses still expose only the existing `BackendURL` fields.
 
-Resolved URLs are stored in `resolved_route` on `BackendURL`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters` during final emission rather than during initial classification. Override resolvers can invalidate an earlier candidate instance when the route requires a different model type. If a resolver predicate or resolver callable raises at runtime, discovery records an internal `<label>:error` attempt, logs a warning, and continues with the remaining strategies.
+Resolved URLs are stored in `resolved_route` on `BackendURL`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters` during final emission rather than during initial classification. Override resolvers can invalidate an earlier candidate instance when the route requires a different model type. If a resolver `matches` or `resolver` callable raises at runtime, discovery records an internal `<label>:error` attempt, logs a warning, and continues with the remaining strategies.
 
 ### Settings Resolution Nuances
 

@@ -267,7 +267,7 @@ class TestParameterizedResolutionStrategies(TestCase):
         instance = mock.Mock(pk=7)
         resolver = AdminInstanceResolver(
             label="extension:custom-package",
-            predicate=lambda context: context.name == "taxonomy_person_modeladmin_edit",
+            matches=lambda context: context.name == "taxonomy_person_modeladmin_edit",
             resolver=lambda context: instance,
         )
         with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
@@ -447,21 +447,21 @@ class TestParameterizedResolutionStrategies(TestCase):
         self.assertIn("reverse:failed", result.attempts)
         self.assertIn("boom", result.detail)
 
-    def test_resolver_predicate_errors_are_recorded_and_later_resolvers_can_still_resolve(self):
+    def test_resolver_match_errors_are_recorded_and_later_resolvers_can_still_resolve(self):
         instance = mock.Mock(pk=7)
 
-        def broken_predicate(context):
-            raise RuntimeError("predicate boom")
+        def broken_matches(context):
+            raise RuntimeError("matches boom")
 
         resolvers = [
             AdminInstanceResolver(
-                label="extension:broken-predicate",
-                predicate=broken_predicate,
+                label="extension:broken-matches",
+                matches=broken_matches,
                 resolver=lambda context: None,
             ),
             AdminInstanceResolver(
                 label="extension:custom-package",
-                predicate=lambda context: True,
+                matches=lambda context: True,
                 resolver=lambda context: instance,
             ),
         ]
@@ -488,14 +488,14 @@ class TestParameterizedResolutionStrategies(TestCase):
             result.attempts,
             [
                 "callback-model:no-model",
-                "extension:broken-predicate:error",
+                "extension:broken-matches:error",
                 "extension:custom-package:instance-found",
                 "reverse:resolved",
             ],
         )
         self.assertEqual(len(logs.output), 1)
-        self.assertIn("extension:broken-predicate", logs.output[0])
-        self.assertIn("predicate evaluation", logs.output[0])
+        self.assertIn("extension:broken-matches", logs.output[0])
+        self.assertIn("match evaluation", logs.output[0])
 
     def test_resolver_errors_are_recorded_and_later_resolvers_can_still_resolve(self):
         instance = mock.Mock(pk=7)
@@ -506,12 +506,12 @@ class TestParameterizedResolutionStrategies(TestCase):
         resolvers = [
             AdminInstanceResolver(
                 label="extension:broken-resolver",
-                predicate=lambda context: True,
+                matches=lambda context: True,
                 resolver=broken_resolver,
             ),
             AdminInstanceResolver(
                 label="extension:custom-package",
-                predicate=lambda context: True,
+                matches=lambda context: True,
                 resolver=lambda context: instance,
             ),
         ]
@@ -555,7 +555,7 @@ class TestParameterizedResolutionStrategies(TestCase):
 
         resolver = AdminInstanceResolver(
             label="extension:override",
-            predicate=lambda context: True,
+            matches=lambda context: True,
             resolver=broken_resolver,
             override=True,
         )
@@ -600,18 +600,18 @@ class TestParameterizedResolutionStrategies(TestCase):
         instance = mock.Mock(pk=7)
         resolvers = [
             AdminInstanceResolver(
-                label="extension:bad-predicate",
-                predicate="not-callable",
+                label="extension:bad-matches",
+                matches="not-callable",
                 resolver=lambda context: None,
             ),
             AdminInstanceResolver(
                 label="extension:bad-resolver",
-                predicate=lambda context: True,
+                matches=lambda context: True,
                 resolver="not-callable",
             ),
             AdminInstanceResolver(
                 label="extension:custom-package",
-                predicate=lambda context: True,
+                matches=lambda context: True,
                 resolver=lambda context: instance,
             ),
         ]
@@ -638,14 +638,14 @@ class TestParameterizedResolutionStrategies(TestCase):
             result.attempts,
             [
                 "callback-model:no-model",
-                "extension:bad-predicate:error",
+                "extension:bad-matches:error",
                 "extension:bad-resolver:error",
                 "extension:custom-package:instance-found",
                 "reverse:resolved",
             ],
         )
         self.assertEqual(len(logs.output), 2)
-        self.assertIn("extension:bad-predicate", logs.output[0])
+        self.assertIn("extension:bad-matches", logs.output[0])
         self.assertIn("extension:bad-resolver", logs.output[1])
 
     def test_attempts_record_full_fallback_order_when_unresolved(self):

@@ -28,12 +28,12 @@ def register_unveil_admin_instance_resolvers():
     return (
         AdminInstanceResolver(
             label="namespace:wagtailforms",
-            predicate=lambda context: context.namespace == "wagtailforms",
+            matches=lambda context: context.namespace == "wagtailforms",
             resolver=lambda context: backend_resolution._get_form_page_instance(),
         ),
         AdminInstanceResolver(
             label="namespace:wagtailadmin_workflows",
-            predicate=lambda context: (
+            matches=lambda context: (
                 context.namespace == "wagtailadmin_workflows"
                 and context.name in backend_resolution.WORKFLOW_USAGE_NAMES
             ),

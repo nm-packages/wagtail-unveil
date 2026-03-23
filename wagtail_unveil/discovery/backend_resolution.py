@@ -233,14 +233,14 @@ def _apply_admin_instance_resolvers(namespace, name, callback, route, current_in
             current_instance=selected_instance,
         )
         try:
-            predicate = resolver.predicate
-            if not callable(predicate):
-                raise TypeError("resolver.predicate is not callable")
-            if not predicate(context):
+            matches = resolver.matches
+            if not callable(matches):
+                raise TypeError("resolver.matches is not callable")
+            if not matches(context):
                 continue
         except Exception:
             attempts.append(f"{resolver.label}:error")
-            _log_admin_instance_resolver_error(resolver, "predicate evaluation", context)
+            _log_admin_instance_resolver_error(resolver, "match evaluation", context)
             continue
         if selected_instance is not None and not resolver.override:
             attempts.append(f"{resolver.label}:skipped")
