@@ -145,11 +145,19 @@ class TestAdminInstanceResolverHooks(SimpleTestCase):
         hook_resolvers = register_unveil_admin_instance_resolvers()
         labels = [resolver.label for resolver in hook_resolvers]
 
-        self.assertEqual(labels, ["namespace:wagtailforms", "namespace:wagtailadmin_workflows"])
+        self.assertEqual(
+            labels,
+            [
+                "namespace:wagtailforms",
+                "namespace:wagtailadmin_pages",
+                "namespace:wagtailadmin_workflows",
+            ],
+        )
         self.assertFalse(any("modeladmin" in label for label in labels))
 
     def test_registered_resolvers_include_package_internal_hooks(self):
         labels = [resolver.label for resolver in get_registered_admin_instance_resolvers()]
 
         self.assertIn("namespace:wagtailforms", labels)
+        self.assertIn("namespace:wagtailadmin_pages", labels)
         self.assertIn("namespace:wagtailadmin_workflows", labels)

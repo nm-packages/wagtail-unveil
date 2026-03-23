@@ -6,7 +6,7 @@ from django.urls import get_resolver
 from wagtail.documents.models import Document
 from wagtail.images.models import Image
 from wagtail.images.tests.utils import get_test_image_file
-from wagtail.models import Site
+from wagtail.models import Page, Site
 
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.backend_resolution import (
@@ -60,6 +60,7 @@ class TestParameterisedURLResolution(TestCase):
         )
         self.user = User.objects.create_user(username="testuser", password="password")
         self.group = Group.objects.create(name="Test group")
+        self.page = Page.objects.exclude(depth=1).first()
 
         from sandbox.inventory.models import Product, Supplier
         from sandbox.taxonomy.models import Banner, Category, Colour
@@ -176,6 +177,38 @@ class TestParameterisedURLResolution(TestCase):
 
     def test_searchpick_edit_url_is_testable(self):
         self._assert_namespace_name_testable("searchpromotions", "edit")
+
+    def test_safe_wagtail_page_routes_are_testable_with_resolved_routes(self):
+        expected_names = {
+            "edit",
+            "preview_on_edit",
+            "view_draft",
+            "add_subpage",
+            "delete",
+            "move",
+            "set_page_position",
+            "copy",
+            "set_privacy",
+            "revisions_index",
+        }
+        page_urls = [u for u in self.urls if u.namespace == "wagtailadmin_pages" and u.name in expected_names]
+
+        self.assertEqual(len(page_urls), len(expected_names))
+        self.assertIsNotNone(self.page)
+        for url in page_urls:
+            with self.subTest(name=url.name):
+                self.assertTrue(url.is_testable, url.route)
+                self.assertEqual(url.skip_reason, "")
+                self.assertTrue(url.resolved_route, url.route)
+                self.assertIn(f"/{self.page.pk}/", url.resolved_route)
+
+    def test_convert_alias_page_route_remains_untestable(self):
+        convert_alias_urls = [u for u in self.urls if u.namespace == "wagtailadmin_pages" and u.name == "convert_alias"]
+
+        self.assertEqual(len(convert_alias_urls), 1)
+        self.assertFalse(convert_alias_urls[0].is_testable, convert_alias_urls[0].route)
+        self.assertEqual(convert_alias_urls[0].skip_reason, "URL requires parameters")
+        self.assertEqual(convert_alias_urls[0].resolved_route, "")
 
     def test_runtime_reorder_urls_remain_visible_but_untestable(self):
         reorder_urls = [u for u in self.urls if u.name == "reorder" and "/reorder/" in u.route]
@@ -326,6 +359,39 @@ class TestParameterizedResolutionStrategies(TestCase):
             [
                 "callback-model:no-model",
                 "namespace:wagtailforms:instance-found",
+                "reverse:resolved",
+            ],
+        )
+
+    def test_wagtailadmin_pages_namespace_fallback_resolves_without_model_metadata(self):
+        instance = mock.Mock(pk=11)
+        with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                return_value=register_unveil_admin_instance_resolvers(),
+            ):
+                with mock.patch(
+                    "wagtail_unveil.discovery.backend_resolution._get_page_instance",
+                    return_value=instance,
+                ):
+                    with mock.patch(
+                        "wagtail_unveil.discovery.backend_resolution.reverse",
+                        return_value="/admin/pages/11/edit/",
+                    ):
+                        result = _resolve_parameterized_url(
+                            "wagtailadmin_pages",
+                            "edit",
+                            callback=object(),
+                            route="admin/pages/<int:page_id>/edit/",
+                        )
+
+        self.assertTrue(result.resolved)
+        self.assertEqual(result.method, "namespace:wagtailadmin_pages")
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:no-model",
+                "namespace:wagtailadmin_pages:instance-found",
                 "reverse:resolved",
             ],
         )

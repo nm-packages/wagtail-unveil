@@ -11,6 +11,18 @@ from wagtail_unveil.discovery.extensions import (
 )
 
 WORKFLOW_USAGE_NAMES = ("usage", "usage_results")
+WAGTAILADMIN_PAGE_FALLBACK_NAMES = (
+    "edit",
+    "preview_on_edit",
+    "view_draft",
+    "add_subpage",
+    "delete",
+    "move",
+    "set_page_position",
+    "copy",
+    "set_privacy",
+    "revisions_index",
+)
 logger = logging.getLogger(__name__)
 
 
@@ -109,6 +121,16 @@ def _get_workflow_instance():
         return Workflow.objects.first()
     except Exception:
         return None
+
+
+def _get_page_instance():
+    """Return a representative non-root page instance for admin URL resolution."""
+    try:
+        from wagtail.models import Page
+    except Exception:
+        return None
+
+    return _get_instance_for_model(Page)
 
 
 def _get_instance_for_model(model):

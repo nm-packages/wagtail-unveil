@@ -74,6 +74,8 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 
 The frontend API keeps canonical paths in the `url` field and, when needed, adds optional `resolved_url` or `query_params` data so the report UI can test parameterised and query-driven routes without rewriting the discovered URL itself.
 
+For admin discovery, `wagtail-unveil` already includes built-in resolvers for common Wagtail namespaces such as form submissions, a safe allowlisted subset of single-parameter page admin routes, and workflow usage views. Projects can extend that behavior further for developer-installed Wagtail packages.
+
 Projects can also extend admin URL parameter resolution for developer-installed Wagtail packages by registering the `register_unveil_admin_instance_resolvers` Wagtail hook and returning `AdminInstanceResolver` objects from `wagtail_unveil.discovery.extensions`. `matches` and `resolver` must both be callables. If a third-party hook raises, returns an invalid shape, or provides a malformed resolver, `wagtail-unveil` logs a warning and skips only that broken contribution so the rest of admin discovery can continue. This is the intended way to support third-party admin packages such as `wagtail-modeladmin` in your own project. For a worked example and the general hook pattern, see [Add Custom Admin URL Resolvers](docs/recipes/custom-admin-url-resolvers.md).
 
 ## Key Configuration
