@@ -83,7 +83,7 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
     "total_count": 190,
     "testable_count": 150,
     "untestable_count": 40,
-    "package_version": "0.1.0a2"
+    "package_version": "0.1.0a3"
   }
 }
 ```
@@ -160,7 +160,7 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
     "total_count": 42,
     "testable_count": 31,
     "untestable_count": 11,
-    "package_version": "0.1.0a2"
+    "package_version": "0.1.0a3"
   }
 }
 ```

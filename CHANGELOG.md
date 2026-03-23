@@ -2,6 +2,19 @@
 
 All notable changes to `wagtail-unveil` are documented in this file.
 
+## 0.1.0a3 - 2026-03-23
+
+Third public alpha release.
+
+This alpha continues to target early adopters and real-world testing. Package behavior and documentation should still be treated as provisional before the first stable release.
+
+### Highlights
+
+- added hook-based admin instance resolver extensions so projects can support developer-installed Wagtail admin packages without patching core discovery
+- documented the custom admin resolver hook pattern, including a `wagtail-modeladmin` recipe and sandbox example integration
+- refactored admin and frontend parameter resolution into dedicated modules with broader test coverage
+- hardened third-party resolver extension handling so invalid hook output degrades gracefully with warnings instead of breaking discovery
+
 ## 0.1.0a2 - 2026-03-22
 
 Second public alpha release.
