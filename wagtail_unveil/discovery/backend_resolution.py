@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass, field
 from functools import cached_property
 
@@ -10,6 +11,7 @@ from wagtail_unveil.discovery.extensions import (
 )
 
 WORKFLOW_USAGE_NAMES = ("usage", "usage_results")
+logger = logging.getLogger(__name__)
 
 
 def _is_django_model(obj):
@@ -122,6 +124,18 @@ def _build_url_name(namespace, name):
     return f"{namespace}:{name}" if namespace else name
 
 
+def _log_admin_instance_resolver_error(resolver, stage, context):
+    """Log a warning when a third-party admin instance resolver fails."""
+    logger.warning(
+        "Skipping admin instance resolver '%s' during %s for %s on route %s.",
+        resolver.label,
+        stage,
+        _build_url_name(context.namespace, context.name),
+        context.route,
+        exc_info=True,
+    )
+
+
 def _reverse_with_instance(namespace, name, instance):
     """Reverse a parameterized URL using a single positional PK argument."""
     result = _ParameterizedURLResolution(method="reverse")
@@ -218,13 +232,29 @@ def _apply_admin_instance_resolvers(namespace, name, callback, route, current_in
             route=route,
             current_instance=selected_instance,
         )
-        if not resolver.predicate(context):
+        try:
+            predicate = resolver.predicate
+            if not callable(predicate):
+                raise TypeError("resolver.predicate is not callable")
+            if not predicate(context):
+                continue
+        except Exception:
+            attempts.append(f"{resolver.label}:error")
+            _log_admin_instance_resolver_error(resolver, "predicate evaluation", context)
             continue
         if selected_instance is not None and not resolver.override:
             attempts.append(f"{resolver.label}:skipped")
             continue
 
-        instance = resolver.resolver(context)
+        try:
+            resolver_func = resolver.resolver
+            if not callable(resolver_func):
+                raise TypeError("resolver.resolver is not callable")
+            instance = resolver_func(context)
+        except Exception:
+            attempts.append(f"{resolver.label}:error")
+            _log_admin_instance_resolver_error(resolver, "instance resolution", context)
+            continue
         if instance is None:
             attempts.append(f"{resolver.label}:no-instance")
             if resolver.override:

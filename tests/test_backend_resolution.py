@@ -447,6 +447,207 @@ class TestParameterizedResolutionStrategies(TestCase):
         self.assertIn("reverse:failed", result.attempts)
         self.assertIn("boom", result.detail)
 
+    def test_resolver_predicate_errors_are_recorded_and_later_resolvers_can_still_resolve(self):
+        instance = mock.Mock(pk=7)
+
+        def broken_predicate(context):
+            raise RuntimeError("predicate boom")
+
+        resolvers = [
+            AdminInstanceResolver(
+                label="extension:broken-predicate",
+                predicate=broken_predicate,
+                resolver=lambda context: None,
+            ),
+            AdminInstanceResolver(
+                label="extension:custom-package",
+                predicate=lambda context: True,
+                resolver=lambda context: instance,
+            ),
+        ]
+
+        with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                return_value=resolvers,
+            ):
+                with mock.patch(
+                    "wagtail_unveil.discovery.backend_resolution.reverse",
+                    return_value="/admin/groups/7/",
+                ):
+                    with self.assertLogs("wagtail_unveil.discovery.backend_resolution", level="WARNING") as logs:
+                        result = _resolve_parameterized_url(
+                            "",
+                            "taxonomy_person_modeladmin_edit",
+                            callback=object(),
+                            route="admin/taxonomy/person/<int:pk>/",
+                        )
+
+        self.assertTrue(result.resolved)
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:no-model",
+                "extension:broken-predicate:error",
+                "extension:custom-package:instance-found",
+                "reverse:resolved",
+            ],
+        )
+        self.assertEqual(len(logs.output), 1)
+        self.assertIn("extension:broken-predicate", logs.output[0])
+        self.assertIn("predicate evaluation", logs.output[0])
+
+    def test_resolver_errors_are_recorded_and_later_resolvers_can_still_resolve(self):
+        instance = mock.Mock(pk=7)
+
+        def broken_resolver(context):
+            raise RuntimeError("resolver boom")
+
+        resolvers = [
+            AdminInstanceResolver(
+                label="extension:broken-resolver",
+                predicate=lambda context: True,
+                resolver=broken_resolver,
+            ),
+            AdminInstanceResolver(
+                label="extension:custom-package",
+                predicate=lambda context: True,
+                resolver=lambda context: instance,
+            ),
+        ]
+
+        with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                return_value=resolvers,
+            ):
+                with mock.patch(
+                    "wagtail_unveil.discovery.backend_resolution.reverse",
+                    return_value="/admin/groups/7/",
+                ):
+                    with self.assertLogs("wagtail_unveil.discovery.backend_resolution", level="WARNING") as logs:
+                        result = _resolve_parameterized_url(
+                            "",
+                            "taxonomy_person_modeladmin_edit",
+                            callback=object(),
+                            route="admin/taxonomy/person/<int:pk>/",
+                        )
+
+        self.assertTrue(result.resolved)
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:no-model",
+                "extension:broken-resolver:error",
+                "extension:custom-package:instance-found",
+                "reverse:resolved",
+            ],
+        )
+        self.assertEqual(len(logs.output), 1)
+        self.assertIn("extension:broken-resolver", logs.output[0])
+        self.assertIn("instance resolution", logs.output[0])
+
+    def test_override_resolver_errors_do_not_clear_existing_instance(self):
+        callback_instance = mock.Mock(pk=1)
+
+        def broken_resolver(context):
+            raise RuntimeError("resolver boom")
+
+        resolver = AdminInstanceResolver(
+            label="extension:override",
+            predicate=lambda context: True,
+            resolver=broken_resolver,
+            override=True,
+        )
+
+        with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=User):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend_resolution._get_instance_for_model",
+                return_value=callback_instance,
+            ):
+                with mock.patch(
+                    "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                    return_value=[resolver],
+                ):
+                    with mock.patch(
+                        "wagtail_unveil.discovery.backend_resolution.reverse",
+                        return_value="/admin/users/1/",
+                    ) as reverse_mock:
+                        with self.assertLogs("wagtail_unveil.discovery.backend_resolution", level="WARNING") as logs:
+                            result = _resolve_parameterized_url(
+                                "",
+                                "edit",
+                                callback=object(),
+                                route="admin/users/<int:pk>/",
+                            )
+
+        self.assertTrue(result.resolved)
+        self.assertEqual(result.method, "callback-model")
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:model-found",
+                "callback-model:instance-found",
+                "extension:override:error",
+                "reverse:resolved",
+            ],
+        )
+        reverse_mock.assert_called_once_with("edit", args=[1])
+        self.assertEqual(len(logs.output), 1)
+        self.assertIn("extension:override", logs.output[0])
+
+    def test_non_callable_resolver_fields_are_recorded_as_errors_and_skipped(self):
+        instance = mock.Mock(pk=7)
+        resolvers = [
+            AdminInstanceResolver(
+                label="extension:bad-predicate",
+                predicate="not-callable",
+                resolver=lambda context: None,
+            ),
+            AdminInstanceResolver(
+                label="extension:bad-resolver",
+                predicate=lambda context: True,
+                resolver="not-callable",
+            ),
+            AdminInstanceResolver(
+                label="extension:custom-package",
+                predicate=lambda context: True,
+                resolver=lambda context: instance,
+            ),
+        ]
+
+        with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                return_value=resolvers,
+            ):
+                with mock.patch(
+                    "wagtail_unveil.discovery.backend_resolution.reverse",
+                    return_value="/admin/groups/7/",
+                ):
+                    with self.assertLogs("wagtail_unveil.discovery.backend_resolution", level="WARNING") as logs:
+                        result = _resolve_parameterized_url(
+                            "",
+                            "taxonomy_person_modeladmin_edit",
+                            callback=object(),
+                            route="admin/taxonomy/person/<int:pk>/",
+                        )
+
+        self.assertTrue(result.resolved)
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:no-model",
+                "extension:bad-predicate:error",
+                "extension:bad-resolver:error",
+                "extension:custom-package:instance-found",
+                "reverse:resolved",
+            ],
+        )
+        self.assertEqual(len(logs.output), 2)
+        self.assertIn("extension:bad-predicate", logs.output[0])
+        self.assertIn("extension:bad-resolver", logs.output[1])
+
     def test_attempts_record_full_fallback_order_when_unresolved(self):
         with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
             with mock.patch(

@@ -45,13 +45,101 @@ class TestAdminInstanceResolverHooks(SimpleTestCase):
 
         self.assertEqual(results, [first, second])
 
-    def test_invalid_hook_result_raises_clear_error(self):
+    def test_none_hook_result_is_ignored(self):
         with mock.patch(
             "wagtail_unveil.discovery.extensions.hooks.get_hooks",
-            return_value=[lambda: "invalid"],
+            return_value=[lambda: None],
         ):
-            with self.assertRaisesMessage(TypeError, "register_unveil_admin_instance_resolvers"):
-                get_registered_admin_instance_resolvers()
+            results = get_registered_admin_instance_resolvers()
+
+        self.assertEqual(results, [])
+
+    def test_hook_raising_is_logged_and_later_hooks_still_load(self):
+        resolver = AdminInstanceResolver(
+            label="extension:single",
+            predicate=lambda context: True,
+            resolver=lambda context: None,
+        )
+
+        def broken_hook():
+            raise RuntimeError("boom")
+
+        with mock.patch(
+            "wagtail_unveil.discovery.extensions.hooks.get_hooks",
+            return_value=[broken_hook, lambda: resolver],
+        ):
+            with self.assertLogs("wagtail_unveil.discovery.extensions", level="WARNING") as logs:
+                results = get_registered_admin_instance_resolvers()
+
+        self.assertEqual(results, [resolver])
+        self.assertEqual(len(logs.output), 1)
+        self.assertIn("broken_hook", logs.output[0])
+        self.assertIn("raised an exception", logs.output[0])
+
+    def test_invalid_hook_result_is_logged_and_skipped(self):
+        resolver = AdminInstanceResolver(
+            label="extension:single",
+            predicate=lambda context: True,
+            resolver=lambda context: None,
+        )
+
+        with mock.patch(
+            "wagtail_unveil.discovery.extensions.hooks.get_hooks",
+            return_value=[lambda: "invalid", lambda: resolver],
+        ):
+            with self.assertLogs("wagtail_unveil.discovery.extensions", level="WARNING") as logs:
+                results = get_registered_admin_instance_resolvers()
+
+        self.assertEqual(results, [resolver])
+        self.assertEqual(len(logs.output), 1)
+        self.assertIn("returned invalid admin instance resolvers", logs.output[0])
+
+    def test_invalid_item_inside_hook_result_list_is_logged_and_skipped(self):
+        resolver = AdminInstanceResolver(
+            label="extension:single",
+            predicate=lambda context: True,
+            resolver=lambda context: None,
+        )
+
+        with mock.patch(
+            "wagtail_unveil.discovery.extensions.hooks.get_hooks",
+            return_value=[lambda: [resolver, "invalid"], lambda: resolver],
+        ):
+            with self.assertLogs("wagtail_unveil.discovery.extensions", level="WARNING") as logs:
+                results = get_registered_admin_instance_resolvers()
+
+        self.assertEqual(results, [resolver])
+        self.assertEqual(len(logs.output), 1)
+        self.assertIn("returned invalid admin instance resolvers", logs.output[0])
+
+    def test_non_callable_resolver_fields_are_logged_and_skipped(self):
+        valid = AdminInstanceResolver(
+            label="extension:valid",
+            predicate=lambda context: True,
+            resolver=lambda context: None,
+        )
+        bad_predicate = AdminInstanceResolver(
+            label="extension:bad-predicate",
+            predicate="not-callable",
+            resolver=lambda context: None,
+        )
+        bad_resolver = AdminInstanceResolver(
+            label="extension:bad-resolver",
+            predicate=lambda context: True,
+            resolver="not-callable",
+        )
+
+        with mock.patch(
+            "wagtail_unveil.discovery.extensions.hooks.get_hooks",
+            return_value=[lambda: bad_predicate, lambda: bad_resolver, lambda: valid],
+        ):
+            with self.assertLogs("wagtail_unveil.discovery.extensions", level="WARNING") as logs:
+                results = get_registered_admin_instance_resolvers()
+
+        self.assertEqual(results, [valid])
+        self.assertEqual(len(logs.output), 2)
+        self.assertIn("non-callable predicate", logs.output[0])
+        self.assertIn("non-callable resolver", logs.output[1])
 
     def test_package_registers_internal_resolvers_via_hook(self):
         hook_resolvers = register_unveil_admin_instance_resolvers()
