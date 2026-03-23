@@ -4,7 +4,7 @@ Task-focused guides for using `wagtail-unveil` in your own Wagtail project.
 
 ## In This Section
 
-- [Add URL Resolution for `wagtail-modeladmin`](wagtail-modeladmin-url-resolution.md) — Make `wagtail-modeladmin` edit, delete, and history routes testable in backend discovery
+- [Add Custom Admin URL Resolvers](custom-admin-url-resolvers.md) — Register project-level resolvers for third-party admin routes that need a concrete instance before they can be tested
 
 ## Related
 

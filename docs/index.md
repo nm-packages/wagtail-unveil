@@ -11,7 +11,7 @@ Discover and test every URL in your Wagtail site — frontend and admin.
 | Use the frontend URL report | [Frontend URLs Report](features/frontend-urls-report.md) |
 | View the settings diagnostic page | [Settings Page](features/settings-page.md) |
 | Configure the package | [Settings Reference](configuration/settings-reference.md) |
-| Add URL resolution for `wagtail-modeladmin` | [Recipe](recipes/wagtail-modeladmin-url-resolution.md) |
+| Add custom admin URL resolvers | [Recipe](recipes/custom-admin-url-resolvers.md) |
 | Use the JSON API | [API Reference](api/endpoints.md) |
 | Contribute to the package | [Contributing](contributing/index.md) |
 
