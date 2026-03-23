@@ -7,7 +7,10 @@ This document explains how `wagtail_unveil` discovers URLs, normalizes route str
 Primary implementation files:
 
 - `wagtail_unveil/discovery/backend.py`
+- `wagtail_unveil/discovery/backend_resolution.py`
+- `wagtail_unveil/discovery/extensions.py`
 - `wagtail_unveil/discovery/frontend.py`
+- `wagtail_unveil/discovery/frontend_resolution.py`
 - `wagtail_unveil/discovery/utils.py`
 - `wagtail_unveil/settings.py`
 
@@ -58,15 +61,23 @@ There are also namespace-specific readiness checks:
 
 ## Parameter Resolution Strategy
 
-Backend parameter resolution is phase 4 only. `_resolve_parameterized_url()` attempts to turn a parameterized admin route into a real path that can be tested. It follows an explicit strategy pipeline:
+Backend parameter resolution lives in `wagtail_unveil/discovery/backend_resolution.py`.
+If you are using `wagtail-unveil` in your own project and want to extend URL resolution for a package such as `wagtail-modeladmin`, start with the user-facing recipe: [Add Custom Admin URL Resolvers](../recipes/custom-admin-url-resolvers.md).
+`_resolve_parameterized_url()` attempts to turn a parameterized admin route into a real path that can be tested. It follows an explicit strategy pipeline:
 
 1. If the namespace is `wagtailsettings`, delegate to `_resolve_settings_url()` and stop there.
 2. Try to infer a model from callback metadata via `_get_model_from_callback()`.
 3. If a callback model is found, select a representative instance with `_get_instance_for_model()`.
-4. If no callback-backed instance is available, fall back to parsing modeladmin-style URL names such as `{app}_{model}_modeladmin_{action}` and again select an instance with `_get_instance_for_model()`.
-5. Apply namespace-specific instance rules from `_get_namespace_specific_instance()`:
+4. Apply registered admin instance resolvers from `get_registered_admin_instance_resolvers()`:
+   - `wagtail_unveil` registers its own built-in Wagtail namespace resolvers through the same hook system
+   - installed Wagtail packages can register `AdminInstanceResolver` objects from `wagtail_unveil.discovery.extensions` via the `register_unveil_admin_instance_resolvers` hook
+   - hook-provided `matches` and `resolver` fields must be callable; invalid hook results are logged and skipped without aborting discovery
+   - non-override resolvers act as fallbacks when no earlier instance has been selected
+   - override resolvers can replace an earlier instance choice or intentionally fail closed
+5. The currently registered built-in resolver rules cover:
    - `wagtailforms` falls back to the first live form page instance when no earlier instance exists
    - `wagtailadmin_workflows` usage views override earlier model-derived instances with the first `Workflow` instance, and fail closed if no workflow exists
+   - third-party admin packages such as `wagtail-modeladmin` are expected to register their own project-level resolvers rather than relying on built-in package support
 6. Reverse the URL with `_reverse_with_instance()` using the selected instance.
 7. If no instance can be selected, keep the route visible but untestable.
 
@@ -74,7 +85,7 @@ Backend parameter resolution is phase 4 only. `_resolve_parameterized_url()` att
 
 Internal resolution returns a `_ParameterizedURLResolution` object with `resolved_route`, `resolved`, `method`, `detail`, and `attempts`. This metadata is internal only. It exists to make the fallback order and failure path easier to debug and test. Public JSON responses still expose only the existing `BackendURL` fields.
 
-Resolved URLs are stored in `resolved_route` on `BackendURL`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters` during final emission rather than during initial classification. Namespace-specific overrides can invalidate an earlier candidate instance when the route requires a different model type.
+Resolved URLs are stored in `resolved_route` on `BackendURL`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters` during final emission rather than during initial classification. Override resolvers can invalidate an earlier candidate instance when the route requires a different model type. If a resolver `matches` or `resolver` callable raises at runtime, discovery records an internal `<label>:error` attempt, logs a warning, and continues with the remaining strategies.
 
 ### Settings Resolution Nuances
 
@@ -195,14 +206,20 @@ Current intentional boundaries:
 If you need to change discovery behavior, start in these files:
 
 - `wagtail_unveil/discovery/backend.py`
+- `wagtail_unveil/discovery/backend_resolution.py`
+- `wagtail_unveil/discovery/extensions.py`
 - `wagtail_unveil/discovery/frontend.py`
+- `wagtail_unveil/discovery/frontend_resolution.py`
 - `wagtail_unveil/discovery/utils.py`
 - `wagtail_unveil/settings.py`
 
 Then verify the intended behavior in:
 
 - `tests/test_admin_urls.py`
-- `tests/test_frontend_urls.py`
+- `tests/test_backend_resolution.py`
+- `tests/test_discovery_extensions.py`
+- `tests/test_frontend.py`
+- `tests/test_frontend_resolution.py`
 - `tests/test_settings.py`
 
 ## Code And Test Map
@@ -210,7 +227,9 @@ Then verify the intended behavior in:
 The main behavior is currently implemented in code and verified in tests:
 
 - `wagtail_unveil/discovery/backend.py` and `tests/test_admin_urls.py`
-- `wagtail_unveil/discovery/frontend.py` and `tests/test_frontend_urls.py`
+- `wagtail_unveil/discovery/backend_resolution.py` and `tests/test_backend_resolution.py`
+- `wagtail_unveil/discovery/frontend.py` and `tests/test_frontend.py`
+- `wagtail_unveil/discovery/frontend_resolution.py` and `tests/test_frontend_resolution.py`
 - `wagtail_unveil/settings.py` and `tests/test_settings.py`
 
 Use the tests as verification of current behavior, not as the primary contributor-facing explanation of how discovery works. This document should be the first place a contributor reads when changing discovery and resolution logic.

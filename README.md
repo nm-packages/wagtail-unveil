@@ -74,6 +74,8 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 
 The frontend API keeps canonical paths in the `url` field and, when needed, adds optional `resolved_url` or `query_params` data so the report UI can test parameterised and query-driven routes without rewriting the discovered URL itself.
 
+Projects can also extend admin URL parameter resolution for developer-installed Wagtail packages by registering the `register_unveil_admin_instance_resolvers` Wagtail hook and returning `AdminInstanceResolver` objects from `wagtail_unveil.discovery.extensions`. `matches` and `resolver` must both be callables. If a third-party hook raises, returns an invalid shape, or provides a malformed resolver, `wagtail-unveil` logs a warning and skips only that broken contribution so the rest of admin discovery can continue. This is the intended way to support third-party admin packages such as `wagtail-modeladmin` in your own project. For a worked example and the general hook pattern, see [Add Custom Admin URL Resolvers](docs/recipes/custom-admin-url-resolvers.md).
+
 ## Key Configuration
 
 Most projects only need `WAGTAIL_UNVEIL_API_KEY` from the quickstart to use the JSON API.
@@ -94,6 +96,7 @@ For full setting details, including environment variable usage, normalization ru
 - Documentation index: [docs/index.md](docs/index.md)
 - Installation guide: [docs/getting-started/installation.md](docs/getting-started/installation.md)
 - Settings reference: [docs/configuration/settings-reference.md](docs/configuration/settings-reference.md)
+- Recipes: [docs/recipes/index.md](docs/recipes/index.md)
 - API endpoints: [docs/api/endpoints.md](docs/api/endpoints.md)
 - Report features: [docs/features/index.md](docs/features/index.md)
 - Contributor/developer guide: [docs/contributing/development.md](docs/contributing/development.md)

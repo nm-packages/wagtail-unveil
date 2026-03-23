@@ -18,8 +18,11 @@ The current public interface is URL-based and admin-integrated: URLconf inclusio
 - `urls.py` — package URL config with app name `wagtail_unveil`
 - `views.py` — JSON and HTML report views
 - `wagtail_hooks.py` — Wagtail admin integration and dashboard panel
-- `discovery/backend.py` — admin URL discovery
-- `discovery/frontend.py` — frontend URL discovery
+- `discovery/backend.py` — admin URL discovery pipeline
+- `discovery/backend_resolution.py` — admin parameter resolution helpers
+- `discovery/extensions.py` — public discovery extension types and hook loading
+- `discovery/frontend.py` — frontend URL discovery pipeline
+- `discovery/frontend_resolution.py` — frontend routable and API URL resolution helpers
 - `discovery/utils.py` — shared resolver utilities
 - `templates/wagtail_unveil/` — report and dashboard templates
 - `../assets_src/css/` — editable report CSS source
@@ -111,6 +114,7 @@ The full discovery flow, resolution fallbacks, special cases, and intentional li
 
 `get_admin_urls()` follows explicit phases: discover admin candidates, normalize route metadata, classify testability, resolve supported parameterized URLs, then emit `BackendURL` objects.
 Namespace-specific rules may replace an earlier instance choice or invalidate it entirely when the route requires a different model type, such as workflow usage URLs.
+Admin parameter resolution is unified through `register_unveil_admin_instance_resolvers` hook registrations. Use that hook for both built-in package rules and developer-installed Wagtail package extensions rather than adding package-specific branches in core discovery.
 Resolved admin routes are only marked testable when the callback supports GET; POST-only routes such as reorder views remain visible with a skip reason instead of being offered to the report tester.
 
 ### Frontend URLs

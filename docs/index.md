@@ -11,6 +11,7 @@ Discover and test every URL in your Wagtail site — frontend and admin.
 | Use the frontend URL report | [Frontend URLs Report](features/frontend-urls-report.md) |
 | View the settings diagnostic page | [Settings Page](features/settings-page.md) |
 | Configure the package | [Settings Reference](configuration/settings-reference.md) |
+| Add custom admin URL resolvers | [Recipe](recipes/custom-admin-url-resolvers.md) |
 | Use the JSON API | [API Reference](api/endpoints.md) |
 | Contribute to the package | [Contributing](contributing/index.md) |
 
@@ -19,5 +20,6 @@ Discover and test every URL in your Wagtail site — frontend and admin.
 - [Getting Started](getting-started/index.md) — Installation, quickstart, and first steps
 - [Features](features/index.md) — URL reports, settings diagnostic page, and dashboard panel
 - [Configuration](configuration/index.md) — Package settings reference
+- [Recipes](recipes/index.md) — Task-focused guides for extending `wagtail-unveil` in your own project
 - [API Reference](api/index.md) — JSON API endpoints, authentication, and response shape
 - [Contributing](contributing/index.md) — Contributor setup, architecture, and release workflow

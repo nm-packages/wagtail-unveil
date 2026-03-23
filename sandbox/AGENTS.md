@@ -15,7 +15,7 @@ Sandbox-only helpers, including management commands such as `create_sample_data`
 - `home/` — home app and management commands such as `create_sample_data`
 - `core/` — general page types and Wagtail settings models
 - `search/` — search view
-- `taxonomy/` — snippets and modeladmin examples
+- `taxonomy/` — snippets, modeladmin examples, and the sample `wagtail_unveil` discovery extension hook
 - `calendar/` — custom Wagtail admin viewsets
 - `forms/` — form builder pages
 - `inventory/` — `ModelViewSet`, grouped admin views, chooser views
