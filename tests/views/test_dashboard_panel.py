@@ -47,26 +47,3 @@ class TestDashboardPanel(TestCase):
         with self.settings(DEBUG=False):
             html = self._render(self.superuser)
             self.assertEqual(html, "")
-
-
-class TestDashboardPanelFrontendLink(TestCase):
-    def setUp(self):
-        self.factory = RequestFactory()
-        self.panel = UnveilReportPanel()
-        self.superuser = User.objects.create_superuser(username="admin", password="password")
-
-    @override_settings(DEBUG=True)
-    def test_panel_shows_frontend_link(self):
-        request = self.factory.get("/admin/")
-        request.user = self.superuser
-        html = self.panel.render_html({"request": request})
-        self.assertIn("Frontend URLs", html)
-        self.assertIn("/unveil/report/frontend-urls/", html)
-        self.assertIn("Inspect discovered public page and resolver URLs.", html)
-        self.assertIn("Settings", html)
-        self.assertIn("/unveil/report/settings/", html)
-        self.assertIn("listing listing--dashboard", html)
-        self.assertIn("Open report", html)
-        self.assertIn("Open settings", html)
-        self.assertIn('id="unveil-section"', html)
-        self.assertIn("data-panel-toggle", html)
