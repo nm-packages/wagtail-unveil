@@ -23,6 +23,8 @@ from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.frontend import get_frontend_urls
 from wagtail_unveil.settings import get_api_key, get_setting_diagnostics
 
+# Shared API response and authentication helpers
+
 
 def _json_error(message, *, status):
     """Return a JSON error response with a consistent shape."""
@@ -50,6 +52,9 @@ def _authenticate_api_request(request):
         return None
 
     return _json_error("Invalid or missing API key", status=403)
+
+
+# Shared serialization and metadata helpers
 
 
 def _serialize_backend_url(url):
@@ -135,6 +140,9 @@ def _build_urls_json_response(urls, serializer, *, applied_filter=None, contract
     }
     response = JsonResponse(data)
     return _apply_lifecycle_headers(response, contract)
+
+
+# Settings report helpers
 
 
 def _get_display_package_version():
@@ -247,25 +255,28 @@ def _build_settings_report_context():
     }
 
 
-def _get_backend_urls_for_version(api_version):
+# Version-specific API dispatch helpers
+
+
+def _get_backend_urls_for_version(_api_version):
     """Return backend URL objects for a specific API version."""
     # Future API versions can customize discovery behavior here.
     return get_admin_urls()
 
 
-def _get_frontend_urls_for_version(api_version):
+def _get_frontend_urls_for_version(_api_version):
     """Return frontend URL objects for a specific API version."""
     # Future API versions can customize discovery behavior here.
     return get_frontend_urls()
 
 
-def _get_backend_serializer_for_version(api_version):
+def _get_backend_serializer_for_version(_api_version):
     """Return backend serializer function for a specific API version."""
     # Future API versions can customize response fields here.
     return _serialize_backend_url
 
 
-def _get_frontend_serializer_for_version(api_version):
+def _get_frontend_serializer_for_version(_api_version):
     """Return frontend serializer function for a specific API version."""
     # Future API versions can customize response fields here.
     return _serialize_frontend_url
@@ -325,6 +336,9 @@ def _frontend_urls_json_for_version(request, api_version):
     )
 
 
+# JSON view builders
+
+
 def build_admin_urls_json_view(api_version):
     """Build a Django view callable bound to a specific backend API version."""
 
@@ -348,6 +362,9 @@ def build_frontend_urls_json_view(api_version):
 # Backward-compatible callables bound to the current latest stable API version.
 admin_urls_json = build_admin_urls_json_view(get_latest_stable_api_version())
 frontend_urls_json = build_frontend_urls_json_view(get_latest_stable_api_version())
+
+
+# HTML report views
 
 
 @user_passes_test(lambda u: u.is_superuser)
