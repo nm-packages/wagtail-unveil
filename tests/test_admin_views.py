@@ -84,6 +84,23 @@ class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
         self.assertEqual(edit_urls[0]["skip_reason"], "")
         self.assertTrue(edit_urls[0]["resolved_route"])
 
+    def test_workflow_task_edit_route_is_serialized_as_testable_with_resolved_route(self):
+        response = self.client.get(
+            self.api_url,
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+
+        edit_task_urls = [
+            url
+            for url in response.json()["urls"]
+            if url["namespace"] == "wagtailadmin_workflows" and url["name"] == "edit_task"
+        ]
+
+        self.assertEqual(len(edit_task_urls), 1)
+        self.assertTrue(edit_task_urls[0]["is_testable"])
+        self.assertEqual(edit_task_urls[0]["skip_reason"], "")
+        self.assertTrue(edit_task_urls[0]["resolved_route"])
+
     @patch("wagtail_unveil.views.get_api_contract")
     def test_response_sets_deprecation_headers_for_deprecated_contract(self, mock_get_api_contract):
         deprecated_contract = replace(

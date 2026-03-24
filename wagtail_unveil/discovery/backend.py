@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from django.urls import get_resolver
 
-from wagtail_unveil.discovery.backend_resolution import _resolve_parameterized_url
+from wagtail_unveil.discovery.backend_resolution import resolve_parameterized_url
 from wagtail_unveil.discovery.utils import clean_regex_route, route_has_parameters, walk_patterns
 from wagtail_unveil.settings import get_skip_url_prefixes
 
@@ -195,7 +195,7 @@ def _finalize_admin_route(normalized_route, classification):
     skip_reason = classification.skip_reason
 
     if classification.should_resolve:
-        resolution = _resolve_parameterized_url(
+        resolution = resolve_parameterized_url(
             normalized_route.namespace,
             normalized_route.name,
             normalized_route.callback,

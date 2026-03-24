@@ -11,6 +11,7 @@ from wagtail_unveil.discovery.extensions import (
 )
 
 WORKFLOW_USAGE_NAMES = ("usage", "usage_results")
+WORKFLOW_TASK_ROUTE_NAMES = ("edit_task", "task_chosen")
 WAGTAILADMIN_PAGE_FALLBACK_NAMES = (
     "edit",
     "preview_on_edit",
@@ -98,7 +99,7 @@ def _get_model_from_callback(callback):
     return None
 
 
-def _get_form_page_instance():
+def get_form_page_instance():
     """Find a live form page instance for wagtailforms URL resolution."""
     try:
         from wagtail.contrib.forms.models import FormMixin
@@ -113,7 +114,7 @@ def _get_form_page_instance():
     return None
 
 
-def _get_workflow_instance():
+def get_workflow_instance():
     """Return the first available Workflow instance."""
     try:
         from wagtail.models import Workflow
@@ -123,7 +124,17 @@ def _get_workflow_instance():
         return None
 
 
-def _get_page_instance():
+def get_workflow_task_instance():
+    """Return the first available workflow task instance."""
+    try:
+        from wagtail.models import Task
+
+        return Task.objects.first()
+    except Exception:
+        return None
+
+
+def get_page_instance():
     """Return a representative non-root page instance for admin URL resolution."""
     try:
         from wagtail.models import Page
@@ -133,7 +144,7 @@ def _get_page_instance():
     return _get_instance_for_model(Page)
 
 
-def _get_add_subpage_parent_page_instance():
+def get_add_subpage_parent_page_instance():
     """Return a parent page that can actually host at least one creatable child page."""
     try:
         from wagtail.models import Page
@@ -310,7 +321,7 @@ def _apply_admin_instance_resolvers(namespace, name, callback, route, current_in
     return selected_method, selected_instance, attempts
 
 
-def _resolve_parameterized_url(namespace, name, callback, route=""):
+def resolve_parameterized_url(namespace, name, callback, route=""):
     """Attempt to resolve a parameterized admin URL using an explicit strategy order."""
     if namespace == "wagtailsettings":
         return _resolve_settings_url(name, route)

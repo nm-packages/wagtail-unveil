@@ -152,6 +152,7 @@ class TestAdminInstanceResolverHooks(SimpleTestCase):
                 "namespace:wagtailadmin_pages",
                 "namespace:wagtailadmin_pages:add_subpage",
                 "namespace:wagtailadmin_workflows",
+                "namespace:wagtailadmin_workflows:tasks",
             ],
         )
         self.assertFalse(any("modeladmin" in label for label in labels))
@@ -163,3 +164,4 @@ class TestAdminInstanceResolverHooks(SimpleTestCase):
         self.assertIn("namespace:wagtailadmin_pages", labels)
         self.assertIn("namespace:wagtailadmin_pages:add_subpage", labels)
         self.assertIn("namespace:wagtailadmin_workflows", labels)
+        self.assertIn("namespace:wagtailadmin_workflows:tasks", labels)
