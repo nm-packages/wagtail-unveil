@@ -27,11 +27,6 @@ WAGTAILADMIN_PAGE_ADD_SUBPAGE_NAME = "add_subpage"
 logger = logging.getLogger(__name__)
 
 
-def _is_django_model(obj):
-    """Check if obj is a Django model class."""
-    return isinstance(obj, type) and hasattr(obj, "_meta")
-
-
 @dataclass
 class _ParameterizedURLResolution:
     """Internal resolution state for a parameterized admin URL."""
@@ -44,6 +39,39 @@ class _ParameterizedURLResolution:
 
     def add_attempt(self, strategy, outcome):
         self.attempts.append(f"{strategy}:{outcome}")
+
+
+def _is_django_model(obj):
+    """Check if obj is a Django model class."""
+    return isinstance(obj, type) and hasattr(obj, "_meta")
+
+
+def _build_url_name(namespace, name):
+    """Return the fully namespaced URL name for reversal."""
+    return f"{namespace}:{name}" if namespace else name
+
+
+def _get_instance_for_model(model):
+    """Return a representative instance for the given model, if one exists."""
+    queryset = model.objects.all()
+    if hasattr(model, "depth"):
+        queryset = queryset.exclude(depth=1)
+    return queryset.first()
+
+
+def _log_admin_instance_resolver_error(resolver, stage, context):
+    """Log a warning when a third-party admin instance resolver fails."""
+    logger.warning(
+        "Skipping admin instance resolver '%s' during %s for %s on route %s.",
+        resolver.label,
+        stage,
+        _build_url_name(context.namespace, context.name),
+        context.route,
+        exc_info=True,
+    )
+
+
+# Callback model inference
 
 
 def _get_model_from_view_class(view_class):
@@ -99,6 +127,9 @@ def _get_model_from_callback(callback):
     return None
 
 
+# Built-in hook resolver helpers
+
+
 def get_form_page_instance():
     """Find a live form page instance for wagtailforms URL resolution."""
     try:
@@ -112,26 +143,6 @@ def get_form_page_instance():
         if isinstance(page, FormMixin):
             return page
     return None
-
-
-def get_workflow_instance():
-    """Return the first available Workflow instance."""
-    try:
-        from wagtail.models import Workflow
-
-        return Workflow.objects.first()
-    except Exception:
-        return None
-
-
-def get_workflow_task_instance():
-    """Return the first available workflow task instance."""
-    try:
-        from wagtail.models import Task
-
-        return Task.objects.first()
-    except Exception:
-        return None
 
 
 def get_page_instance():
@@ -162,46 +173,27 @@ def get_add_subpage_parent_page_instance():
     return None
 
 
-def _get_instance_for_model(model):
-    """Return a representative instance for the given model, if one exists."""
-    queryset = model.objects.all()
-    if hasattr(model, "depth"):
-        queryset = queryset.exclude(depth=1)
-    return queryset.first()
-
-
-def _build_url_name(namespace, name):
-    """Return the fully namespaced URL name for reversal."""
-    return f"{namespace}:{name}" if namespace else name
-
-
-def _log_admin_instance_resolver_error(resolver, stage, context):
-    """Log a warning when a third-party admin instance resolver fails."""
-    logger.warning(
-        "Skipping admin instance resolver '%s' during %s for %s on route %s.",
-        resolver.label,
-        stage,
-        _build_url_name(context.namespace, context.name),
-        context.route,
-        exc_info=True,
-    )
-
-
-def _reverse_with_instance(namespace, name, instance):
-    """Reverse a parameterized URL using a single positional PK argument."""
-    result = _ParameterizedURLResolution(method="reverse")
+def get_workflow_instance():
+    """Return the first available Workflow instance."""
     try:
-        url = reverse(_build_url_name(namespace, name), args=[instance.pk])
-    except Exception as exc:
-        result.add_attempt("reverse", "failed")
-        result.detail = str(exc) or exc.__class__.__name__
-        return result
+        from wagtail.models import Workflow
 
-    result.add_attempt("reverse", "resolved")
-    result.resolved = True
-    result.resolved_route = url.lstrip("/")
-    result.detail = f"Reversed {_build_url_name(namespace, name)} with pk={instance.pk}"
-    return result
+        return Workflow.objects.first()
+    except Exception:
+        return None
+
+
+def get_workflow_task_instance():
+    """Return the first available workflow task instance."""
+    try:
+        from wagtail.models import Task
+
+        return Task.objects.first()
+    except Exception:
+        return None
+
+
+# Concrete resolution steps
 
 
 def _resolve_settings_url(name, route):
@@ -319,6 +311,23 @@ def _apply_admin_instance_resolvers(namespace, name, callback, route, current_in
         selected_instance = instance
 
     return selected_method, selected_instance, attempts
+
+
+def _reverse_with_instance(namespace, name, instance):
+    """Reverse a parameterized URL using a single positional PK argument."""
+    result = _ParameterizedURLResolution(method="reverse")
+    try:
+        url = reverse(_build_url_name(namespace, name), args=[instance.pk])
+    except Exception as exc:
+        result.add_attempt("reverse", "failed")
+        result.detail = str(exc) or exc.__class__.__name__
+        return result
+
+    result.add_attempt("reverse", "resolved")
+    result.resolved = True
+    result.resolved_route = url.lstrip("/")
+    result.detail = f"Reversed {_build_url_name(namespace, name)} with pk={instance.pk}"
+    return result
 
 
 def resolve_parameterized_url(namespace, name, callback, route=""):
