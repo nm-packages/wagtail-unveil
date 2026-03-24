@@ -2,16 +2,12 @@ from dataclasses import replace
 from datetime import date
 from unittest.mock import patch
 
-from django.contrib.auth.models import User
-from django.test import RequestFactory, TestCase, override_settings
-from django.urls import reverse
-from wagtail.test.utils import WagtailTestUtils
+from django.test import TestCase
 
-from tests.utils import BaseAPIViewTestMixin, BaseReportViewTestMixin
-from wagtail_unveil.api_contract import get_api_contract, get_latest_stable_api_contract
+from tests.views.support import BaseAPIViewTestMixin
+from wagtail_unveil.api_contract import get_api_contract
 from wagtail_unveil.discovery.frontend import FrontendURL
 from wagtail_unveil.views import _serialize_frontend_url
-from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 V1_CONTRACT = get_api_contract("v1")
 API_URL = f"/unveil/{V1_CONTRACT.frontend_url_path}"
@@ -116,60 +112,3 @@ class TestFrontendAPIViewHelpers(TestCase):
                 "skip_reason": "Requires POST submission",
             },
         )
-
-
-@override_settings(DEBUG=True)
-class TestFrontendUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, TestCase):
-    report_url = "/unveil/report/frontend-urls/"
-    report_title = "Frontend URLs Report"
-
-    def setUp(self):
-        self.login()
-
-    def test_report_has_sortable_headers(self):
-        response = self.client.get(self.report_url)
-        content = response.content.decode()
-        self.assertIn('data-sort-col="0"', content)
-        self.assertIn('data-sort-col="1"', content)
-        self.assertIn('data-sort-col="2"', content)
-        self.assertIn('data-sort-col="3"', content)
-        self.assertIn('data-sort-col="4"', content)
-
-    def test_report_shows_source_column(self):
-        response = self.client.get("/unveil/report/frontend-urls/")
-        self.assertContains(response, "Source")
-
-    def test_report_includes_frontend_api_url(self):
-        response = self.client.get("/unveil/report/frontend-urls/")
-        latest_contract = get_latest_stable_api_contract()
-        api_url = reverse(f"wagtail_unveil:{latest_contract.frontend_url_name}")
-        self.assertContains(response, f'data-api-url="{api_url}"')
-
-    def test_report_does_not_render_rows_server_side(self):
-        response = self.client.get("/unveil/report/frontend-urls/")
-        content = response.content.decode()
-        self.assertNotIn('data-source="page"', content)
-        self.assertNotIn('data-source="resolver"', content)
-
-
-class TestDashboardPanelFrontendLink(TestCase):
-    def setUp(self):
-        self.factory = RequestFactory()
-        self.panel = UnveilReportPanel()
-        self.superuser = User.objects.create_superuser(username="admin", password="password")
-
-    @override_settings(DEBUG=True)
-    def test_panel_shows_frontend_link(self):
-        request = self.factory.get("/admin/")
-        request.user = self.superuser
-        html = self.panel.render_html({"request": request})
-        self.assertIn("Frontend URLs", html)
-        self.assertIn("/unveil/report/frontend-urls/", html)
-        self.assertIn("Inspect discovered public page and resolver URLs.", html)
-        self.assertIn("Settings", html)
-        self.assertIn("/unveil/report/settings/", html)
-        self.assertIn("listing listing--dashboard", html)
-        self.assertIn("Open report", html)
-        self.assertIn("Open settings", html)
-        self.assertIn('id="unveil-section"', html)
-        self.assertIn("data-panel-toggle", html)

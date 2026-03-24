@@ -4,16 +4,10 @@ from datetime import date
 from importlib.metadata import PackageNotFoundError
 from unittest.mock import patch
 
-from django.contrib.auth.models import User
 from django.test import RequestFactory, TestCase, override_settings
-from django.urls import reverse
-from wagtail.test.utils import WagtailTestUtils
 
-from tests.utils import BaseAPIViewTestMixin, BaseReportViewTestMixin
-from wagtail_unveil.api_contract import (
-    get_api_contract,
-    get_latest_stable_api_contract,
-)
+from tests.views.support import BaseAPIViewTestMixin
+from wagtail_unveil.api_contract import get_api_contract
 from wagtail_unveil.discovery.backend import BackendURL
 from wagtail_unveil.views import (
     _authenticate_api_request,
@@ -22,7 +16,6 @@ from wagtail_unveil.views import (
     _get_package_version,
     _serialize_backend_url,
 )
-from wagtail_unveil.wagtail_hooks import UnveilReportPanel
 
 V1_CONTRACT = get_api_contract("v1")
 API_URL = f"/unveil/{V1_CONTRACT.backend_url_path}"
@@ -205,76 +198,3 @@ class TestAdminAPIViewHelpers(TestCase):
 
         self.assertIn("Deprecated on 2026-01-01", detail)
         self.assertIn("Sunsets on 2026-12-31", detail)
-
-
-@override_settings(DEBUG=True)
-class TestAdminUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, TestCase):
-    report_url = "/unveil/report/backend-urls/"
-    report_title = "Backend URLs Report"
-
-    def setUp(self):
-        self.login()
-
-    def test_report_includes_backend_api_url(self):
-        response = self.client.get("/unveil/report/backend-urls/")
-        latest_contract = get_latest_stable_api_contract()
-        api_url = reverse(f"wagtail_unveil:{latest_contract.backend_url_name}")
-        self.assertContains(response, f'data-api-url="{api_url}"')
-
-    def test_report_uses_summary_placeholders(self):
-        response = self.client.get("/unveil/report/backend-urls/")
-        self.assertContains(response, 'id="report-total"')
-        self.assertContains(response, 'id="report-testable"')
-        self.assertContains(response, 'id="report-untestable"')
-
-    def test_report_does_not_render_rows_server_side(self):
-        response = self.client.get("/unveil/report/backend-urls/")
-        content = response.content.decode()
-        self.assertNotIn("wagtailadmin_home", content)
-        self.assertNotIn('data-has-parameters="true"', content)
-        self.assertNotIn('data-has-parameters="false"', content)
-
-
-@override_settings(DEBUG=True)
-class TestDashboardPanel(TestCase):
-    def setUp(self):
-        self.factory = RequestFactory()
-        self.panel = UnveilReportPanel()
-        self.superuser = User.objects.create_superuser(username="admin", password="password")
-        self.regular_user = User.objects.create_user(username="editor", password="password", is_staff=True)
-
-    def _render(self, user):
-        request = self.factory.get("/admin/")
-        request.user = user
-        return self.panel.render_html({"request": request})
-
-    def test_panel_visible_for_superuser(self):
-        html = self._render(self.superuser)
-        self.assertIn("Backend URLs", html)
-        self.assertIn("/unveil/report/backend-urls/", html)
-        self.assertIn("Frontend URLs", html)
-        self.assertIn("/unveil/report/frontend-urls/", html)
-        self.assertIn("Settings", html)
-        self.assertIn("/unveil/report/settings/", html)
-        self.assertIn("Inspect discovered backend and admin routes.", html)
-        self.assertIn("Inspect discovered public page and resolver URLs.", html)
-        self.assertIn("Review active Unveil settings and runtime diagnostics.", html)
-        self.assertIn("Open report", html)
-        self.assertIn("Open settings", html)
-        self.assertIn("w-panel w-panel--dashboard", html)
-        self.assertIn("listing listing--dashboard", html)
-        self.assertIn('id="unveil-section"', html)
-        self.assertIn('id="unveil-heading"', html)
-        self.assertIn('id="unveil-content"', html)
-        self.assertIn("data-panel", html)
-        self.assertIn("data-panel-toggle", html)
-        self.assertIn('aria-controls="unveil-content"', html)
-
-    def test_panel_hidden_for_non_superuser(self):
-        html = self._render(self.regular_user)
-        self.assertEqual(html, "")
-
-    def test_panel_hidden_when_not_debug(self):
-        with self.settings(DEBUG=False):
-            html = self._render(self.superuser)
-            self.assertEqual(html, "")
