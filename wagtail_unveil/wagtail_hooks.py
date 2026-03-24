@@ -29,7 +29,7 @@ def register_unveil_admin_instance_resolvers():
         AdminInstanceResolver(
             label="namespace:wagtailforms",
             matches=lambda context: context.namespace == "wagtailforms",
-            resolver=lambda context: backend_resolution._get_form_page_instance(),
+            resolver=lambda context: backend_resolution.get_form_page_instance(),
         ),
         AdminInstanceResolver(
             label="namespace:wagtailadmin_pages",
@@ -38,7 +38,7 @@ def register_unveil_admin_instance_resolvers():
                 and context.name in backend_resolution.WAGTAILADMIN_PAGE_FALLBACK_NAMES
                 and context.route.count("<") == 1
             ),
-            resolver=lambda context: backend_resolution._get_page_instance(),
+            resolver=lambda context: backend_resolution.get_page_instance(),
         ),
         AdminInstanceResolver(
             label="namespace:wagtailadmin_pages:add_subpage",
@@ -47,7 +47,7 @@ def register_unveil_admin_instance_resolvers():
                 and context.name == backend_resolution.WAGTAILADMIN_PAGE_ADD_SUBPAGE_NAME
                 and context.route.count("<") == 1
             ),
-            resolver=lambda context: backend_resolution._get_add_subpage_parent_page_instance(),
+            resolver=lambda context: backend_resolution.get_add_subpage_parent_page_instance(),
         ),
         AdminInstanceResolver(
             label="namespace:wagtailadmin_workflows",
@@ -55,7 +55,7 @@ def register_unveil_admin_instance_resolvers():
                 context.namespace == "wagtailadmin_workflows"
                 and context.name in backend_resolution.WORKFLOW_USAGE_NAMES
             ),
-            resolver=lambda context: backend_resolution._get_workflow_instance(),
+            resolver=lambda context: backend_resolution.get_workflow_instance(),
             override=True,
         ),
         AdminInstanceResolver(
@@ -65,6 +65,6 @@ def register_unveil_admin_instance_resolvers():
                 and context.name in backend_resolution.WORKFLOW_TASK_ROUTE_NAMES
                 and context.route.count("<") == 1
             ),
-            resolver=lambda context: backend_resolution._get_workflow_task_instance(),
+            resolver=lambda context: backend_resolution.get_workflow_task_instance(),
         ),
     )

@@ -252,7 +252,7 @@ class TestParameterisedURLResolution(TestCase):
         self.assertEqual(convert_alias_urls[0].skip_reason, "URL requires parameters")
         self.assertEqual(convert_alias_urls[0].resolved_route, "")
 
-    @mock.patch("wagtail_unveil.discovery.backend_resolution._get_add_subpage_parent_page_instance", return_value=None)
+    @mock.patch("wagtail_unveil.discovery.backend_resolution.get_add_subpage_parent_page_instance", return_value=None)
     def test_add_subpage_route_remains_untestable_without_compatible_parent_page(self, _get_parent_page):
         urls = get_admin_urls()
         add_subpage_urls = [u for u in urls if u.namespace == "wagtailadmin_pages" and u.name == "add_subpage"]
@@ -390,7 +390,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                 return_value=register_unveil_admin_instance_resolvers(),
             ):
                 with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution._get_form_page_instance",
+                    "wagtail_unveil.discovery.backend_resolution.get_form_page_instance",
                     return_value=instance,
                 ):
                     with mock.patch(
@@ -423,7 +423,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                 return_value=register_unveil_admin_instance_resolvers(),
             ):
                 with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution._get_page_instance",
+                    "wagtail_unveil.discovery.backend_resolution.get_page_instance",
                     return_value=instance,
                 ):
                     with mock.patch(
@@ -456,10 +456,10 @@ class TestParameterizedResolutionStrategies(TestCase):
                 return_value=register_unveil_admin_instance_resolvers(),
             ):
                 with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution._get_page_instance",
+                    "wagtail_unveil.discovery.backend_resolution.get_page_instance",
                 ) as get_page_instance:
                     with mock.patch(
-                        "wagtail_unveil.discovery.backend_resolution._get_add_subpage_parent_page_instance",
+                        "wagtail_unveil.discovery.backend_resolution.get_add_subpage_parent_page_instance",
                         return_value=instance,
                     ):
                         with mock.patch(
@@ -498,7 +498,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                     return_value=register_unveil_admin_instance_resolvers(),
                 ):
                     with mock.patch(
-                        "wagtail_unveil.discovery.backend_resolution._get_workflow_instance",
+                        "wagtail_unveil.discovery.backend_resolution.get_workflow_instance",
                         return_value=workflow_instance,
                     ):
                         with mock.patch(
@@ -537,7 +537,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                     return_value=register_unveil_admin_instance_resolvers(),
                 ):
                     with mock.patch(
-                        "wagtail_unveil.discovery.backend_resolution._get_workflow_instance",
+                        "wagtail_unveil.discovery.backend_resolution.get_workflow_instance",
                         return_value=None,
                     ):
                         with mock.patch("wagtail_unveil.discovery.backend_resolution.reverse") as reverse_mock:
@@ -569,7 +569,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                 return_value=register_unveil_admin_instance_resolvers(),
             ):
                 with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution._get_workflow_task_instance",
+                    "wagtail_unveil.discovery.backend_resolution.get_workflow_task_instance",
                     return_value=instance,
                 ):
                     with mock.patch(
@@ -843,7 +843,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                 return_value=register_unveil_admin_instance_resolvers(),
             ):
                 with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution._get_form_page_instance",
+                    "wagtail_unveil.discovery.backend_resolution.get_form_page_instance",
                     return_value=None,
                 ):
                     result = _resolve_parameterized_url(

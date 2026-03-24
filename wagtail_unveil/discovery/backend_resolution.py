@@ -99,7 +99,7 @@ def _get_model_from_callback(callback):
     return None
 
 
-def _get_form_page_instance():
+def get_form_page_instance():
     """Find a live form page instance for wagtailforms URL resolution."""
     try:
         from wagtail.contrib.forms.models import FormMixin
@@ -114,7 +114,7 @@ def _get_form_page_instance():
     return None
 
 
-def _get_workflow_instance():
+def get_workflow_instance():
     """Return the first available Workflow instance."""
     try:
         from wagtail.models import Workflow
@@ -124,7 +124,7 @@ def _get_workflow_instance():
         return None
 
 
-def _get_workflow_task_instance():
+def get_workflow_task_instance():
     """Return the first available workflow task instance."""
     try:
         from wagtail.models import Task
@@ -134,7 +134,7 @@ def _get_workflow_task_instance():
         return None
 
 
-def _get_page_instance():
+def get_page_instance():
     """Return a representative non-root page instance for admin URL resolution."""
     try:
         from wagtail.models import Page
@@ -144,7 +144,7 @@ def _get_page_instance():
     return _get_instance_for_model(Page)
 
 
-def _get_add_subpage_parent_page_instance():
+def get_add_subpage_parent_page_instance():
     """Return a parent page that can actually host at least one creatable child page."""
     try:
         from wagtail.models import Page
