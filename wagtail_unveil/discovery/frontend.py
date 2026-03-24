@@ -56,17 +56,6 @@ def _should_skip_frontend_url(url, skip_prefixes):
     return bool(skip_prefixes and any(url.lstrip("/").startswith(prefix) for prefix in skip_prefixes))
 
 
-def _format_cross_site_skip_reason(candidate):
-    """Build a skip reason for candidates that belong to a non-default site host."""
-    if not candidate.site_hostname:
-        return "Belongs to non-default site host"
-
-    if candidate.site_port and candidate.site_port not in (80, 443):
-        return f"Belongs to non-default site host: {candidate.site_hostname}:{candidate.site_port}"
-
-    return f"Belongs to non-default site host: {candidate.site_hostname}"
-
-
 def _discover_page_candidates():
     """Discover frontend page candidates before classification."""
     try:
@@ -236,6 +225,17 @@ def _discover_resolver_candidates():
             )
         )
     return results
+
+
+def _format_cross_site_skip_reason(candidate):
+    """Build a skip reason for candidates that belong to a non-default site host."""
+    if not candidate.site_hostname:
+        return "Belongs to non-default site host"
+
+    if candidate.site_port and candidate.site_port not in (80, 443):
+        return f"Belongs to non-default site host: {candidate.site_hostname}:{candidate.site_port}"
+
+    return f"Belongs to non-default site host: {candidate.site_hostname}"
 
 
 def _classify_frontend_candidate(candidate):
