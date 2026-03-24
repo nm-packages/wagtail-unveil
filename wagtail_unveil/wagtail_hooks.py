@@ -32,6 +32,24 @@ def register_unveil_admin_instance_resolvers():
             resolver=lambda context: backend_resolution._get_form_page_instance(),
         ),
         AdminInstanceResolver(
+            label="namespace:wagtailadmin_pages",
+            matches=lambda context: (
+                context.namespace == "wagtailadmin_pages"
+                and context.name in backend_resolution.WAGTAILADMIN_PAGE_FALLBACK_NAMES
+                and context.route.count("<") == 1
+            ),
+            resolver=lambda context: backend_resolution._get_page_instance(),
+        ),
+        AdminInstanceResolver(
+            label="namespace:wagtailadmin_pages:add_subpage",
+            matches=lambda context: (
+                context.namespace == "wagtailadmin_pages"
+                and context.name == backend_resolution.WAGTAILADMIN_PAGE_ADD_SUBPAGE_NAME
+                and context.route.count("<") == 1
+            ),
+            resolver=lambda context: backend_resolution._get_add_subpage_parent_page_instance(),
+        ),
+        AdminInstanceResolver(
             label="namespace:wagtailadmin_workflows",
             matches=lambda context: (
                 context.namespace == "wagtailadmin_workflows"
