@@ -15,7 +15,6 @@ WAGTAILADMIN_PAGE_FALLBACK_NAMES = (
     "edit",
     "preview_on_edit",
     "view_draft",
-    "add_subpage",
     "delete",
     "move",
     "set_page_position",
@@ -23,6 +22,7 @@ WAGTAILADMIN_PAGE_FALLBACK_NAMES = (
     "set_privacy",
     "revisions_index",
 )
+WAGTAILADMIN_PAGE_ADD_SUBPAGE_NAME = "add_subpage"
 logger = logging.getLogger(__name__)
 
 
@@ -131,6 +131,24 @@ def _get_page_instance():
         return None
 
     return _get_instance_for_model(Page)
+
+
+def _get_add_subpage_parent_page_instance():
+    """Return a parent page that can actually host at least one creatable child page."""
+    try:
+        from wagtail.models import Page
+    except Exception:
+        return None
+
+    for page in Page.objects.exclude(depth=1).specific().iterator():
+        specific_class = getattr(page, "specific_class", None)
+        if specific_class is None:
+            continue
+
+        if any(model.can_create_at(page) for model in specific_class.creatable_subpage_models()):
+            return page
+
+    return None
 
 
 def _get_instance_for_model(model):

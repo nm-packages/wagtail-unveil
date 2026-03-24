@@ -61,6 +61,14 @@ class TestParameterisedURLResolution(TestCase):
         self.user = User.objects.create_user(username="testuser", password="password")
         self.group = Group.objects.create(name="Test group")
         self.page = Page.objects.exclude(depth=1).first()
+        self.add_subpage_parent = next(
+            (
+                page
+                for page in Page.objects.exclude(depth=1).specific().order_by("path")
+                if any(model.can_create_at(page) for model in type(page).creatable_subpage_models())
+            ),
+            None,
+        )
 
         from sandbox.inventory.models import Product, Supplier
         from sandbox.taxonomy.models import Banner, Category, Colour
@@ -183,7 +191,6 @@ class TestParameterisedURLResolution(TestCase):
             "edit",
             "preview_on_edit",
             "view_draft",
-            "add_subpage",
             "delete",
             "move",
             "set_page_position",
@@ -202,6 +209,16 @@ class TestParameterisedURLResolution(TestCase):
                 self.assertTrue(url.resolved_route, url.route)
                 self.assertIn(f"/{self.page.pk}/", url.resolved_route)
 
+    def test_add_subpage_route_is_testable_with_compatible_parent_page(self):
+        add_subpage_urls = [u for u in self.urls if u.namespace == "wagtailadmin_pages" and u.name == "add_subpage"]
+
+        self.assertEqual(len(add_subpage_urls), 1)
+        self.assertIsNotNone(self.add_subpage_parent)
+        self.assertTrue(add_subpage_urls[0].is_testable, add_subpage_urls[0].route)
+        self.assertEqual(add_subpage_urls[0].skip_reason, "")
+        self.assertTrue(add_subpage_urls[0].resolved_route, add_subpage_urls[0].route)
+        self.assertIn(f"/{self.add_subpage_parent.pk}/", add_subpage_urls[0].resolved_route)
+
     def test_convert_alias_page_route_remains_untestable(self):
         convert_alias_urls = [u for u in self.urls if u.namespace == "wagtailadmin_pages" and u.name == "convert_alias"]
 
@@ -209,6 +226,16 @@ class TestParameterisedURLResolution(TestCase):
         self.assertFalse(convert_alias_urls[0].is_testable, convert_alias_urls[0].route)
         self.assertEqual(convert_alias_urls[0].skip_reason, "URL requires parameters")
         self.assertEqual(convert_alias_urls[0].resolved_route, "")
+
+    @mock.patch("wagtail_unveil.discovery.backend_resolution._get_add_subpage_parent_page_instance", return_value=None)
+    def test_add_subpage_route_remains_untestable_without_compatible_parent_page(self, _get_parent_page):
+        urls = get_admin_urls()
+        add_subpage_urls = [u for u in urls if u.namespace == "wagtailadmin_pages" and u.name == "add_subpage"]
+
+        self.assertEqual(len(add_subpage_urls), 1)
+        self.assertFalse(add_subpage_urls[0].is_testable, add_subpage_urls[0].route)
+        self.assertEqual(add_subpage_urls[0].skip_reason, "URL requires parameters")
+        self.assertEqual(add_subpage_urls[0].resolved_route, "")
 
     def test_runtime_reorder_urls_remain_visible_but_untestable(self):
         reorder_urls = [u for u in self.urls if u.name == "reorder" and "/reorder/" in u.route]
@@ -392,6 +419,43 @@ class TestParameterizedResolutionStrategies(TestCase):
             [
                 "callback-model:no-model",
                 "namespace:wagtailadmin_pages:instance-found",
+                "reverse:resolved",
+            ],
+        )
+
+    def test_wagtailadmin_pages_add_subpage_fallback_uses_dedicated_parent_helper(self):
+        instance = mock.Mock(pk=13)
+        with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                return_value=register_unveil_admin_instance_resolvers(),
+            ):
+                with mock.patch(
+                    "wagtail_unveil.discovery.backend_resolution._get_page_instance",
+                ) as get_page_instance:
+                    with mock.patch(
+                        "wagtail_unveil.discovery.backend_resolution._get_add_subpage_parent_page_instance",
+                        return_value=instance,
+                    ):
+                        with mock.patch(
+                            "wagtail_unveil.discovery.backend_resolution.reverse",
+                            return_value="/admin/pages/13/add_subpage/",
+                        ):
+                            result = _resolve_parameterized_url(
+                                "wagtailadmin_pages",
+                                "add_subpage",
+                                callback=object(),
+                                route="admin/pages/<int:parent_page_id>/add_subpage/",
+                            )
+
+        self.assertTrue(result.resolved)
+        self.assertEqual(result.method, "namespace:wagtailadmin_pages:add_subpage")
+        get_page_instance.assert_not_called()
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:no-model",
+                "namespace:wagtailadmin_pages:add_subpage:instance-found",
                 "reverse:resolved",
             ],
         )
