@@ -4,13 +4,12 @@ from dataclasses import dataclass
 from django.urls import get_resolver
 
 from wagtail_unveil.discovery.backend_resolution import resolve_parameterized_url
-from wagtail_unveil.discovery.utils import clean_regex_route, route_has_parameters, walk_patterns
+from wagtail_unveil.discovery.utils import (
+    clean_regex_route,
+    route_has_parameters,
+    walk_patterns,
+)
 from wagtail_unveil.settings import get_skip_url_prefixes
-
-
-def _is_url_registered(url_name):
-    """Return True if the given URL name exists in the root URLconf."""
-    return url_name in get_resolver().reverse_dict
 
 
 @dataclass
@@ -50,59 +49,6 @@ class _AdminClassification:
     should_resolve: bool = False
 
 
-def _get_view_name(callback):
-    """Return a dotted path for a view callback."""
-    if hasattr(callback, "view_class"):
-        cls = callback.view_class
-        return f"{cls.__module__}.{cls.__qualname__}"
-    if hasattr(callback, "__module__") and hasattr(callback, "__qualname__"):
-        return f"{callback.__module__}.{callback.__qualname__}"
-    return repr(callback)
-
-
-def _iter_callback_view_classes(callback):
-    """Yield distinct view classes exposed by a callback."""
-    seen = set()
-    for attr_name in ("view_class", "cls"):
-        view_class = getattr(callback, attr_name, None)
-        if view_class is None or view_class in seen:
-            continue
-        seen.add(view_class)
-        yield view_class
-
-
-def _get_callback_allowed_http_methods(callback):
-    """Return declared HTTP methods for the callback when discoverable."""
-    allowed_methods = set()
-    callback_actions = getattr(callback, "actions", None)
-    if callback_actions:
-        allowed_methods.update(str(method_name).upper() for method_name in callback_actions)
-
-    for view_class in _iter_callback_view_classes(callback):
-        declared_methods = getattr(view_class, "http_method_names", None)
-        if declared_methods is None:
-            continue
-        for method_name in declared_methods:
-            if hasattr(view_class, method_name):
-                allowed_methods.add(method_name.upper())
-
-    callback_allowed_methods = getattr(callback, "allowed_methods", None)
-    if callback_allowed_methods:
-        allowed_methods.update(str(method_name).upper() for method_name in callback_allowed_methods)
-
-    return allowed_methods
-
-
-def _get_method_skip_reason(callback):
-    """Return a skip reason when the callback does not support GET."""
-    allowed_methods = _get_callback_allowed_http_methods(callback)
-    if not allowed_methods or "GET" in allowed_methods:
-        return ""
-    if allowed_methods.issubset({"POST", "OPTIONS"}):
-        return "POST-only view"
-    return "GET not supported"
-
-
 NON_TESTABLE_NAMES = {
     "wagtailadmin_logout": "POST-only view",
     "wagtailadmin_error_test": "Intentional error endpoint",
@@ -121,6 +67,11 @@ IMAGE_GENERATOR_NAMES = {
     "url_generator",
     "url_generator_output",
 }
+
+
+def _is_url_registered(url_name):
+    """Return True if the given URL name exists in the root URLconf."""
+    return url_name in get_resolver().reverse_dict
 
 
 def _discover_admin_routes():
@@ -143,6 +94,16 @@ def _discover_admin_routes():
 def _has_unsafe_admin_regex(route):
     """Return True when a cleaned admin route still contains unsafe regex syntax."""
     return bool(re.search(r"[.][*+?]|\(", route))
+
+
+def _get_view_name(callback):
+    """Return a dotted path for a view callback."""
+    if hasattr(callback, "view_class"):
+        cls = callback.view_class
+        return f"{cls.__module__}.{cls.__qualname__}"
+    if hasattr(callback, "__module__") and hasattr(callback, "__qualname__"):
+        return f"{callback.__module__}.{callback.__qualname__}"
+    return repr(callback)
 
 
 def _normalize_admin_route(discovered_route, skip_prefixes):
@@ -186,6 +147,49 @@ def _classify_admin_route(normalized_route, docs_serve_available, images_serve_a
     if normalized_route.has_parameters:
         return _AdminClassification(should_resolve=True)
     return _AdminClassification()
+
+
+def _iter_callback_view_classes(callback):
+    """Yield distinct view classes exposed by a callback."""
+    seen = set()
+    for attr_name in ("view_class", "cls"):
+        view_class = getattr(callback, attr_name, None)
+        if view_class is None or view_class in seen:
+            continue
+        seen.add(view_class)
+        yield view_class
+
+
+def _get_callback_allowed_http_methods(callback):
+    """Return declared HTTP methods for the callback when discoverable."""
+    allowed_methods = set()
+    callback_actions = getattr(callback, "actions", None)
+    if callback_actions:
+        allowed_methods.update(str(method_name).upper() for method_name in callback_actions)
+
+    for view_class in _iter_callback_view_classes(callback):
+        declared_methods = getattr(view_class, "http_method_names", None)
+        if declared_methods is None:
+            continue
+        for method_name in declared_methods:
+            if hasattr(view_class, method_name):
+                allowed_methods.add(method_name.upper())
+
+    callback_allowed_methods = getattr(callback, "allowed_methods", None)
+    if callback_allowed_methods:
+        allowed_methods.update(str(method_name).upper() for method_name in callback_allowed_methods)
+
+    return allowed_methods
+
+
+def _get_method_skip_reason(callback):
+    """Return a skip reason when the callback does not support GET."""
+    allowed_methods = _get_callback_allowed_http_methods(callback)
+    if not allowed_methods or "GET" in allowed_methods:
+        return ""
+    if allowed_methods.issubset({"POST", "OPTIONS"}):
+        return "POST-only view"
+    return "GET not supported"
 
 
 def _finalize_admin_route(normalized_route, classification):
