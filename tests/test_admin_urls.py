@@ -223,7 +223,7 @@ class TestAdminDiscoveryPhases(TestCase):
         classification = _AdminClassification(should_resolve=True)
 
         with mock.patch(
-            "wagtail_unveil.discovery.backend._resolve_parameterized_url",
+            "wagtail_unveil.discovery.backend.resolve_parameterized_url",
             return_value=mock.Mock(resolved=False, resolved_route=""),
         ):
             result = _finalize_admin_route(normalized, classification)
@@ -256,7 +256,7 @@ class TestAdminDiscoveryPhases(TestCase):
         classification = _AdminClassification(should_resolve=True)
 
         with mock.patch(
-            "wagtail_unveil.discovery.backend._resolve_parameterized_url",
+            "wagtail_unveil.discovery.backend.resolve_parameterized_url",
             return_value=mock.Mock(
                 resolved=True,
                 resolved_route="admin/inventory/product/reorder/1/",

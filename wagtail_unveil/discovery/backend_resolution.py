@@ -321,7 +321,7 @@ def _apply_admin_instance_resolvers(namespace, name, callback, route, current_in
     return selected_method, selected_instance, attempts
 
 
-def _resolve_parameterized_url(namespace, name, callback, route=""):
+def resolve_parameterized_url(namespace, name, callback, route=""):
     """Attempt to resolve a parameterized admin URL using an explicit strategy order."""
     if namespace == "wagtailsettings":
         return _resolve_settings_url(name, route)

@@ -63,7 +63,7 @@ There are also namespace-specific readiness checks:
 
 Backend parameter resolution lives in `wagtail_unveil/discovery/backend_resolution.py`.
 If you are using `wagtail-unveil` in your own project and want to extend URL resolution for a package such as `wagtail-modeladmin`, start with the user-facing recipe: [Add Custom Admin URL Resolvers](../recipes/custom-admin-url-resolvers.md).
-`_resolve_parameterized_url()` attempts to turn a parameterized admin route into a real path that can be tested. It follows an explicit strategy pipeline:
+`resolve_parameterized_url()` attempts to turn a parameterized admin route into a real path that can be tested. It follows an explicit strategy pipeline:
 
 1. If the namespace is `wagtailsettings`, delegate to `_resolve_settings_url()` and stop there.
 2. Try to infer a model from callback metadata via `_get_model_from_callback()`.

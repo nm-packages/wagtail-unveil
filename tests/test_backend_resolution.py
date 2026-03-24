@@ -14,8 +14,8 @@ from wagtail_unveil.discovery.backend_resolution import (
     _apply_admin_instance_resolvers,
     _get_instance_for_model,
     _get_model_from_callback,
-    _resolve_parameterized_url,
     _resolve_settings_url,
+    resolve_parameterized_url,
 )
 from wagtail_unveil.discovery.extensions import AdminInstanceResolver
 from wagtail_unveil.discovery.utils import walk_patterns
@@ -303,7 +303,7 @@ class TestParameterizedResolutionStrategies(TestCase):
             return_value=mock.Mock(resolved=False, attempts=["settings:no-model-instance"], detail="missing"),
         ) as resolve_settings:
             with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback") as get_model:
-                result = _resolve_parameterized_url(
+                result = resolve_parameterized_url(
                     "wagtailsettings",
                     "edit",
                     callback=object(),
@@ -330,7 +330,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                         "wagtail_unveil.discovery.backend_resolution.reverse",
                         return_value="/admin/users/42/",
                     ):
-                        result = _resolve_parameterized_url(
+                        result = resolve_parameterized_url(
                             "",
                             "edit",
                             callback=object(),
@@ -364,7 +364,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                     "wagtail_unveil.discovery.backend_resolution.reverse",
                     return_value="/admin/groups/7/",
                 ):
-                    result = _resolve_parameterized_url(
+                    result = resolve_parameterized_url(
                         "",
                         "taxonomy_person_modeladmin_edit",
                         callback=object(),
@@ -397,7 +397,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                         "wagtail_unveil.discovery.backend_resolution.reverse",
                         return_value="/admin/forms/submissions/9/",
                     ):
-                        result = _resolve_parameterized_url(
+                        result = resolve_parameterized_url(
                             "wagtailforms",
                             "list_submissions",
                             callback=object(),
@@ -430,7 +430,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                         "wagtail_unveil.discovery.backend_resolution.reverse",
                         return_value="/admin/pages/11/edit/",
                     ):
-                        result = _resolve_parameterized_url(
+                        result = resolve_parameterized_url(
                             "wagtailadmin_pages",
                             "edit",
                             callback=object(),
@@ -466,7 +466,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                             "wagtail_unveil.discovery.backend_resolution.reverse",
                             return_value="/admin/pages/13/add_subpage/",
                         ):
-                            result = _resolve_parameterized_url(
+                            result = resolve_parameterized_url(
                                 "wagtailadmin_pages",
                                 "add_subpage",
                                 callback=object(),
@@ -505,7 +505,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                             "wagtail_unveil.discovery.backend_resolution.reverse",
                             return_value="/admin/workflows/usage/99/",
                         ) as reverse_mock:
-                            result = _resolve_parameterized_url(
+                            result = resolve_parameterized_url(
                                 "wagtailadmin_workflows",
                                 "usage",
                                 callback=object(),
@@ -541,7 +541,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                         return_value=None,
                     ):
                         with mock.patch("wagtail_unveil.discovery.backend_resolution.reverse") as reverse_mock:
-                            result = _resolve_parameterized_url(
+                            result = resolve_parameterized_url(
                                 "wagtailadmin_workflows",
                                 "usage",
                                 callback=object(),
@@ -576,7 +576,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                         "wagtail_unveil.discovery.backend_resolution.reverse",
                         return_value="/admin/workflows/tasks/edit/17/",
                     ):
-                        result = _resolve_parameterized_url(
+                        result = resolve_parameterized_url(
                             "wagtailadmin_workflows",
                             "edit_task",
                             callback=object(),
@@ -623,7 +623,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                         "wagtail_unveil.discovery.backend_resolution.reverse",
                         side_effect=RuntimeError("boom"),
                     ):
-                        result = _resolve_parameterized_url(
+                        result = resolve_parameterized_url(
                             "",
                             "edit",
                             callback=object(),
@@ -664,7 +664,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                     return_value="/admin/groups/7/",
                 ):
                     with self.assertLogs("wagtail_unveil.discovery.backend_resolution", level="WARNING") as logs:
-                        result = _resolve_parameterized_url(
+                        result = resolve_parameterized_url(
                             "",
                             "taxonomy_person_modeladmin_edit",
                             callback=object(),
@@ -714,7 +714,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                     return_value="/admin/groups/7/",
                 ):
                     with self.assertLogs("wagtail_unveil.discovery.backend_resolution", level="WARNING") as logs:
-                        result = _resolve_parameterized_url(
+                        result = resolve_parameterized_url(
                             "",
                             "taxonomy_person_modeladmin_edit",
                             callback=object(),
@@ -762,7 +762,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                         return_value="/admin/users/1/",
                     ) as reverse_mock:
                         with self.assertLogs("wagtail_unveil.discovery.backend_resolution", level="WARNING") as logs:
-                            result = _resolve_parameterized_url(
+                            result = resolve_parameterized_url(
                                 "",
                                 "edit",
                                 callback=object(),
@@ -814,7 +814,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                     return_value="/admin/groups/7/",
                 ):
                     with self.assertLogs("wagtail_unveil.discovery.backend_resolution", level="WARNING") as logs:
-                        result = _resolve_parameterized_url(
+                        result = resolve_parameterized_url(
                             "",
                             "taxonomy_person_modeladmin_edit",
                             callback=object(),
@@ -846,7 +846,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                     "wagtail_unveil.discovery.backend_resolution.get_form_page_instance",
                     return_value=None,
                 ):
-                    result = _resolve_parameterized_url(
+                    result = resolve_parameterized_url(
                         "wagtailforms",
                         "list_submissions",
                         callback=object(),
@@ -1036,7 +1036,7 @@ class TestModeladminURLDiscoveryWithoutProjectExtension(TestCase):
             for suffix in ("_edit", "_delete", "_history"):
                 with self.subTest(suffix=suffix):
                     route, name, namespace, callback = self._get_modeladmin_row(suffix)
-                    result = _resolve_parameterized_url(namespace, name, callback, route)
+                    result = resolve_parameterized_url(namespace, name, callback, route)
                     self.assertFalse(result.resolved)
                     self.assertEqual(result.method, "")
                     self.assertEqual(result.attempts, ["callback-model:no-model"])
