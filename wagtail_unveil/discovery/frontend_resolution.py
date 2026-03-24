@@ -7,25 +7,7 @@ from wagtail_unveil.discovery.utils import route_contains_regex, route_has_param
 ROUTABLE_PARAMETER_PATTERN = re.compile(r"<(?:(?P<converter>[^:>]+):)?(?P<name>[^>]+)>")
 
 
-def _get_default_site():
-    """Return the default Wagtail Site instance when available."""
-    try:
-        from wagtail.models import Site
-    except ImportError:
-        return None
-
-    return Site.objects.filter(is_default_site=True).first()
-
-
-def _get_default_site_root_page_id():
-    """Return the default site's root page ID when available."""
-    default_site = _get_default_site()
-    if default_site and default_site.root_page_id:
-        return str(default_site.root_page_id)
-    return ""
-
-
-def _join_frontend_paths(base_path, sub_path):
+def join_frontend_paths(base_path, sub_path):
     """Join a page path and relative sub-route into a normalized absolute path."""
     base = base_path.rstrip("/")
     joined = f"{base}/{sub_path.lstrip('/')}"
@@ -48,6 +30,27 @@ def _unique_values(values):
             continue
         unique.append(value)
     return unique
+
+
+def get_default_site():
+    """Return the default Wagtail Site instance when available."""
+    try:
+        from wagtail.models import Site
+    except ImportError:
+        return None
+
+    return Site.objects.filter(is_default_site=True).first()
+
+
+def _get_default_site_root_page_id():
+    """Return the default site's root page ID when available."""
+    default_site = get_default_site()
+    if default_site and default_site.root_page_id:
+        return str(default_site.root_page_id)
+    return ""
+
+
+# Routable page parameter helpers
 
 
 def _get_descendant_date_years(page):
@@ -115,7 +118,7 @@ def _get_routable_parameter_candidates(page, parameter_name, converter_name):
     return _unique_values(values)
 
 
-def _resolve_routable_page_url(page, pattern, page_path, sub_route):
+def resolve_routable_page_url(page, pattern, page_path, sub_route):
     """Resolve a concrete routable subpage URL when safe example args can be inferred."""
     if not getattr(pattern.pattern, "_route", None):
         return ""
@@ -138,10 +141,13 @@ def _resolve_routable_page_url(page, pattern, page_path, sub_route):
     except Exception:
         return ""
 
-    resolved_url = _join_frontend_paths(page_path, resolved_subpath)
+    resolved_url = join_frontend_paths(page_path, resolved_subpath)
     if route_has_parameters(resolved_url) or route_contains_regex(resolved_url):
         return ""
     return resolved_url
+
+
+# Resolver-backed API ID helpers
 
 
 def _get_first_live_page_id():
@@ -190,7 +196,10 @@ def _get_first_redirect_id():
     return str(redirect_id) if redirect_id else ""
 
 
-def _get_wagtail_api_detail_resolved_url(callback, url):
+# Wagtail API resolution helpers
+
+
+def get_wagtail_api_detail_resolved_url(callback, url):
     """Return a concrete resolved URL for supported Wagtail API detail routes."""
     callback_cls = getattr(callback, "cls", None)
     callback_actions = getattr(callback, "actions", {}) or {}
@@ -224,7 +233,7 @@ def _get_wagtail_api_detail_resolved_url(callback, url):
     return ""
 
 
-def _is_supported_wagtail_api_find_route(name, callback):
+def is_supported_wagtail_api_find_route(name, callback):
     """Return True for supported Wagtail API GET find routes."""
     if name != "find":
         return False

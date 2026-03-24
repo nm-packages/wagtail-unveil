@@ -18,12 +18,12 @@ from wagtail_unveil.discovery.frontend_resolution import (
     _get_descendant_date_years,
     _get_descendant_page_candidates,
     _get_routable_parameter_candidates,
-    _get_wagtail_api_detail_resolved_url,
-    _is_supported_wagtail_api_find_route,
     _iter_routable_parameters,
-    _join_frontend_paths,
-    _resolve_routable_page_url,
     _unique_values,
+    get_wagtail_api_detail_resolved_url,
+    is_supported_wagtail_api_find_route,
+    join_frontend_paths,
+    resolve_routable_page_url,
 )
 
 
@@ -31,12 +31,12 @@ class TestFrontendDiscoveryHelpers(TestCase):
     def test_supported_wagtail_api_find_route_detection_requires_find_view(self):
         callback = SimpleNamespace(name="find", cls=SimpleNamespace(), actions={"get": "listing_view"})
 
-        self.assertFalse(_is_supported_wagtail_api_find_route("find", callback))
+        self.assertFalse(is_supported_wagtail_api_find_route("find", callback))
 
     def test_non_wagtail_detail_route_does_not_get_resolved_url(self):
         callback = SimpleNamespace(cls=SimpleNamespace(), actions={"get": "detail_view"})
 
-        self.assertEqual(_get_wagtail_api_detail_resolved_url(callback, "/api/v2/pages/<int:pk>/"), "")
+        self.assertEqual(get_wagtail_api_detail_resolved_url(callback, "/api/v2/pages/<int:pk>/"), "")
 
     def test_format_cross_site_skip_reason_with_standard_port_omits_port(self):
         candidate = _FrontendCandidate(
@@ -56,8 +56,8 @@ class TestFrontendDiscoveryHelpers(TestCase):
         )
 
     def test_join_frontend_paths_normalizes_root_and_relative_subpath(self):
-        self.assertEqual(_join_frontend_paths("/", "events/"), "/events/")
-        self.assertEqual(_join_frontend_paths("/events/", "year/2025/"), "/events/year/2025/")
+        self.assertEqual(join_frontend_paths("/", "events/"), "/events/")
+        self.assertEqual(join_frontend_paths("/events/", "year/2025/"), "/events/year/2025/")
 
     def test_iter_routable_parameters_preserves_order_and_defaults_str_converter(self):
         self.assertEqual(
@@ -117,7 +117,7 @@ class TestFrontendDiscoveryHelpers(TestCase):
         )
 
         self.assertEqual(
-            _resolve_routable_page_url(page, pattern, "/events/", "year/<int:year>/"),
+            resolve_routable_page_url(page, pattern, "/events/", "year/<int:year>/"),
             "",
         )
 
@@ -131,7 +131,7 @@ class TestFrontendDiscoveryHelpers(TestCase):
         )
 
         self.assertEqual(
-            _resolve_routable_page_url(page, pattern, "/events/", "year/<int:year>/"),
+            resolve_routable_page_url(page, pattern, "/events/", "year/<int:year>/"),
             "",
         )
 
@@ -143,7 +143,7 @@ class TestFrontendDiscoveryHelpers(TestCase):
         )
 
         self.assertEqual(
-            _resolve_routable_page_url(page, pattern, "/events/", "year/<int:year>/<slug:slug>/"),
+            resolve_routable_page_url(page, pattern, "/events/", "year/<int:year>/<slug:slug>/"),
             "",
         )
         page.reverse_subpage.assert_not_called()
