@@ -128,6 +128,7 @@ The sandbox project mounts the package at `/unveil/`, exposes Wagtail API v2 rou
 See [CONVENTIONS.md](CONVENTIONS.md) for the full project conventions. Important rules:
 
 - Use double quotes consistently
+- Sort modules using the flow-first organization guidance in `CONVENTIONS.md`
 - Use `path()` and namespaced URLs
 - Keep `wagtail_unveil/` independent from `sandbox/`
 - Prefer Wagtail ViewSet patterns for admin integration
