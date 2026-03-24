@@ -92,6 +92,31 @@ def get_pages_per_type():
     return 1
 
 
+def inspect_pages_per_type_setting():
+    """Describe the configured and effective page-per-type setting."""
+    source, raw_value = _get_configured_source_and_raw_value("WAGTAIL_UNVEIL_PAGES_PER_TYPE")
+    effective_value = get_pages_per_type()
+    notes = []
+
+    if source == "default":
+        notes.append("Defaults to 1 when omitted.")
+    elif source == "env" and _is_blank_string(raw_value):
+        notes.append("Blank environment values are ignored.")
+    elif raw_value != effective_value:
+        notes.append("Effective value is normalized to a non-negative integer.")
+
+    if effective_value == 0:
+        notes.append("0 means no limit.")
+
+    return SettingDiagnostic(
+        name="WAGTAIL_UNVEIL_PAGES_PER_TYPE",
+        source=source,
+        raw_value=raw_value,
+        effective_value=effective_value,
+        notes=" ".join(notes) or "Value used as-is.",
+    )
+
+
 def get_skip_url_prefixes():
     """Return WAGTAIL_UNVEIL_SKIP_URL_PREFIXES as a list of normalised prefix strings.
 
@@ -119,46 +144,6 @@ def get_skip_url_prefixes():
     return result
 
 
-def get_api_key():
-    """Return WAGTAIL_UNVEIL_API_KEY as a non-empty string, or '' if absent/invalid.
-
-    Accepted inputs:
-    - environment variable WAGTAIL_UNVEIL_API_KEY (checked first)
-    - Django setting WAGTAIL_UNVEIL_API_KEY (fallback)
-
-    Invalid, non-string, or empty values return ''.
-    """
-    value = os.environ.get("WAGTAIL_UNVEIL_API_KEY") or getattr(settings, "WAGTAIL_UNVEIL_API_KEY", "")
-    if not isinstance(value, str):
-        return ""
-    return value.strip()
-
-
-def inspect_pages_per_type_setting():
-    """Describe the configured and effective page-per-type setting."""
-    source, raw_value = _get_configured_source_and_raw_value("WAGTAIL_UNVEIL_PAGES_PER_TYPE")
-    effective_value = get_pages_per_type()
-    notes = []
-
-    if source == "default":
-        notes.append("Defaults to 1 when omitted.")
-    elif source == "env" and _is_blank_string(raw_value):
-        notes.append("Blank environment values are ignored.")
-    elif raw_value != effective_value:
-        notes.append("Effective value is normalized to a non-negative integer.")
-
-    if effective_value == 0:
-        notes.append("0 means no limit.")
-
-    return SettingDiagnostic(
-        name="WAGTAIL_UNVEIL_PAGES_PER_TYPE",
-        source=source,
-        raw_value=raw_value,
-        effective_value=effective_value,
-        notes=" ".join(notes) or "Value used as-is.",
-    )
-
-
 def inspect_skip_url_prefixes_setting():
     """Describe the configured and effective skip-prefix setting."""
     source, raw_value = _get_configured_source_and_raw_value("WAGTAIL_UNVEIL_SKIP_URL_PREFIXES")
@@ -182,6 +167,21 @@ def inspect_skip_url_prefixes_setting():
         effective_value=effective_value,
         notes=" ".join(notes) or "Value used as-is.",
     )
+
+
+def get_api_key():
+    """Return WAGTAIL_UNVEIL_API_KEY as a non-empty string, or '' if absent/invalid.
+
+    Accepted inputs:
+    - environment variable WAGTAIL_UNVEIL_API_KEY (checked first)
+    - Django setting WAGTAIL_UNVEIL_API_KEY (fallback)
+
+    Invalid, non-string, or empty values return ''.
+    """
+    value = os.environ.get("WAGTAIL_UNVEIL_API_KEY") or getattr(settings, "WAGTAIL_UNVEIL_API_KEY", "")
+    if not isinstance(value, str):
+        return ""
+    return value.strip()
 
 
 def inspect_api_key_setting():

@@ -114,6 +114,8 @@ This logic exists to support the currently targeted Wagtail versions, including 
 
 Each candidate is classified by `_classify_frontend_candidate()` and emitted as a `FrontendURL` by `_build_frontend_url()`.
 
+`wagtail_unveil/discovery/frontend_resolution.py` keeps most of its helper functions internal, but exposes a small public helper layer for cross-module use: `get_default_site()`, `join_frontend_paths()`, `resolve_routable_page_url()`, `get_wagtail_api_detail_resolved_url()`, and `is_supported_wagtail_api_find_route()`.
+
 ## Frontend Page Discovery
 
 `_discover_page_candidates()` builds page-derived frontend candidates in this order:

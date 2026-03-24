@@ -4,11 +4,11 @@ from urllib.parse import urlparse
 from django.urls import get_resolver
 
 from wagtail_unveil.discovery.frontend_resolution import (
-    _get_default_site,
-    _get_wagtail_api_detail_resolved_url,
-    _is_supported_wagtail_api_find_route,
-    _join_frontend_paths,
-    _resolve_routable_page_url,
+    get_default_site,
+    get_wagtail_api_detail_resolved_url,
+    is_supported_wagtail_api_find_route,
+    join_frontend_paths,
+    resolve_routable_page_url,
 )
 from wagtail_unveil.discovery.utils import clean_regex_route, route_contains_regex, route_has_parameters, walk_patterns
 from wagtail_unveil.settings import get_pages_per_type, get_skip_url_prefixes
@@ -56,17 +56,6 @@ def _should_skip_frontend_url(url, skip_prefixes):
     return bool(skip_prefixes and any(url.lstrip("/").startswith(prefix) for prefix in skip_prefixes))
 
 
-def _format_cross_site_skip_reason(candidate):
-    """Build a skip reason for candidates that belong to a non-default site host."""
-    if not candidate.site_hostname:
-        return "Belongs to non-default site host"
-
-    if candidate.site_port and candidate.site_port not in (80, 443):
-        return f"Belongs to non-default site host: {candidate.site_hostname}:{candidate.site_port}"
-
-    return f"Belongs to non-default site host: {candidate.site_hostname}"
-
-
 def _discover_page_candidates():
     """Discover frontend page candidates before classification."""
     try:
@@ -84,7 +73,7 @@ def _discover_page_candidates():
     skip_prefixes = get_skip_url_prefixes()
     limit = get_pages_per_type()
     included_pages_by_type = {}
-    default_site = _get_default_site()
+    default_site = get_default_site()
     results = []
     pages = Page.objects.live().specific()
     for page in pages:
@@ -182,7 +171,7 @@ def _discover_routable_page_candidates(
         if not sub_route:
             continue
 
-        full_url = _join_frontend_paths(page_path, sub_route)
+        full_url = join_frontend_paths(page_path, sub_route)
         if _should_skip_frontend_url(full_url, skip_prefixes):
             continue
         results.append(
@@ -197,7 +186,7 @@ def _discover_routable_page_candidates(
                 is_cross_site=is_cross_site,
                 has_parameters=route_has_parameters(sub_route),
                 contains_regex=route_contains_regex(sub_route),
-                resolved_url=_resolve_routable_page_url(page, pattern, page_path, sub_route),
+                resolved_url=resolve_routable_page_url(page, pattern, page_path, sub_route),
             )
         )
     return results
@@ -220,8 +209,8 @@ def _discover_resolver_candidates():
 
         normalized_route = clean_regex_route(route)
         url = normalized_route if normalized_route.startswith("/") else f"/{normalized_route}"
-        requires_query_params = _is_supported_wagtail_api_find_route(name, callback)
-        resolved_url = _get_wagtail_api_detail_resolved_url(callback, url)
+        requires_query_params = is_supported_wagtail_api_find_route(name, callback)
+        resolved_url = get_wagtail_api_detail_resolved_url(callback, url)
         results.append(
             _FrontendCandidate(
                 url=url,
@@ -236,6 +225,17 @@ def _discover_resolver_candidates():
             )
         )
     return results
+
+
+def _format_cross_site_skip_reason(candidate):
+    """Build a skip reason for candidates that belong to a non-default site host."""
+    if not candidate.site_hostname:
+        return "Belongs to non-default site host"
+
+    if candidate.site_port and candidate.site_port not in (80, 443):
+        return f"Belongs to non-default site host: {candidate.site_hostname}:{candidate.site_port}"
+
+    return f"Belongs to non-default site host: {candidate.site_hostname}"
 
 
 def _classify_frontend_candidate(candidate):
