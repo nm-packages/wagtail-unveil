@@ -11,6 +11,7 @@ from wagtail_unveil.discovery.extensions import (
 )
 
 WORKFLOW_USAGE_NAMES = ("usage", "usage_results")
+WORKFLOW_TASK_ROUTE_NAMES = ("edit_task", "task_chosen")
 WAGTAILADMIN_PAGE_FALLBACK_NAMES = (
     "edit",
     "preview_on_edit",
@@ -119,6 +120,16 @@ def _get_workflow_instance():
         from wagtail.models import Workflow
 
         return Workflow.objects.first()
+    except Exception:
+        return None
+
+
+def _get_workflow_task_instance():
+    """Return the first available workflow task instance."""
+    try:
+        from wagtail.models import Task
+
+        return Task.objects.first()
     except Exception:
         return None
 

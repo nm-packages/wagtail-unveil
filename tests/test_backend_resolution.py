@@ -1,12 +1,13 @@
 from unittest import mock
 
 from django.contrib.auth.models import Group, User
+from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.urls import get_resolver
 from wagtail.documents.models import Document
 from wagtail.images.models import Image
 from wagtail.images.tests.utils import get_test_image_file
-from wagtail.models import Page, Site
+from wagtail.models import Page, Site, Task, Workflow
 
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.backend_resolution import (
@@ -61,6 +62,13 @@ class TestParameterisedURLResolution(TestCase):
         self.user = User.objects.create_user(username="testuser", password="password")
         self.group = Group.objects.create(name="Test group")
         self.page = Page.objects.exclude(depth=1).first()
+        self.workflow = Workflow.objects.first() or Workflow.objects.create(name="Test workflow")
+        self.task = Task.objects.first()
+        if self.task is None:
+            self.task = Task.objects.create(
+                name="Test task",
+                content_type=ContentType.objects.get_for_model(Task),
+            )
         self.add_subpage_parent = next(
             (
                 page
@@ -185,6 +193,23 @@ class TestParameterisedURLResolution(TestCase):
 
     def test_searchpick_edit_url_is_testable(self):
         self._assert_namespace_name_testable("searchpromotions", "edit")
+
+    def test_workflow_task_routes_are_testable_with_resolved_routes(self):
+        expected_pks = {
+            "edit_task": self.task.pk,
+            "task_chosen": self.task.pk,
+        }
+        workflow_task_urls = [
+            u for u in self.urls if u.namespace == "wagtailadmin_workflows" and u.name in expected_pks
+        ]
+
+        self.assertEqual(len(workflow_task_urls), len(expected_pks))
+        for url in workflow_task_urls:
+            with self.subTest(name=url.name):
+                self.assertTrue(url.is_testable, url.route)
+                self.assertEqual(url.skip_reason, "")
+                self.assertTrue(url.resolved_route, url.route)
+                self.assertIn(f"/{expected_pks[url.name]}/", url.resolved_route)
 
     def test_safe_wagtail_page_routes_are_testable_with_resolved_routes(self):
         expected_names = {
@@ -535,6 +560,39 @@ class TestParameterizedResolutionStrategies(TestCase):
             ],
         )
         self.assertIn("did not provide a compatible instance", result.detail)
+
+    def test_workflow_task_namespace_fallback_resolves_without_model_metadata(self):
+        instance = mock.Mock(pk=17)
+        with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
+                return_value=register_unveil_admin_instance_resolvers(),
+            ):
+                with mock.patch(
+                    "wagtail_unveil.discovery.backend_resolution._get_workflow_task_instance",
+                    return_value=instance,
+                ):
+                    with mock.patch(
+                        "wagtail_unveil.discovery.backend_resolution.reverse",
+                        return_value="/admin/workflows/tasks/edit/17/",
+                    ):
+                        result = _resolve_parameterized_url(
+                            "wagtailadmin_workflows",
+                            "edit_task",
+                            callback=object(),
+                            route="admin/workflows/tasks/edit/<int:pk>/",
+                        )
+
+        self.assertTrue(result.resolved)
+        self.assertEqual(result.method, "namespace:wagtailadmin_workflows:tasks")
+        self.assertEqual(
+            result.attempts,
+            [
+                "callback-model:no-model",
+                "namespace:wagtailadmin_workflows:tasks:instance-found",
+                "reverse:resolved",
+            ],
+        )
 
     def test_treebeard_models_skip_root_nodes(self):
         first_instance = mock.Mock()

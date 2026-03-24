@@ -58,4 +58,13 @@ def register_unveil_admin_instance_resolvers():
             resolver=lambda context: backend_resolution._get_workflow_instance(),
             override=True,
         ),
+        AdminInstanceResolver(
+            label="namespace:wagtailadmin_workflows:tasks",
+            matches=lambda context: (
+                context.namespace == "wagtailadmin_workflows"
+                and context.name in backend_resolution.WORKFLOW_TASK_ROUTE_NAMES
+                and context.route.count("<") == 1
+            ),
+            resolver=lambda context: backend_resolution._get_workflow_task_instance(),
+        ),
     )
