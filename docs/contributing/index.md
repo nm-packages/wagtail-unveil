@@ -17,7 +17,6 @@ make setup          # env, install, migrate, sample data
 make test           # run tests
 make lint           # ruff check
 make coverage       # run tests with coverage
-make docs-check     # verify docs command parity
 ```
 
 ## Related

@@ -34,6 +34,6 @@
 
 - **Pre-commit hooks** are configured in `.pre-commit-config.yaml` — run `make pre-commit` to check all files, or `uv run pre-commit install` to enable automatic checks on each commit
 - **After each piece of work**, run lint and coverage checks (see the workflow in root AGENTS.md), then update the relevant AGENTS.md files and README.md to reflect new features, files, or changes
-- **Docs sync checklist:** if `Makefile` targets or command behavior changes, update command docs in `AGENTS.md` and `docs/contributing/development.md`, then run `make docs-check`
+- **Docs sync checklist:** if `Makefile` targets or command behavior changes, update command docs in `AGENTS.md` and `docs/contributing/development.md` in the same PR
 - **README.md** is user-facing documentation — document features, usage, and configuration
 - **AGENTS.md files** are the canonical agent context files — document key files, structure, and conventions

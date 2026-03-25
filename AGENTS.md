@@ -39,7 +39,6 @@ make lint            # ruff check
 make lint-fix        # ruff check --fix
 make coverage        # run tests with coverage report
 make coverage-html   # generate HTML coverage report
-make docs-check      # verify docs command parity and drift checks
 make pre-commit      # run all configured hooks
 ```
 
@@ -161,4 +160,3 @@ More focused guidance lives in:
 - `docs/contributing/api-versioning.md` is the canonical contributor-facing reference for API version lifecycle policy and version-bump workflow
 - `docs/contributing/releasing.md` is the canonical contributor-facing reference for release workflow, PyPI Trusted Publisher setup, and maintainer release troubleshooting
 - Command-level docs must stay in sync with `Makefile`; when targets change, update `AGENTS.md` and `docs/contributing/development.md` in the same PR. `README.md` should link to this contributor workflow, not duplicate command lists.
-- Run `make docs-check` before merging docs or workflow changes that touch development commands
