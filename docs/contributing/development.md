@@ -71,7 +71,7 @@ When changing contributor commands or Make targets:
 1. Update `Makefile`.
 2. Update command docs in `AGENTS.md` and this file.
 3. Keep `README.md` focused and linked to this file.
-4. Keep those command-doc updates in the same PR as the workflow change.
+4. Keep those command-doc updates in the same PR as the Makefile/command change.
 
 ## Related Docs
 
