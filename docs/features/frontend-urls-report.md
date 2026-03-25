@@ -6,7 +6,7 @@ The frontend URLs report discovers and displays all frontend URLs in your projec
 
 Visit `/unveil/report/frontend-urls/` while logged in as a superuser with `DEBUG=True`.
 
-![Frontend URLs Report](frontend_report.jpg)
+![Frontend URLs Report](https://raw.githubusercontent.com/nm-packages/wagtail-unveil/main/docs/features/frontend_report.jpg)
 
 You can also reach it from the Wagtail admin dashboard panel.
 
@@ -15,7 +15,7 @@ You can also reach it from the Wagtail admin dashboard panel.
 - **Two URL sources** — Wagtail page URLs (from `Page.objects.live().specific()`) and Django resolver URLs (non-admin routes)
 - **RoutablePageMixin support** — automatically discovers `@path()` and regex `@route()` sub-routes on routable pages; static sub-routes are testable, supported single-parameter path sub-routes use inferred concrete URLs for testing, and regex literal patterns remain visible but non-testable
 - **Resolver detail-route testing** — supported resolver detail routes such as Wagtail API object endpoints stay visible with their canonical parameterised path while the Test/Open actions use inferred concrete URLs
-- **Configurable page limit** — control how many page instances per type are included via [`WAGTAIL_UNVEIL_PAGES_PER_TYPE`](../configuration/settings-reference.md#wagtail_unveil_pages_per_type)
+- **Configurable page limit** — control how many page instances per type are included via [`WAGTAIL_UNVEIL_PAGES_PER_TYPE`](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md#wagtail_unveil_pages_per_type)
 - **One-click URL testing** — colour-coded status codes (green=2xx, yellow=3xx, red=4xx/5xx)
 - **Test All** button — runs all testable URLs sequentially with a progress indicator and pass/fail summary
 - **Hide Untestable toggle** — hides non-testable rows; preference saved in a cookie across sessions
@@ -54,7 +54,7 @@ When a routable page path parameter can be resolved safely, the row stays visibl
 
 ## Related
 
-- [Backend URLs Report](backend-urls-report.md) — Test Wagtail admin URLs
-- [Configuration](../configuration/settings-reference.md) — Control page limits and URL exclusions
-- [API Reference](../api/endpoints.md) — Query frontend URLs via the JSON API
-- [Features Index](index.md) — Back to section overview
+- [Backend URLs Report](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/backend-urls-report.md) — Test Wagtail admin URLs
+- [Configuration](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md) — Control page limits and URL exclusions
+- [API Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/api/endpoints.md) — Query frontend URLs via the JSON API
+- [Features Index](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/index.md) — Back to section overview

@@ -19,7 +19,7 @@ Scope:
 Out of scope:
 
 - package release versioning (`package_version`)
-- discovery internals (see [discovery-architecture.md](discovery-architecture.md))
+- discovery internals (see [discovery-architecture.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-architecture.md))
 
 ## Why Explicit Versioning
 
