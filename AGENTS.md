@@ -124,7 +124,7 @@ The sandbox project mounts the package at `/unveil/`, exposes Wagtail API v2 rou
 
 ## Coding Conventions
 
-See [CONVENTIONS.md](CONVENTIONS.md) for the full project conventions. Important rules:
+See [CONVENTIONS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/CONVENTIONS.md) for the full project conventions. Important rules:
 
 - Use double quotes consistently
 - Sort modules using the flow-first organization guidance in `CONVENTIONS.md`
@@ -146,8 +146,8 @@ After changing code in `wagtail_unveil/` or `tests/`:
 
 More focused guidance lives in:
 
-- [wagtail_unveil/AGENTS.md](wagtail_unveil/AGENTS.md) — package-specific architecture and constraints
-- [sandbox/AGENTS.md](sandbox/AGENTS.md) — sandbox-specific structure and sample-data notes
+- [wagtail_unveil/AGENTS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/wagtail_unveil/AGENTS.md) — package-specific architecture and constraints
+- [sandbox/AGENTS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/sandbox/AGENTS.md) — sandbox-specific structure and sample-data notes
 
 ## Documentation Contract
 

@@ -6,7 +6,7 @@ The settings page is a server-rendered diagnostic view showing the effective wag
 
 Visit `/unveil/report/settings/` while logged in as a superuser with `DEBUG=True`.
 
-![Settings Page](settings_pane.jpg)
+![Settings Page](https://raw.githubusercontent.com/nm-packages/wagtail-unveil/main/docs/features/settings_pane.jpg)
 
 You can also reach it from the Wagtail admin dashboard panel.
 
@@ -34,7 +34,7 @@ Each value also shows its source: environment variable, Django settings, or pack
 
 ## Related
 
-- [Backend URLs Report](backend-urls-report.md) — Test admin URLs
-- [Frontend URLs Report](frontend-urls-report.md) — Test frontend URLs
-- [Configuration](../configuration/settings-reference.md) — Change the effective settings
-- [Features Index](index.md) — Back to section overview
+- [Backend URLs Report](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/backend-urls-report.md) — Test admin URLs
+- [Frontend URLs Report](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/frontend-urls-report.md) — Test frontend URLs
+- [Configuration](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md) — Change the effective settings
+- [Features Index](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/index.md) — Back to section overview

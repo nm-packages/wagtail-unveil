@@ -9,10 +9,10 @@
 ## Install the Package
 
 ```bash
-pip install wagtail-unveil==0.1.0a3
+pip install wagtail-unveil==0.1.0a4
 ```
 
-> `0.1.0a3` is the current public alpha release. It is intended for early adopters and real-world testing, and breaking changes may still happen before a stable release.
+> `0.1.0a4` is the current public alpha release. It is intended for early adopters and real-world testing, and breaking changes may still happen before a stable release.
 > To try the latest unreleased changes from GitHub instead:
 >
 > ```bash
@@ -75,7 +75,7 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 
 ## Related
 
-- [Configuration](../configuration/settings-reference.md) — Customise page limits and URL exclusions
-- [Features](../features/index.md) — Explore what the reports can do
-- [API Reference](../api/endpoints.md) — Full API endpoint documentation
-- [Getting Started Index](index.md) — Back to section overview
+- [Configuration](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md) — Customise page limits and URL exclusions
+- [Features](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/index.md) — Explore what the reports can do
+- [API Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/api/endpoints.md) — Full API endpoint documentation
+- [Getting Started Index](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/getting-started/index.md) — Back to section overview
