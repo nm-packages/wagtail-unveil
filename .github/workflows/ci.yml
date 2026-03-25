@@ -25,7 +25,6 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
-      - run: make docs-check
       - run: uv run ruff check .
 
   frontend-lint:

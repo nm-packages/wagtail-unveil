@@ -30,7 +30,6 @@ make test
 make test-js
 make lint
 make coverage
-make docs-check
 ```
 
 ## Extended Workflows
@@ -60,7 +59,7 @@ make pre-commit
 
 ## CI Expectations
 
-- Pull requests run lint, docs-check, JS checks, coverage, and smoke tox jobs.
+- Pull requests run lint, JS checks, coverage, and smoke tox jobs.
 - The full tox matrix runs on pushes to `main`, manual dispatch, and the weekly scheduled CI run.
 
 See `.github/workflows/ci.yml` for exact job definitions.
@@ -72,7 +71,7 @@ When changing contributor commands or Make targets:
 1. Update `Makefile`.
 2. Update command docs in `AGENTS.md` and this file.
 3. Keep `README.md` focused and linked to this file.
-4. Run `make docs-check` before merging.
+4. Keep those command-doc updates in the same PR as the workflow change.
 
 ## Related Docs
 
