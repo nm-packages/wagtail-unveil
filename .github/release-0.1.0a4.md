@@ -1,4 +1,4 @@
-# Release 0.1.0a4
+# wagtail-unveil 0.1.0a4
 
 Fourth public alpha release for `wagtail-unveil`.
 
