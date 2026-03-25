@@ -2,6 +2,18 @@
 
 All notable changes to `wagtail-unveil` are documented in this file.
 
+## 0.1.0a4 - 2026-03-25
+
+Fourth public alpha release.
+
+This alpha continues to target early adopters and real-world testing. Package behavior and documentation should still be treated as provisional before the first stable release.
+
+### Highlights
+
+- resolved more GET-safe Wagtail admin routes, including compatible page admin views and workflow task URLs, so backend discovery can test more concrete paths
+- exposed and reorganized resolution helpers to make custom admin resolver extensions and test patching easier to support
+- expanded automated coverage across discovery, settings, and report/API views while tightening contributor docs around the Makefile-backed workflow
+
 ## 0.1.0a3 - 2026-03-23
 
 Third public alpha release.
