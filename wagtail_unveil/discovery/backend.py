@@ -244,7 +244,7 @@ def _iter_page_backed_admin_urls(
     page_instances_by_type,
     add_subpage_parent_instances_by_type,
 ):
-    """Yield per-page-type BackendURL rows for safe Wagtail page routes."""
+    """Return a list of per-page-type BackendURL rows for safe Wagtail page routes."""
     if normalized_route.namespace != "wagtailadmin_pages" or normalized_route.route.count("<") != 1:
         return []
 

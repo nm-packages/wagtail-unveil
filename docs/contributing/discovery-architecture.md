@@ -84,7 +84,7 @@ If you are using `wagtail-unveil` in your own project and want to extend URL res
 6. Reverse the URL with `_reverse_with_instance()` using the selected instance.
 7. If no instance can be selected, keep the route visible but untestable.
 
-The `wagtailadmin_pages` per-type behavior does not come from `get_registered_admin_instance_resolvers()`. It is a core backend discovery special-case in `wagtail_unveil/discovery/backend.py`, where `_iter_page_backed_admin_urls()` expands:
+The `wagtailadmin_pages` per-type behavior does not come from `get_registered_admin_instance_resolvers()`. It is handled only by a core backend discovery special-case in `wagtail_unveil/discovery/backend.py`, where `_iter_page_backed_admin_urls()` expands:
 
 - an explicit safe allowlist of single-parameter page routes such as edit, delete, copy, move, privacy, and revisions index into one backend row per concrete non-root page type, using a representative instance for each type
 - `wagtailadmin_pages:add_subpage` into one backend row per concrete non-root parent page type that exposes at least one creatable child model at that specific parent page

@@ -132,73 +132,51 @@ class TestParameterizedResolutionStrategies(TestCase):
             ],
         )
 
-    def test_wagtailadmin_pages_namespace_fallback_resolves_without_model_metadata(self):
-        instance = mock.Mock(pk=11)
+    def test_wagtailadmin_pages_without_model_metadata_no_longer_uses_hook_fallback(self):
         with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
             with mock.patch(
                 "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
-                return_value=register_unveil_admin_instance_resolvers(),
+                    return_value=register_unveil_admin_instance_resolvers(),
             ):
-                with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution.get_page_instance",
-                    return_value=instance,
-                ):
-                    with mock.patch(
-                        "wagtail_unveil.discovery.backend_resolution.reverse",
-                        return_value="/admin/pages/11/edit/",
-                    ):
-                        result = resolve_parameterized_url(
-                            "wagtailadmin_pages",
-                            "edit",
-                            callback=object(),
-                            route="admin/pages/<int:page_id>/edit/",
-                        )
+                with mock.patch("wagtail_unveil.discovery.backend_resolution.reverse") as reverse_mock:
+                    result = resolve_parameterized_url(
+                        "wagtailadmin_pages",
+                        "edit",
+                        callback=object(),
+                        route="admin/pages/<int:page_id>/edit/",
+                    )
 
-        self.assertTrue(result.resolved)
-        self.assertEqual(result.method, "namespace:wagtailadmin_pages")
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.method, "")
+        reverse_mock.assert_not_called()
         self.assertEqual(
             result.attempts,
             [
                 "callback-model:no-model",
-                "namespace:wagtailadmin_pages:instance-found",
-                "reverse:resolved",
             ],
         )
 
-    def test_wagtailadmin_pages_add_subpage_fallback_uses_dedicated_parent_helper(self):
-        instance = mock.Mock(pk=13)
+    def test_wagtailadmin_pages_add_subpage_without_model_metadata_no_longer_uses_hook_fallback(self):
         with mock.patch("wagtail_unveil.discovery.backend_resolution._get_model_from_callback", return_value=None):
             with mock.patch(
                 "wagtail_unveil.discovery.backend_resolution.get_registered_admin_instance_resolvers",
                 return_value=register_unveil_admin_instance_resolvers(),
             ):
-                with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution.get_page_instance",
-                ) as get_page_instance:
-                    with mock.patch(
-                        "wagtail_unveil.discovery.backend_resolution.get_add_subpage_parent_page_instance",
-                        return_value=instance,
-                    ):
-                        with mock.patch(
-                            "wagtail_unveil.discovery.backend_resolution.reverse",
-                            return_value="/admin/pages/13/add_subpage/",
-                        ):
-                            result = resolve_parameterized_url(
-                                "wagtailadmin_pages",
-                                "add_subpage",
-                                callback=object(),
-                                route="admin/pages/<int:parent_page_id>/add_subpage/",
-                            )
+                with mock.patch("wagtail_unveil.discovery.backend_resolution.reverse") as reverse_mock:
+                    result = resolve_parameterized_url(
+                        "wagtailadmin_pages",
+                        "add_subpage",
+                        callback=object(),
+                        route="admin/pages/<int:parent_page_id>/add_subpage/",
+                    )
 
-        self.assertTrue(result.resolved)
-        self.assertEqual(result.method, "namespace:wagtailadmin_pages:add_subpage")
-        get_page_instance.assert_not_called()
+        self.assertFalse(result.resolved)
+        self.assertEqual(result.method, "")
+        reverse_mock.assert_not_called()
         self.assertEqual(
             result.attempts,
             [
                 "callback-model:no-model",
-                "namespace:wagtailadmin_pages:add_subpage:instance-found",
-                "reverse:resolved",
             ],
         )
 
