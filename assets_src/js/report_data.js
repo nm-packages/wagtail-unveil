@@ -159,7 +159,7 @@
     return row;
   }
 
-  function createEmptyRow(reportKind) {
+  function createEmptyRow() {
     var row = document.createElement("tr");
     var cell = document.createElement("td");
 
@@ -176,7 +176,7 @@
     tbody.innerHTML = "";
 
     if (!urls.length) {
-      tbody.appendChild(createEmptyRow(reportKind));
+      tbody.appendChild(createEmptyRow());
       return;
     }
 

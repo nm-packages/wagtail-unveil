@@ -76,13 +76,17 @@ If you are using `wagtail-unveil` in your own project and want to extend URL res
    - override resolvers can replace an earlier instance choice or intentionally fail closed
 5. The currently registered built-in resolver rules cover:
    - `wagtailforms` falls back to the first live form page instance when no earlier instance exists
-   - `wagtailadmin_pages` expands an explicit safe allowlist of single-parameter page routes such as edit, delete, copy, move, privacy, and revisions index into one backend row per concrete non-root page type, using a representative instance for each type
-   - `wagtailadmin_pages:add_subpage` resolves into one backend row per concrete non-root parent page type that exposes at least one creatable child model at that specific parent page
    - `wagtailadmin_workflows` usage views override earlier model-derived instances with the first `Workflow` instance, and fail closed if no workflow exists
    - `wagtailadmin_workflows:tasks` resolves the GET-safe task routes `edit_task` and `task_chosen` from the first available `Task` instance
-   - third-party admin packages such as `wagtail-modeladmin` are expected to register their own project-level resolvers rather than relying on built-in package support
 6. Reverse the URL with `_reverse_with_instance()` using the selected instance.
 7. If no instance can be selected, keep the route visible but untestable.
+
+The `wagtailadmin_pages` per-type behavior does not come from `get_registered_admin_instance_resolvers()`. It is a core backend discovery special-case in `wagtail_unveil/discovery/backend.py`, where `_iter_page_backed_admin_urls()` expands:
+
+- an explicit safe allowlist of single-parameter page routes such as edit, delete, copy, move, privacy, and revisions index into one backend row per concrete non-root page type, using a representative instance for each type
+- `wagtailadmin_pages:add_subpage` into one backend row per concrete non-root parent page type that exposes at least one creatable child model at that specific parent page
+
+Third-party and other non-core namespace-specific behavior should still use project-level resolver hooks rather than new package-specific branches in core discovery.
 
 `_get_model_from_callback()` still checks callback init kwargs first, then inspects classes exposed on `callback.view_class` and `callback.cls`, including direct `model` attributes plus cached-property and MRO-based variants of `model`. For treebeard-backed models, `_get_instance_for_model()` excludes the root node (`depth=1`) before selecting the first instance.
 
