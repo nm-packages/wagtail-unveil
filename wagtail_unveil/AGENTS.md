@@ -114,8 +114,8 @@ The full discovery flow, resolution fallbacks, special cases, and intentional li
 
 `get_admin_urls()` follows explicit phases: discover admin candidates, normalize route metadata, classify testability, resolve supported parameterized URLs, then emit `BackendURL` objects.
 Namespace-specific rules may replace an earlier instance choice or invalidate it entirely when the route requires a different model type, such as workflow usage URLs.
-Admin parameter resolution is unified through `register_unveil_admin_instance_resolvers` hook registrations. Use that hook for both built-in package rules and developer-installed Wagtail package extensions rather than adding package-specific branches in core discovery.
-Built-in hook resolvers currently cover Wagtail form submissions, workflow usage routes, and GET-safe workflow task routes. Safe single-parameter `wagtailadmin_pages` routes and compatibility-aware `add_subpage` parent pages are expanded into one backend row per concrete page type during backend discovery.
+Admin parameter resolution is unified through `register_unveil_admin_instance_resolvers` hook registrations for built-in non-page namespaces and developer-installed Wagtail package extensions. Prefer that hook for third-party and non-core namespace-specific behavior rather than adding new package-specific branches in core discovery.
+Built-in hook resolvers currently cover Wagtail form submissions, workflow usage routes, and GET-safe workflow task routes. Safe single-parameter `wagtailadmin_pages` routes and compatibility-aware `add_subpage` parent pages are an intentional built-in backend discovery exception and are expanded into one backend row per concrete page type.
 Resolved admin routes are only marked testable when the callback supports GET; POST-only routes such as reorder views remain visible with a skip reason instead of being offered to the report tester.
 
 ### Frontend URLs

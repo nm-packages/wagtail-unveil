@@ -238,15 +238,20 @@ def _finalize_admin_route(normalized_route, classification):
     )
 
 
-def _iter_page_backed_admin_urls(normalized_route):
+def _iter_page_backed_admin_urls(
+    normalized_route,
+    *,
+    page_instances_by_type,
+    add_subpage_parent_instances_by_type,
+):
     """Yield per-page-type BackendURL rows for safe Wagtail page routes."""
     if normalized_route.namespace != "wagtailadmin_pages" or normalized_route.route.count("<") != 1:
         return []
 
     if normalized_route.name == WAGTAILADMIN_PAGE_ADD_SUBPAGE_NAME:
-        instances = get_add_subpage_parent_page_instances_by_type()
+        instances = add_subpage_parent_instances_by_type
     elif normalized_route.name in WAGTAILADMIN_PAGE_FALLBACK_NAMES:
-        instances = get_page_instances_by_type()
+        instances = page_instances_by_type
     else:
         return []
 
@@ -298,6 +303,8 @@ def get_admin_urls():
     images_serve_available = _is_url_registered("wagtailimages_serve")
     docs_serve_available = _is_url_registered("wagtaildocs_serve")
     skip_prefixes = get_skip_url_prefixes()
+    page_instances_by_type = get_page_instances_by_type()
+    add_subpage_parent_instances_by_type = get_add_subpage_parent_page_instances_by_type()
     results = []
     for discovered_route in _discover_admin_routes():
         normalized_route = _normalize_admin_route(discovered_route, skip_prefixes)
@@ -308,7 +315,11 @@ def get_admin_urls():
             docs_serve_available=docs_serve_available,
             images_serve_available=images_serve_available,
         )
-        page_backed_urls = _iter_page_backed_admin_urls(normalized_route)
+        page_backed_urls = _iter_page_backed_admin_urls(
+            normalized_route,
+            page_instances_by_type=page_instances_by_type,
+            add_subpage_parent_instances_by_type=add_subpage_parent_instances_by_type,
+        )
         if page_backed_urls:
             results.extend(page_backed_urls)
             continue

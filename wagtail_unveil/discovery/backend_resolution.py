@@ -170,7 +170,7 @@ def get_page_instances_by_type():
         return []
 
     instances_by_type = {}
-    for page in Page.objects.exclude(depth=1).specific().order_by("path").iterator():
+    for page in Page.objects.exclude(depth=1).select_related("content_type").order_by("path").iterator():
         page_type = _get_page_type_label(page)
         instances_by_type.setdefault(page_type, page)
     return list(instances_by_type.values())
@@ -202,14 +202,15 @@ def get_add_subpage_parent_page_instances_by_type():
         return []
 
     instances_by_type = {}
-    for page in Page.objects.exclude(depth=1).specific().order_by("path").iterator():
+    for page in Page.objects.exclude(depth=1).select_related("content_type").order_by("path").iterator():
         specific_class = getattr(page, "specific_class", None)
         if specific_class is None:
             continue
-        if not any(model.can_create_at(page) for model in specific_class.creatable_subpage_models()):
+        specific_page = page.specific
+        if not any(model.can_create_at(specific_page) for model in specific_class.creatable_subpage_models()):
             continue
         page_type = _get_page_type_label(page)
-        instances_by_type.setdefault(page_type, page)
+        instances_by_type.setdefault(page_type, specific_page)
     return list(instances_by_type.values())
 
 

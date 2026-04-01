@@ -164,7 +164,7 @@
     var cell = document.createElement("td");
 
     row.className = "empty-row";
-    cell.setAttribute("colspan", reportKind === "backend" ? "7" : "7");
+    cell.setAttribute("colspan", "7");
     cell.textContent = "No URLs found.";
     row.appendChild(cell);
     return row;
