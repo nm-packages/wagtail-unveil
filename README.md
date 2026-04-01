@@ -105,6 +105,7 @@ For full setting details, including environment variable usage, normalization ru
 - Coding conventions: [CONVENTIONS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/CONVENTIONS.md)
 - API versioning policy: [docs/contributing/api-versioning.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/api-versioning.md)
 - Discovery internals: [docs/contributing/discovery-architecture.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-architecture.md)
+- Discovery workflow diagrams: [docs/contributing/discovery-workflows.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-workflows.md)
 - Frontend asset workflow: [docs/contributing/frontend-assets.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/frontend-assets.md)
 - Changelog: [CHANGELOG.md](https://github.com/nm-packages/wagtail-unveil/blob/main/CHANGELOG.md)
 - Release runbook: [docs/contributing/releasing.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/releasing.md)

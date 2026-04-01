@@ -82,4 +82,5 @@ When changing contributor commands or Make targets:
 - Frontend assets: [frontend-assets.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/frontend-assets.md)
 - API lifecycle/versioning: [api-versioning.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/api-versioning.md)
 - Discovery internals: [discovery-architecture.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-architecture.md)
+- Discovery workflow diagrams: [discovery-workflows.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-workflows.md)
 - Release runbook: [releasing.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/releasing.md)

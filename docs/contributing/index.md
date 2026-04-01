@@ -7,6 +7,7 @@ Guidance for contributors working in this repository.
 - [Development Guide](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/development.md) — Local setup, day-to-day workflow, and CI expectations
 - [API Versioning](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/api-versioning.md) — Lifecycle policy and version bump workflow for the JSON API
 - [Discovery Architecture](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-architecture.md) — How URL discovery, normalization, and resolution works
+- [Discovery Workflow Visual Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-workflows.md) — Maintainer-facing Mermaid diagrams for backend and frontend discovery flows
 - [Frontend Assets](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/frontend-assets.md) — Report asset source, build/test workflow, and CI expectations
 - [Releasing](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/releasing.md) — Maintainer runbook for publishing releases to PyPI
 
