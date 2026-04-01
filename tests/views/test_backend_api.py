@@ -5,6 +5,7 @@ from importlib.metadata import PackageNotFoundError
 from unittest.mock import patch
 
 from django.test import RequestFactory, TestCase, override_settings
+from wagtail.models import Page
 
 from tests.views.support import BaseAPIViewTestMixin
 from wagtail_unveil.api_contract import get_api_contract
@@ -72,10 +73,17 @@ class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
             url for url in response.json()["urls"] if url["namespace"] == "wagtailadmin_pages" and url["name"] == "edit"
         ]
 
-        self.assertEqual(len(edit_urls), 1)
-        self.assertTrue(edit_urls[0]["is_testable"])
-        self.assertEqual(edit_urls[0]["skip_reason"], "")
-        self.assertTrue(edit_urls[0]["resolved_route"])
+        expected_page_types = {
+            f"{type(page)._meta.app_label}.{type(page)._meta.object_name}"
+            for page in Page.objects.exclude(depth=1).specific()
+        }
+
+        self.assertEqual(len(edit_urls), len(expected_page_types))
+        self.assertTrue(all(url["is_testable"] for url in edit_urls))
+        self.assertTrue(all(url["skip_reason"] == "" for url in edit_urls))
+        self.assertTrue(all(url["resolved_route"] for url in edit_urls))
+        self.assertTrue(all(url["page_type"] for url in edit_urls))
+        self.assertEqual({url["page_type"] for url in edit_urls}, expected_page_types)
 
     def test_workflow_task_edit_route_is_serialized_as_testable_with_resolved_route(self):
         response = self.client.get(
@@ -159,6 +167,7 @@ class TestAdminAPIViewHelpers(TestCase):
             namespace="wagtailadmin_pages",
             has_parameters=True,
             view_name="wagtail.admin.views.pages.edit.EditView",
+            page_type="core.StandardPage",
             is_testable=True,
             skip_reason="",
             resolved_route="admin/pages/1/edit/",
@@ -172,6 +181,7 @@ class TestAdminAPIViewHelpers(TestCase):
                 "namespace": "wagtailadmin_pages",
                 "has_parameters": True,
                 "view_name": "wagtail.admin.views.pages.edit.EditView",
+                "page_type": "core.StandardPage",
                 "is_testable": True,
                 "skip_reason": "",
                 "resolved_route": "admin/pages/1/edit/",

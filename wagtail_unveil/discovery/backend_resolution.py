@@ -59,6 +59,13 @@ def _get_instance_for_model(model):
     return queryset.first()
 
 
+def _get_page_type_label(page):
+    """Return the concrete page type label used in report/API output."""
+    specific_class = getattr(page, "specific_class", None) or page.__class__
+    meta = specific_class._meta
+    return f"{meta.app_label}.{meta.object_name}"
+
+
 def _log_admin_instance_resolver_error(resolver, stage, context):
     """Log a warning when a third-party admin instance resolver fails."""
     logger.warning(
@@ -155,6 +162,20 @@ def get_page_instance():
     return _get_instance_for_model(Page)
 
 
+def get_page_instances_by_type():
+    """Return one representative non-root page instance per concrete page type."""
+    try:
+        from wagtail.models import Page
+    except Exception:
+        return []
+
+    instances_by_type = {}
+    for page in Page.objects.exclude(depth=1).specific().order_by("path").iterator():
+        page_type = _get_page_type_label(page)
+        instances_by_type.setdefault(page_type, page)
+    return list(instances_by_type.values())
+
+
 def get_add_subpage_parent_page_instance():
     """Return a parent page that can actually host at least one creatable child page."""
     try:
@@ -171,6 +192,25 @@ def get_add_subpage_parent_page_instance():
             return page
 
     return None
+
+
+def get_add_subpage_parent_page_instances_by_type():
+    """Return one compatible add-subpage parent page per concrete page type."""
+    try:
+        from wagtail.models import Page
+    except Exception:
+        return []
+
+    instances_by_type = {}
+    for page in Page.objects.exclude(depth=1).specific().order_by("path").iterator():
+        specific_class = getattr(page, "specific_class", None)
+        if specific_class is None:
+            continue
+        if not any(model.can_create_at(page) for model in specific_class.creatable_subpage_models()):
+            continue
+        page_type = _get_page_type_label(page)
+        instances_by_type.setdefault(page_type, page)
+    return list(instances_by_type.values())
 
 
 def get_workflow_instance():
@@ -328,6 +368,11 @@ def _reverse_with_instance(namespace, name, instance):
     result.resolved_route = url.lstrip("/")
     result.detail = f"Reversed {_build_url_name(namespace, name)} with pk={instance.pk}"
     return result
+
+
+def resolve_parameterized_url_with_instance(namespace, name, instance):
+    """Resolve a parameterized admin URL using the provided instance."""
+    return _reverse_with_instance(namespace, name, instance)
 
 
 def resolve_parameterized_url(namespace, name, callback, route=""):

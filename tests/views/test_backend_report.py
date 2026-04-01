@@ -26,6 +26,10 @@ class TestBackendUrlsReportView(BaseReportViewTestMixin, WagtailTestUtils, TestC
         self.assertContains(response, 'id="report-testable"')
         self.assertContains(response, 'id="report-untestable"')
 
+    def test_report_includes_page_type_column(self):
+        response = self.client.get(self.report_url)
+        self.assertContains(response, "<th data-sort-col=\"3\">Page Type</th>", html=True)
+
     def test_report_does_not_render_rows_server_side(self):
         response = self.client.get(self.report_url)
         content = response.content.decode()

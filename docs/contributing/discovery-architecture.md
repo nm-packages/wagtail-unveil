@@ -76,8 +76,8 @@ If you are using `wagtail-unveil` in your own project and want to extend URL res
    - override resolvers can replace an earlier instance choice or intentionally fail closed
 5. The currently registered built-in resolver rules cover:
    - `wagtailforms` falls back to the first live form page instance when no earlier instance exists
-   - `wagtailadmin_pages` falls back to the first non-root page instance for an explicit safe allowlist of single-parameter page routes such as edit, delete, copy, move, privacy, and revisions index
-   - `wagtailadmin_pages:add_subpage` resolves only when a non-root parent page exists whose concrete type exposes at least one creatable child model that can be created at that specific parent page
+   - `wagtailadmin_pages` expands an explicit safe allowlist of single-parameter page routes such as edit, delete, copy, move, privacy, and revisions index into one backend row per concrete non-root page type, using a representative instance for each type
+   - `wagtailadmin_pages:add_subpage` resolves into one backend row per concrete non-root parent page type that exposes at least one creatable child model at that specific parent page
    - `wagtailadmin_workflows` usage views override earlier model-derived instances with the first `Workflow` instance, and fail closed if no workflow exists
    - `wagtailadmin_workflows:tasks` resolves the GET-safe task routes `edit_task` and `task_chosen` from the first available `Task` instance
    - third-party admin packages such as `wagtail-modeladmin` are expected to register their own project-level resolvers rather than relying on built-in package support
@@ -89,7 +89,7 @@ If you are using `wagtail-unveil` in your own project and want to extend URL res
 Internal resolution returns a `_ParameterizedURLResolution` object with `resolved_route`, `resolved`, `method`, `detail`, and `attempts`. This metadata is internal only. It exists to make the fallback order and failure path easier to debug and test. Public JSON responses still expose only the existing `BackendURL` fields.
 
 Resolved URLs are stored in `resolved_route` on `BackendURL`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters` during final emission rather than during initial classification. Override resolvers can invalidate an earlier candidate instance when the route requires a different model type. If a resolver `matches` or `resolver` callable raises at runtime, discovery records an internal `<label>:error` attempt, logs a warning, and continues with the remaining strategies.
-The built-in `wagtailadmin_pages` resolver is intentionally allowlisted rather than a blanket fallback for every page route so state-dependent routes such as `convert_alias` can remain visible but untestable when a representative page would not produce a valid GET target. `add_subpage` is treated separately and only resolves when a compatible parent page exists, rather than merely any non-root page. The built-in workflow task resolver is also allowlisted to GET-safe routes rather than attempting every single-parameter workflow action view.
+The built-in `wagtailadmin_pages` expansion is intentionally allowlisted rather than a blanket fallback for every page route so state-dependent routes such as `convert_alias` can remain visible but untestable when a representative page would not produce a valid GET target. `add_subpage` is treated separately and only resolves when a compatible parent page exists, rather than merely any non-root page. The built-in workflow task resolver is also allowlisted to GET-safe routes rather than attempting every single-parameter workflow action view.
 
 ### Settings Resolution Nuances
 

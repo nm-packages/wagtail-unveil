@@ -33,6 +33,7 @@ class TestGetAdminUrls(TestCase):
         self.assertIsInstance(url.namespace, str)
         self.assertIsInstance(url.has_parameters, bool)
         self.assertIsInstance(url.view_name, str)
+        self.assertIsInstance(url.page_type, str)
 
     def test_known_url_present(self):
         names = {url.name for url in self.urls}
