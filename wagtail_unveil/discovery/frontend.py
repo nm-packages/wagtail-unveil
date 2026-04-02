@@ -198,16 +198,15 @@ def _discover_resolver_candidates():
     skip_prefixes = get_skip_url_prefixes()
     results = []
     for route, name, namespace, callback in walk_patterns(resolver.url_patterns):
-        if route.startswith("admin/"):
-            continue
-        if route.startswith("django-admin/"):
+        normalized_route = clean_regex_route(route)
+
+        if normalized_route.startswith("admin/"):
             continue
         if namespace == "wagtail_unveil":
             continue
-        if skip_prefixes and any(route.startswith(prefix) for prefix in skip_prefixes):
+        if skip_prefixes and any(normalized_route.startswith(prefix) for prefix in skip_prefixes):
             continue
 
-        normalized_route = clean_regex_route(route)
         url = normalized_route if normalized_route.startswith("/") else f"/{normalized_route}"
         requires_query_params = is_supported_wagtail_api_find_route(name, callback)
         resolved_url = get_wagtail_api_detail_resolved_url(callback, url)

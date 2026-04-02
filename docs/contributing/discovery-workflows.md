@@ -141,8 +141,8 @@ flowchart TD
     N --> M
 
     C --> O["walk_patterns() over root resolver"]
-    O --> P["Exclude admin/, django-admin/,<br/>wagtail_unveil namespace, skip prefixes"]
-    P --> Q["clean_regex_route() and normalize to /path"]
+    O --> P["clean_regex_route()"]
+    P --> Q["Exclude admin/, wagtail_unveil namespace,<br/>skip prefixes on normalized route"]
     Q --> R["Detect supported Wagtail API find/detail routes"]
     R --> S["Optionally derive concrete resolved_url<br/>for supported detail endpoints"]
 

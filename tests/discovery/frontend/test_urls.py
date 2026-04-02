@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from wagtail_unveil.discovery.frontend import FrontendURL, get_frontend_urls
 
@@ -41,6 +41,10 @@ class TestGetFrontendUrls(TestCase):
         for url in self.urls:
             self.assertFalse(url.url.startswith("/admin/"), url.url)
 
+    def test_django_admin_urls_can_be_included(self):
+        django_admin_urls = [url for url in self.urls if url.url.startswith("/django-admin/")]
+        self.assertGreater(len(django_admin_urls), 0)
+
     def test_no_unveil_urls_included(self):
         for url in self.urls:
             self.assertNotIn("unveil-api", url.url)
@@ -72,3 +76,23 @@ class TestGetFrontendUrls(TestCase):
     def test_urls_start_with_slash(self):
         for url in self.urls:
             self.assertTrue(url.url.startswith("/"), url.url)
+
+
+@override_settings(ROOT_URLCONF="tests.discovery.frontend.urls_regex_admin")
+class TestRegexMountedAdminDiscovery(TestCase):
+    def test_regex_mounted_django_admin_urls_are_included_by_default(self):
+        urls = get_frontend_urls()
+        django_admin_urls = [url for url in urls if url.url.startswith("/django-admin/")]
+        self.assertGreater(len(django_admin_urls), 0)
+
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["django-admin/"])
+    def test_regex_mounted_django_admin_urls_respect_skip_prefixes(self):
+        urls = get_frontend_urls()
+        django_admin_urls = [url for url in urls if url.url.startswith("/django-admin/")]
+        self.assertEqual(django_admin_urls, [])
+
+    def test_non_admin_regex_routes_are_still_discovered(self):
+        urls = get_frontend_urls()
+        regex_search_urls = [url for url in urls if url.url == "/regex-search/"]
+        self.assertEqual(len(regex_search_urls), 1)
+        self.assertEqual(regex_search_urls[0].name, "regex_search")

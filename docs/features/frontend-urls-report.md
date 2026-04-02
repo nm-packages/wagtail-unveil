@@ -36,7 +36,7 @@ Discovered from `Page.objects.live().specific()`. Includes:
 
 Discovered by walking the root URL resolver. Excludes:
 
-- Routes under `admin/` and `django-admin/`
+- Routes under `admin/`
 - Routes in the `wagtail_unveil` namespace
 - Any prefixes configured in `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES`
 

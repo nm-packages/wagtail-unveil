@@ -162,10 +162,10 @@ This means routable pages contribute both their base page URL and any additional
 
 1. Walk all URL patterns with `walk_patterns()`.
 2. Exclude routes under `admin/`.
-3. Exclude routes under `django-admin/`.
-4. Exclude routes whose namespace is `wagtail_unveil`.
-5. Apply `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES`.
-6. Normalize the route with `clean_regex_route()`.
+3. Normalize the route with `clean_regex_route()`.
+4. Exclude routes whose normalized path is under `admin/`.
+5. Exclude routes whose namespace is `wagtail_unveil`.
+6. Apply `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES` against the normalized route, which allows projects to exclude mounts such as `django-admin/` consistently for both `path()` and `re_path()`.
 7. Record whether the normalized route contains `<...>` placeholders.
 8. Record whether the normalized route still contains regex groups such as `(`.
 9. Detect supported Wagtail API resolver routes by callback metadata.
