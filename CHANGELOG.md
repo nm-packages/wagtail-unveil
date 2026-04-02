@@ -2,6 +2,18 @@
 
 All notable changes to `wagtail-unveil` are documented in this file.
 
+## 0.1.0a5 - 2026-04-02
+
+Fifth public alpha release.
+
+This alpha continues to target early adopters and real-world testing. Package behavior and documentation should still be treated as provisional before the first stable release.
+
+### Highlights
+
+- surfaced concrete backend page-admin routes per discovered page type so page-specific admin views are easier to inspect and test
+- cached page-type admin expansion work per discovery run while tightening frontend skip-prefix normalization for django-admin routes
+- added discovery workflow reference diagrams and related contributor docs to make the discovery pipeline easier to understand and extend
+
 ## 0.1.0a4 - 2026-03-25
 
 Fourth public alpha release.
