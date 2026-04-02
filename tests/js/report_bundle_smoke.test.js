@@ -34,6 +34,7 @@ describe("report bundle", () => {
           namespace: "wagtailadmin",
           has_parameters: false,
           view_name: "demo.View",
+          page_type: "",
           is_testable: true,
           skip_reason: "",
         },
@@ -70,6 +71,7 @@ describe("report bundle", () => {
           namespace: "wagtailadmin",
           has_parameters: false,
           view_name: "demo.View",
+          page_type: "",
           is_testable: true,
           skip_reason: "",
         },
@@ -105,6 +107,7 @@ describe("report bundle", () => {
           namespace: "wagtailadmin",
           has_parameters: false,
           view_name: "demo.View",
+          page_type: "",
           is_testable: true,
           skip_reason: "",
         },
@@ -160,6 +163,43 @@ describe("report bundle", () => {
     );
     expect(document.querySelector(".open-btn").getAttribute("href")).toBe(
       "/events/year/2025/",
+    );
+  });
+
+  test("backend rows render the page type column", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/backend-urls/",
+      reportKind: "backend",
+    });
+
+    stubFetchResponse({
+      count: 1,
+      metadata: {
+        total_count: 1,
+        testable_count: 1,
+        untestable_count: 0,
+      },
+      urls: [
+        {
+          route: "admin/pages/<int:page_id>/edit/",
+          resolved_route: "admin/pages/3/edit/",
+          name: "edit",
+          namespace: "wagtailadmin_pages",
+          has_parameters: true,
+          view_name: "demo.View",
+          page_type: "core.StandardPage",
+          is_testable: true,
+          skip_reason: "",
+        },
+      ],
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(document.querySelectorAll("tbody td")[3].textContent).toBe(
+      "core.StandardPage",
     );
   });
 

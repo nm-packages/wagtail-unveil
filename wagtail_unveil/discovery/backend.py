@@ -3,7 +3,14 @@ from dataclasses import dataclass
 
 from django.urls import get_resolver
 
-from wagtail_unveil.discovery.backend_resolution import resolve_parameterized_url
+from wagtail_unveil.discovery.backend_resolution import (
+    WAGTAILADMIN_PAGE_ADD_SUBPAGE_NAME,
+    WAGTAILADMIN_PAGE_FALLBACK_NAMES,
+    get_add_subpage_parent_page_instances_by_type,
+    get_page_instances_by_type,
+    resolve_parameterized_url,
+    resolve_parameterized_url_with_instance,
+)
 from wagtail_unveil.discovery.utils import (
     clean_regex_route,
     route_has_parameters,
@@ -19,6 +26,7 @@ class BackendURL:
     namespace: str
     has_parameters: bool
     view_name: str
+    page_type: str = ""
     is_testable: bool = True
     skip_reason: str = ""
     resolved_route: str = ""
@@ -223,10 +231,67 @@ def _finalize_admin_route(normalized_route, classification):
         namespace=normalized_route.namespace,
         has_parameters=normalized_route.has_parameters,
         view_name=normalized_route.view_name,
+        page_type="",
         is_testable=is_testable,
         skip_reason=skip_reason,
         resolved_route=resolved_route,
     )
+
+
+def _iter_page_backed_admin_urls(
+    normalized_route,
+    *,
+    page_instances_by_type,
+    add_subpage_parent_instances_by_type,
+):
+    """Return a list of per-page-type BackendURL rows for safe Wagtail page routes."""
+    if normalized_route.namespace != "wagtailadmin_pages" or normalized_route.route.count("<") != 1:
+        return []
+
+    if normalized_route.name == WAGTAILADMIN_PAGE_ADD_SUBPAGE_NAME:
+        instances = add_subpage_parent_instances_by_type
+    elif normalized_route.name in WAGTAILADMIN_PAGE_FALLBACK_NAMES:
+        instances = page_instances_by_type
+    else:
+        return []
+
+    results = []
+    for instance in instances:
+        resolution = resolve_parameterized_url_with_instance(
+            normalized_route.namespace,
+            normalized_route.name,
+            instance,
+        )
+        if resolution.resolved:
+            resolved_route = resolution.resolved_route
+            is_testable = True
+            skip_reason = ""
+        else:
+            resolved_route = ""
+            is_testable = False
+            skip_reason = "URL requires parameters"
+
+        if is_testable:
+            method_skip_reason = _get_method_skip_reason(normalized_route.callback)
+            if method_skip_reason:
+                is_testable = False
+                skip_reason = method_skip_reason
+
+        results.append(
+            BackendURL(
+                route=normalized_route.route,
+                name=normalized_route.name,
+                namespace=normalized_route.namespace,
+                has_parameters=normalized_route.has_parameters,
+                view_name=normalized_route.view_name,
+                page_type=getattr(instance.specific_class, "_meta", instance._meta).label,
+                is_testable=is_testable,
+                skip_reason=skip_reason,
+                resolved_route=resolved_route,
+            )
+        )
+
+    return results
 
 
 def get_admin_urls():
@@ -238,6 +303,8 @@ def get_admin_urls():
     images_serve_available = _is_url_registered("wagtailimages_serve")
     docs_serve_available = _is_url_registered("wagtaildocs_serve")
     skip_prefixes = get_skip_url_prefixes()
+    page_instances_by_type = get_page_instances_by_type()
+    add_subpage_parent_instances_by_type = get_add_subpage_parent_page_instances_by_type()
     results = []
     for discovered_route in _discover_admin_routes():
         normalized_route = _normalize_admin_route(discovered_route, skip_prefixes)
@@ -248,5 +315,13 @@ def get_admin_urls():
             docs_serve_available=docs_serve_available,
             images_serve_available=images_serve_available,
         )
+        page_backed_urls = _iter_page_backed_admin_urls(
+            normalized_route,
+            page_instances_by_type=page_instances_by_type,
+            add_subpage_parent_instances_by_type=add_subpage_parent_instances_by_type,
+        )
+        if page_backed_urls:
+            results.extend(page_backed_urls)
+            continue
         results.append(_finalize_admin_route(normalized_route, classification))
     return results

@@ -117,6 +117,13 @@ class TestSkipUrlPrefixesFilter(TestCase):
         search_urls = [u for u in resolver_urls if u.url.startswith("/search")]
         self.assertEqual(search_urls, [])
 
+    @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["django-admin/"])
+    def test_skip_prefix_excludes_path_mounted_django_admin_url(self):
+        urls = get_frontend_urls()
+        resolver_urls = [u for u in urls if u.source == "resolver"]
+        django_admin_urls = [u for u in resolver_urls if u.url.startswith("/django-admin/")]
+        self.assertEqual(django_admin_urls, [])
+
     @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["events/past/"])
     def test_skip_prefix_excludes_routable_sub_url(self):
         from wagtail.models import Page

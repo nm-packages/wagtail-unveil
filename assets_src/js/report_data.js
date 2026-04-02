@@ -134,6 +134,7 @@
     row.appendChild(createTextCell(routeLabel, "route"));
     row.appendChild(createTextCell(item.name));
     row.appendChild(createTextCell(item.namespace));
+    row.appendChild(createTextCell(item.page_type));
     row.appendChild(createTextCell(item.view_name, "view", "small"));
     row.appendChild(createActionCell(item, "backend"));
     row.appendChild(createStatusCell(item));
@@ -158,12 +159,12 @@
     return row;
   }
 
-  function createEmptyRow(reportKind) {
+  function createEmptyRow() {
     var row = document.createElement("tr");
     var cell = document.createElement("td");
 
     row.className = "empty-row";
-    cell.setAttribute("colspan", reportKind === "backend" ? "6" : "7");
+    cell.setAttribute("colspan", "7");
     cell.textContent = "No URLs found.";
     row.appendChild(cell);
     return row;
@@ -175,7 +176,7 @@
     tbody.innerHTML = "";
 
     if (!urls.length) {
-      tbody.appendChild(createEmptyRow(reportKind));
+      tbody.appendChild(createEmptyRow());
       return;
     }
 

@@ -33,6 +33,7 @@ class TestGetAdminUrls(TestCase):
         self.assertIsInstance(url.namespace, str)
         self.assertIsInstance(url.has_parameters, bool)
         self.assertIsInstance(url.view_name, str)
+        self.assertIsInstance(url.page_type, str)
 
     def test_known_url_present(self):
         names = {url.name for url in self.urls}
@@ -76,6 +77,20 @@ class TestGetAdminUrls(TestCase):
         self.assertEqual(len(home), 1)
         self.assertTrue(home[0].is_testable)
         self.assertEqual(home[0].skip_reason, "")
+
+    def test_page_instance_helpers_are_loaded_once_per_discovery_run(self):
+        with mock.patch(
+            "wagtail_unveil.discovery.backend.get_page_instances_by_type",
+            return_value=[],
+        ) as get_page_instances_by_type:
+            with mock.patch(
+                "wagtail_unveil.discovery.backend.get_add_subpage_parent_page_instances_by_type",
+                return_value=[],
+            ) as get_add_subpage_parent_page_instances_by_type:
+                get_admin_urls()
+
+        get_page_instances_by_type.assert_called_once_with()
+        get_add_subpage_parent_page_instances_by_type.assert_called_once_with()
 
 
 class TestCleanRegexRoute(TestCase):

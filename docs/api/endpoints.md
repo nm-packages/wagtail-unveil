@@ -65,6 +65,7 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
       "namespace": "wagtailadmin",
       "has_parameters": false,
       "view_name": "wagtail.admin.views.home.HomeView",
+      "page_type": "",
       "is_testable": true,
       "skip_reason": "",
       "resolved_route": ""
@@ -97,6 +98,7 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
 | `namespace` | The Django namespace for the route |
 | `has_parameters` | Whether the discovered route contains path parameters |
 | `view_name` | The dotted Python view path when available |
+| `page_type` | The concrete `app_label.ModelName` for page-backed admin rows, otherwise an empty string |
 | `is_testable` | Whether the route can be directly tested with a GET request |
 | `skip_reason` | Empty string for testable routes, otherwise the reason the route is not directly testable |
 | `resolved_route` | A concrete resolved admin path when parameter resolution succeeded, otherwise an empty string |

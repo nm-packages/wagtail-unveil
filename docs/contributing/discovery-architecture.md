@@ -4,6 +4,9 @@
 
 This document explains how `wagtail_unveil` discovers URLs, normalizes route strings, classifies URLs as testable or untestable, resolves supported parameterized admin routes, and emits the final public dataclasses. It is intended for contributors and coding agents working on discovery behavior.
 
+For a maintainer-facing visual map of the backend and frontend pipelines, see
+[discovery-workflows.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-workflows.md).
+
 Primary implementation files:
 
 - `wagtail_unveil/discovery/backend.py`
@@ -76,20 +79,24 @@ If you are using `wagtail-unveil` in your own project and want to extend URL res
    - override resolvers can replace an earlier instance choice or intentionally fail closed
 5. The currently registered built-in resolver rules cover:
    - `wagtailforms` falls back to the first live form page instance when no earlier instance exists
-   - `wagtailadmin_pages` falls back to the first non-root page instance for an explicit safe allowlist of single-parameter page routes such as edit, delete, copy, move, privacy, and revisions index
-   - `wagtailadmin_pages:add_subpage` resolves only when a non-root parent page exists whose concrete type exposes at least one creatable child model that can be created at that specific parent page
    - `wagtailadmin_workflows` usage views override earlier model-derived instances with the first `Workflow` instance, and fail closed if no workflow exists
    - `wagtailadmin_workflows:tasks` resolves the GET-safe task routes `edit_task` and `task_chosen` from the first available `Task` instance
-   - third-party admin packages such as `wagtail-modeladmin` are expected to register their own project-level resolvers rather than relying on built-in package support
 6. Reverse the URL with `_reverse_with_instance()` using the selected instance.
 7. If no instance can be selected, keep the route visible but untestable.
+
+The `wagtailadmin_pages` per-type behavior does not come from `get_registered_admin_instance_resolvers()`. It is handled only by a core backend discovery special-case in `wagtail_unveil/discovery/backend.py`, where `_iter_page_backed_admin_urls()` expands:
+
+- an explicit safe allowlist of single-parameter page routes such as edit, delete, copy, move, privacy, and revisions index into one backend row per concrete non-root page type, using a representative instance for each type
+- `wagtailadmin_pages:add_subpage` into one backend row per concrete non-root parent page type that exposes at least one creatable child model at that specific parent page
+
+Third-party and other non-core namespace-specific behavior should still use project-level resolver hooks rather than new package-specific branches in core discovery.
 
 `_get_model_from_callback()` still checks callback init kwargs first, then inspects classes exposed on `callback.view_class` and `callback.cls`, including direct `model` attributes plus cached-property and MRO-based variants of `model`. For treebeard-backed models, `_get_instance_for_model()` excludes the root node (`depth=1`) before selecting the first instance.
 
 Internal resolution returns a `_ParameterizedURLResolution` object with `resolved_route`, `resolved`, `method`, `detail`, and `attempts`. This metadata is internal only. It exists to make the fallback order and failure path easier to debug and test. Public JSON responses still expose only the existing `BackendURL` fields.
 
 Resolved URLs are stored in `resolved_route` on `BackendURL`. If reversal fails or no suitable instance exists, the parameterized URL remains in the results but is marked untestable with `URL requires parameters` during final emission rather than during initial classification. Override resolvers can invalidate an earlier candidate instance when the route requires a different model type. If a resolver `matches` or `resolver` callable raises at runtime, discovery records an internal `<label>:error` attempt, logs a warning, and continues with the remaining strategies.
-The built-in `wagtailadmin_pages` resolver is intentionally allowlisted rather than a blanket fallback for every page route so state-dependent routes such as `convert_alias` can remain visible but untestable when a representative page would not produce a valid GET target. `add_subpage` is treated separately and only resolves when a compatible parent page exists, rather than merely any non-root page. The built-in workflow task resolver is also allowlisted to GET-safe routes rather than attempting every single-parameter workflow action view.
+The built-in `wagtailadmin_pages` expansion is intentionally allowlisted rather than a blanket fallback for every page route so state-dependent routes such as `convert_alias` can remain visible but untestable when a representative page would not produce a valid GET target. `add_subpage` is treated separately and only resolves when a compatible parent page exists, rather than merely any non-root page. The built-in workflow task resolver is also allowlisted to GET-safe routes rather than attempting every single-parameter workflow action view.
 
 ### Settings Resolution Nuances
 
@@ -155,10 +162,10 @@ This means routable pages contribute both their base page URL and any additional
 
 1. Walk all URL patterns with `walk_patterns()`.
 2. Exclude routes under `admin/`.
-3. Exclude routes under `django-admin/`.
-4. Exclude routes whose namespace is `wagtail_unveil`.
-5. Apply `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES`.
-6. Normalize the route with `clean_regex_route()`.
+3. Normalize the route with `clean_regex_route()`.
+4. Exclude routes whose normalized path is under `admin/`.
+5. Exclude routes whose namespace is `wagtail_unveil`.
+6. Apply `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES` against the normalized route, which allows projects to exclude mounts such as `django-admin/` consistently for both `path()` and `re_path()`.
 7. Record whether the normalized route contains `<...>` placeholders.
 8. Record whether the normalized route still contains regex groups such as `(`.
 9. Detect supported Wagtail API resolver routes by callback metadata.

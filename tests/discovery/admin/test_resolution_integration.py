@@ -10,6 +10,7 @@ from wagtail.models import Page, Site, Task, Workflow
 
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.backend_resolution import (
+    WAGTAILADMIN_PAGE_FALLBACK_NAMES,
     _get_model_from_callback,
 )
 
@@ -54,6 +55,15 @@ class TestParameterisedURLResolution(TestCase):
         self.user = User.objects.create_user(username="testuser", password="password")
         self.group = Group.objects.create(name="Test group")
         self.page = Page.objects.exclude(depth=1).first()
+        self.page_types = {
+            f"{type(page)._meta.app_label}.{type(page)._meta.object_name}"
+            for page in Page.objects.exclude(depth=1).specific()
+        }
+        self.add_subpage_parent_types = {
+            f"{type(page)._meta.app_label}.{type(page)._meta.object_name}"
+            for page in Page.objects.exclude(depth=1).specific().order_by("path")
+            if any(model.can_create_at(page) for model in type(page).creatable_subpage_models())
+        }
         self.workflow = Workflow.objects.first() or Workflow.objects.create(name="Test workflow")
         self.task = Task.objects.first()
         if self.task is None:
@@ -204,37 +214,32 @@ class TestParameterisedURLResolution(TestCase):
                 self.assertIn(f"/{expected_pks[url.name]}/", url.resolved_route)
 
     def test_safe_wagtail_page_routes_are_testable_with_resolved_routes(self):
-        expected_names = {
-            "edit",
-            "preview_on_edit",
-            "view_draft",
-            "delete",
-            "move",
-            "set_page_position",
-            "copy",
-            "set_privacy",
-            "revisions_index",
-        }
-        page_urls = [u for u in self.urls if u.namespace == "wagtailadmin_pages" and u.name in expected_names]
+        expected_names = set(WAGTAILADMIN_PAGE_FALLBACK_NAMES)
+        self.assertGreater(len(self.page_types), 0)
 
-        self.assertEqual(len(page_urls), len(expected_names))
-        self.assertIsNotNone(self.page)
-        for url in page_urls:
-            with self.subTest(name=url.name):
-                self.assertTrue(url.is_testable, url.route)
-                self.assertEqual(url.skip_reason, "")
-                self.assertTrue(url.resolved_route, url.route)
-                self.assertIn(f"/{self.page.pk}/", url.resolved_route)
+        for name in expected_names:
+            with self.subTest(name=name):
+                page_urls = [u for u in self.urls if u.namespace == "wagtailadmin_pages" and u.name == name]
+                self.assertEqual(len(page_urls), len(self.page_types))
+                self.assertEqual({u.page_type for u in page_urls}, self.page_types)
+                self.assertEqual(len({u.resolved_route for u in page_urls}), len(page_urls))
+                for url in page_urls:
+                    self.assertTrue(url.is_testable, url.route)
+                    self.assertEqual(url.skip_reason, "")
+                    self.assertTrue(url.resolved_route, url.route)
+                    self.assertTrue(url.page_type)
 
     def test_add_subpage_route_is_testable_with_compatible_parent_page(self):
         add_subpage_urls = [u for u in self.urls if u.namespace == "wagtailadmin_pages" and u.name == "add_subpage"]
 
-        self.assertEqual(len(add_subpage_urls), 1)
         self.assertIsNotNone(self.add_subpage_parent)
-        self.assertTrue(add_subpage_urls[0].is_testable, add_subpage_urls[0].route)
-        self.assertEqual(add_subpage_urls[0].skip_reason, "")
-        self.assertTrue(add_subpage_urls[0].resolved_route, add_subpage_urls[0].route)
-        self.assertIn(f"/{self.add_subpage_parent.pk}/", add_subpage_urls[0].resolved_route)
+        self.assertEqual(len(add_subpage_urls), len(self.add_subpage_parent_types))
+        self.assertEqual({u.page_type for u in add_subpage_urls}, self.add_subpage_parent_types)
+        for url in add_subpage_urls:
+            self.assertTrue(url.is_testable, url.route)
+            self.assertEqual(url.skip_reason, "")
+            self.assertTrue(url.resolved_route, url.route)
+            self.assertTrue(url.page_type)
 
     def test_convert_alias_page_route_remains_untestable(self):
         convert_alias_urls = [u for u in self.urls if u.namespace == "wagtailadmin_pages" and u.name == "convert_alias"]
@@ -244,8 +249,14 @@ class TestParameterisedURLResolution(TestCase):
         self.assertEqual(convert_alias_urls[0].skip_reason, "URL requires parameters")
         self.assertEqual(convert_alias_urls[0].resolved_route, "")
 
-    @mock.patch("wagtail_unveil.discovery.backend_resolution.get_add_subpage_parent_page_instance", return_value=None)
-    def test_add_subpage_route_remains_untestable_without_compatible_parent_page(self, _get_parent_page):
+    @mock.patch("wagtail_unveil.discovery.backend.resolve_parameterized_url")
+    @mock.patch("wagtail_unveil.discovery.backend.get_add_subpage_parent_page_instances_by_type", return_value=[])
+    def test_add_subpage_route_remains_untestable_without_compatible_parent_page(
+        self,
+        _get_parent_pages,
+        mock_resolve_parameterized_url,
+    ):
+        mock_resolve_parameterized_url.return_value = mock.Mock(resolved=False, resolved_route="")
         urls = get_admin_urls()
         add_subpage_urls = [u for u in urls if u.namespace == "wagtailadmin_pages" and u.name == "add_subpage"]
 

@@ -65,6 +65,7 @@ def _serialize_backend_url(url):
         "namespace": url.namespace,
         "has_parameters": url.has_parameters,
         "view_name": url.view_name,
+        "page_type": url.page_type,
         "is_testable": url.is_testable,
         "skip_reason": url.skip_reason,
         "resolved_route": url.resolved_route,
