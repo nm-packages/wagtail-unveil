@@ -43,8 +43,8 @@ The GitHub repository and workflow identity must match exactly, or publish will 
 8. Confirm `.github/workflows/release.yml` succeeds and the version appears on PyPI.
 
 For local sandbox/test command workflows before a release, use:
-- [`development.md`](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/development.md) for canonical developer workflow and quickstart commands
-- [`../../AGENTS.md`](https://github.com/nm-packages/wagtail-unveil/blob/main/AGENTS.md) for canonical contributor command/reference guidance
+- [`development.md`](development.md) for canonical developer workflow and quickstart commands
+- [`../../AGENTS.md`](../../AGENTS.md) for canonical contributor command/reference guidance
 
 Examples:
 

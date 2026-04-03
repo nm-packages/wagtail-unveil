@@ -2,13 +2,13 @@
 
 ## Setup
 
-Add the URLs to your project's `urls.py` (see [Installation](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/getting-started/installation.md)):
+Add the URLs to your project's `urls.py` (see [Installation](../getting-started/installation.md)):
 
 ```python
 path("unveil/", include("wagtail_unveil.urls")),
 ```
 
-Then set `WAGTAIL_UNVEIL_API_KEY` (see [Settings Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md#wagtail_unveil_api_key)).
+Then set `WAGTAIL_UNVEIL_API_KEY` (see [Settings Reference](../configuration/settings-reference.md#wagtail_unveil_api_key)).
 
 ## Authentication
 
@@ -209,10 +209,10 @@ Deprecated API versions return additional response headers:
 
 Versioned endpoints are explicit and can run in parallel (for example `v1` and `v2`). The built-in HTML reports always call the latest stable version.
 
-For the full lifecycle policy, breaking-change criteria, and version bump workflow, see [contributing/api-versioning.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/api-versioning.md).
+For the full lifecycle policy, breaking-change criteria, and version bump workflow, see [contributing/api-versioning.md](../contributing/api-versioning.md).
 
 ## Related
 
-- [Configuration](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md) — API key and discovery settings
-- [Features](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/index.md) — HTML report counterparts
-- [API Reference Index](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/api/index.md) — Back to section overview
+- [Configuration](../configuration/settings-reference.md) — API key and discovery settings
+- [Features](../features/index.md) — HTML report counterparts
+- [API Reference Index](index.md) — Back to section overview

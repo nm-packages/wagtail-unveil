@@ -34,8 +34,8 @@ These remain visible in the report with a reason. Use the Hide Untestable toggle
 
 ## Related
 
-- [Frontend URLs Report](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/frontend-urls-report.md) — Test frontend page and resolver URLs
-- [Settings Page](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/settings-page.md) — View resolved URL paths and diagnostics
-- [Configuration](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md) — Exclude URL prefixes from discovery
-- [API Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/api/endpoints.md) — Query backend URLs via the JSON API
-- [Features Index](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/index.md) — Back to section overview
+- [Frontend URLs Report](frontend-urls-report.md) — Test frontend page and resolver URLs
+- [Settings Page](settings-page.md) — View resolved URL paths and diagnostics
+- [Configuration](../configuration/settings-reference.md) — Exclude URL prefixes from discovery
+- [API Reference](../api/endpoints.md) — Query backend URLs via the JSON API
+- [Features Index](index.md) — Back to section overview

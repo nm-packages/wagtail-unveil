@@ -9,7 +9,7 @@ Read this page if you need the canonical contributor reference for how discovery
 This document explains how `wagtail_unveil` discovers URLs, normalizes route strings, classifies URLs as testable or untestable, resolves supported parameterized admin routes, and emits the final public dataclasses. It is intended for contributors and coding agents working on discovery behavior.
 
 For a maintainer-facing visual companion to the authoritative rules here, see
-[discovery-workflows.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-workflows.md).
+[discovery-workflows.md](discovery-workflows.md).
 
 Primary implementation files:
 
@@ -69,7 +69,7 @@ There are also namespace-specific readiness checks:
 ## Parameter Resolution Strategy
 
 Backend parameter resolution lives in `wagtail_unveil/discovery/backend_resolution.py`.
-If you are using `wagtail-unveil` in your own project and want to extend URL resolution for a package such as `wagtail-modeladmin`, start with the user-facing recipe: [Add Custom Admin URL Resolvers](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/recipes/custom-admin-url-resolvers.md).
+If you are using `wagtail-unveil` in your own project and want to extend URL resolution for a package such as `wagtail-modeladmin`, start with the user-facing recipe: [Add Custom Admin URL Resolvers](../recipes/custom-admin-url-resolvers.md).
 `resolve_parameterized_url()` attempts to turn a parameterized admin route into a real path that can be tested. It follows an explicit strategy pipeline:
 
 1. If the namespace is `wagtailsettings`, delegate to `_resolve_settings_url()` and stop there.

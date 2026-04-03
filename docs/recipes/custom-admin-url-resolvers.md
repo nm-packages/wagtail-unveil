@@ -117,6 +117,6 @@ You do not need it for the `wagtail-modeladmin` example above.
 
 ## Related
 
-- [Recipes](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/recipes/index.md) — Back to recipe list
-- [Backend URLs Report](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/backend-urls-report.md) — See how resolved admin URLs are presented
-- [Discovery Architecture](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-architecture.md) — Contributor-focused internals for the resolution pipeline
+- [Recipes](index.md) — Back to recipe list
+- [Backend URLs Report](../features/backend-urls-report.md) — See how resolved admin URLs are presented
+- [Discovery Architecture](../contributing/discovery-architecture.md) — Contributor-focused internals for the resolution pipeline
