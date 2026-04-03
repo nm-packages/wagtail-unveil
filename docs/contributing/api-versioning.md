@@ -1,5 +1,9 @@
 # API Versioning and Lifecycle Guide
 
+## Read This If...
+
+Read this page if you are changing JSON API behavior and need the canonical policy for deciding whether a new API version is required.
+
 This is the canonical contributor guide for JSON API versioning and lifecycle policy in `wagtail-unveil`.
 Use this document when deciding whether a change requires a new API version and when implementing/deprecating versions.
 

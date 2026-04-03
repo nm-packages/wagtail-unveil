@@ -2,6 +2,10 @@
 
 This guide is for contributors working in this repository (sandbox + tests). It is not part of the public package interface.
 
+## Read This If...
+
+Read this page first if you are setting up the repo, running the sandbox, or looking for the canonical contributor workflow and CI-aligned commands.
+
 ## Local Setup
 
 ```bash
@@ -78,7 +82,7 @@ When changing contributor commands or Make targets:
 - User-facing package overview: [../../README.md](https://github.com/nm-packages/wagtail-unveil/blob/main/README.md)
 - Coding conventions: [../../CONVENTIONS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/CONVENTIONS.md)
 - Agent project guidance: [../../AGENTS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/AGENTS.md)
-- Documentation index: [../index.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/index.md)
+- Documentation hub: [../index.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/index.md)
 - Frontend assets: [frontend-assets.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/frontend-assets.md)
 - API lifecycle/versioning: [api-versioning.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/api-versioning.md)
 - Discovery internals: [discovery-architecture.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-architecture.md)

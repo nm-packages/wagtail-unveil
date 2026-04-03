@@ -15,7 +15,8 @@ This file is the canonical guidance for coding agents working in this repository
 
 ## Docs Map
 
-- `README.md` — user-facing package overview, install, quickstart, and key configuration
+- `README.md` — user-facing package overview and minimal quickstart
+- `docs/index.md` — canonical documentation hub for users, contributors, and maintainers
 - `docs/contributing/development.md` — human contributor setup, day-to-day workflow, and CI-aligned dev commands
 - `AGENTS.md` files — canonical agent-facing guidance and documentation contract
 

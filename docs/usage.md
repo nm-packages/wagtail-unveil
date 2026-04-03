@@ -1,8 +1,8 @@
 # Usage Reference
 
-> The usage reference has been reorganised into intent-driven sections. Please update any bookmarks.
+The usage reference has moved into the main documentation sections below; please update any bookmarks.
 
-## New Locations
+## Where To Go Instead
 
 | Topic | New Location |
 |---|---|
@@ -14,4 +14,4 @@
 | Settings diagnostic page | [features/settings-page.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/settings-page.md) |
 | Dashboard panel | [features/dashboard-panel.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/dashboard-panel.md) |
 
-See the [documentation index](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/index.md) for the full overview.
+For the canonical docs entry point, see the [documentation hub](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/index.md).

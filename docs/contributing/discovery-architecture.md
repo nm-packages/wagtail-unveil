@@ -1,10 +1,14 @@
 # Discovery and Resolution Architecture
 
+## Read This If...
+
+Read this page if you need the canonical contributor reference for how discovery, normalization, classification, and parameter resolution work.
+
 ## Purpose
 
 This document explains how `wagtail_unveil` discovers URLs, normalizes route strings, classifies URLs as testable or untestable, resolves supported parameterized admin routes, and emits the final public dataclasses. It is intended for contributors and coding agents working on discovery behavior.
 
-For a maintainer-facing visual map of the backend and frontend pipelines, see
+For a maintainer-facing visual companion to the authoritative rules here, see
 [discovery-workflows.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-workflows.md).
 
 Primary implementation files:
