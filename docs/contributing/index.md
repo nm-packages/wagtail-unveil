@@ -26,6 +26,6 @@ make coverage       # run tests with coverage
 
 ## Related
 
-- [AGENTS.md](../../AGENTS.md) — Agent-facing project guidance
-- [CONVENTIONS.md](../../CONVENTIONS.md) — Coding standards and patterns
+- [AGENTS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/AGENTS.md) — Agent-facing project guidance
+- [CONVENTIONS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/CONVENTIONS.md) — Coding standards and patterns
 - [Documentation Hub](../index.md) — Canonical top-level documentation entry point

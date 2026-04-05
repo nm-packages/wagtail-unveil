@@ -23,7 +23,7 @@ It exposes discovery through:
 
 ## Quick Start
 
-Canonical documentation hub: [docs/index.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/index.md)
+Canonical documentation hub: [wagtail-unveil documentation](https://nm-packages.github.io/wagtail-unveil/)
 
 ```bash
 pip install wagtail-unveil==0.1.0a5
@@ -60,7 +60,7 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/frontend-urls/
 ```
 
-For installation details, configuration, API usage, reports, and extension recipes, use the [documentation hub](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/index.md).
+For installation details, configuration, API usage, reports, and extension recipes, use the [documentation hub](https://nm-packages.github.io/wagtail-unveil/).
 
 ## Compatibility
 
@@ -70,13 +70,13 @@ For installation details, configuration, API usage, reports, and extension recip
 
 ## Documentation
 
-- Documentation hub: [docs/index.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/index.md)
-- Installation and setup: [docs/getting-started/installation.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/getting-started/installation.md)
-- Settings and API key configuration: [docs/configuration/settings-reference.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md)
-- Feature guides: [docs/features/index.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/index.md)
-- JSON API reference: [docs/api/endpoints.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/api/endpoints.md)
-- Recipes: [docs/recipes/index.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/recipes/index.md)
-- Contributor docs: [docs/contributing/index.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/index.md)
+- Documentation hub: [wagtail-unveil docs](https://nm-packages.github.io/wagtail-unveil/)
+- Installation and setup: [Getting Started](https://nm-packages.github.io/wagtail-unveil/getting-started/installation/)
+- Settings and API key configuration: [Settings Reference](https://nm-packages.github.io/wagtail-unveil/configuration/settings-reference/)
+- Feature guides: [Features](https://nm-packages.github.io/wagtail-unveil/features/)
+- JSON API reference: [API Reference](https://nm-packages.github.io/wagtail-unveil/api/endpoints/)
+- Recipes: [Recipes](https://nm-packages.github.io/wagtail-unveil/recipes/)
+- Contributor docs: [Contributing](https://nm-packages.github.io/wagtail-unveil/contributing/)
 
 ## License
 

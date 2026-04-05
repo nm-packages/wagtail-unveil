@@ -1,0 +1,67 @@
+site_name: wagtail-unveil
+site_description: Discover and test every URL in your Wagtail site.
+site_url: https://nm-packages.github.io/wagtail-unveil/
+repo_url: https://github.com/nm-packages/wagtail-unveil
+repo_name: nm-packages/wagtail-unveil
+edit_uri: edit/main/docs/
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  features:
+    - content.action.edit
+    - content.action.view
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.share
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra_javascript:
+  - https://unpkg.com/mermaid@11/dist/mermaid.min.js
+  - javascripts/mermaid.js
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Overview: getting-started/index.md
+      - Installation: getting-started/installation.md
+  - Features:
+      - Overview: features/index.md
+      - Backend URLs Report: features/backend-urls-report.md
+      - Frontend URLs Report: features/frontend-urls-report.md
+      - Settings Page: features/settings-page.md
+      - Dashboard Panel: features/dashboard-panel.md
+  - Configuration:
+      - Overview: configuration/index.md
+      - Settings Reference: configuration/settings-reference.md
+  - API Reference:
+      - Overview: api/index.md
+      - Endpoints: api/endpoints.md
+  - Recipes:
+      - Overview: recipes/index.md
+      - Add Custom Admin URL Resolvers: recipes/custom-admin-url-resolvers.md
+  - Contributing:
+      - Overview: contributing/index.md
+      - Development Guide: contributing/development.md
+      - API Versioning: contributing/api-versioning.md
+      - Discovery Architecture: contributing/discovery-architecture.md
+      - Discovery Workflow Visual Reference: contributing/discovery-workflows.md
+      - Frontend Assets: contributing/frontend-assets.md
+      - Releasing: contributing/releasing.md

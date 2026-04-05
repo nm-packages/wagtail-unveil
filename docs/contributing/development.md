@@ -53,6 +53,13 @@ make lint-assets
 make lint-assets-fix
 ```
 
+HTML documentation site:
+
+```bash
+make docs-build
+make docs-serve
+```
+
 Other useful targets:
 
 ```bash
@@ -66,7 +73,7 @@ make pre-commit
 - Pull requests run lint, JS checks, coverage, and smoke tox jobs.
 - The full tox matrix runs on pushes to `main`, manual dispatch, and the weekly scheduled CI run.
 
-See `.github/workflows/ci.yml` for exact job definitions.
+See `.github/workflows/ci.yml` for exact job definitions. The HTML docs site is also validated in CI and deployed from `main` via `.github/workflows/docs.yml`.
 
 ## Documentation Maintenance
 
@@ -79,9 +86,9 @@ When changing contributor commands or Make targets:
 
 ## Related Docs
 
-- User-facing package overview: [../../README.md](../../README.md)
-- Coding conventions: [../../CONVENTIONS.md](../../CONVENTIONS.md)
-- Agent project guidance: [../../AGENTS.md](../../AGENTS.md)
+- User-facing package overview: [README.md](https://github.com/nm-packages/wagtail-unveil/blob/main/README.md)
+- Coding conventions: [CONVENTIONS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/CONVENTIONS.md)
+- Agent project guidance: [AGENTS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/AGENTS.md)
 - Documentation hub: [../index.md](../index.md)
 - Frontend assets: [frontend-assets.md](frontend-assets.md)
 - API lifecycle/versioning: [api-versioning.md](api-versioning.md)

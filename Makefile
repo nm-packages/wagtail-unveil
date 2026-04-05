@@ -2,7 +2,7 @@ UV = uv
 RUN = $(UV) run --env-file .env
 MANAGE = $(RUN) django-admin
 
-.PHONY: help setup env install migrate superuser sample-data runserver run test test-js build-assets tox tox-smoke lint lint-fix lint-assets lint-assets-fix makemigrations pre-commit coverage coverage-html clean
+.PHONY: help setup env install migrate superuser sample-data runserver run test test-js build-assets docs-build docs-serve tox tox-smoke lint lint-fix lint-assets lint-assets-fix makemigrations pre-commit coverage coverage-html clean
 
 help:
 	@echo "Usage: make <target>"
@@ -14,6 +14,8 @@ help:
 	@echo "  test            Run package tests"
 	@echo "  test-js         Run JavaScript report tests"
 	@echo "  build-assets    Build report frontend assets (JavaScript + CSS)"
+	@echo "  docs-build      Build the HTML documentation site"
+	@echo "  docs-serve      Run the HTML documentation site locally"
 	@echo "  tox             Run tests across all Python/Django/Wagtail versions"
 	@echo "  tox-smoke       Run the fast smoke tox subset used for PR CI"
 	@echo "  lint            Run ruff check"
@@ -57,6 +59,12 @@ test-js:
 
 build-assets:
 	npm run build:assets
+
+docs-build:
+	$(UV) run --group docs mkdocs build --strict
+
+docs-serve:
+	$(UV) run --group docs mkdocs serve
 
 tox:
 	$(UV) run tox

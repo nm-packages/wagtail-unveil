@@ -44,7 +44,7 @@ The GitHub repository and workflow identity must match exactly, or publish will 
 
 For local sandbox/test command workflows before a release, use:
 - [`development.md`](development.md) for canonical developer workflow and quickstart commands
-- [`../../AGENTS.md`](../../AGENTS.md) for canonical contributor command/reference guidance
+- [`AGENTS.md`](https://github.com/nm-packages/wagtail-unveil/blob/main/AGENTS.md) for canonical contributor command/reference guidance
 
 Examples:
 

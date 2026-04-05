@@ -32,6 +32,8 @@ make runserver       # start the sandbox dev server
 make test            # run package tests
 make test-js         # run JavaScript report tests
 make build-assets    # build report frontend assets (JavaScript + CSS)
+make docs-build      # build the HTML documentation site
+make docs-serve      # run the HTML documentation site locally
 make lint-assets     # Biome frontend asset lint/format checks (JavaScript + CSS)
 make lint-assets-fix # Biome frontend asset lint/format with autofix
 make tox             # run the version matrix
@@ -51,6 +53,8 @@ uv run --env-file .env django-admin migrate
 uv run --env-file .env django-admin runserver
 uv run --env-file .env django-admin test tests
 uv run ruff check .
+uv run --group docs mkdocs build --strict
+uv run --group docs mkdocs serve
 uv run tox
 uv run tox -m smoke
 npm run lint:assets
@@ -68,6 +72,7 @@ uvx twine check /tmp/wagtail-unveil-dist-check/*
 
 Maintainer release publishing is CI-driven from GitHub Releases via `.github/workflows/release.yml`.
 Use `docs/contributing/releasing.md` as the canonical release runbook.
+Use `mkdocs.yml` as the canonical HTML docs site configuration.
 
 ## Architecture Summary
 
