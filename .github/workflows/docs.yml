@@ -30,6 +30,8 @@ jobs:
 
       - run: uv run --group docs mkdocs build --strict
 
+      - run: touch site/.nojekyll
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site/
