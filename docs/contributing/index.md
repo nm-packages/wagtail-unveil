@@ -4,11 +4,11 @@ Guidance for contributors and maintainers working in this repository.
 
 ## Start Here
 
-Read the [Development Guide](development.md) first if you are setting up the repo or looking for the standard contributor workflow.
+Read the [Development Guide](development.md) first if you are setting up the repo, looking for the standard contributor workflow, or need the sandbox usage and local debugging guide for feature work.
 
 ## Choose The Right Page
 
-- [Development Guide](development.md) — Read this if you need the canonical contributor workflow: local setup, validation commands, and CI-aligned day-to-day development.
+- [Development Guide](development.md) — Read this if you need the canonical contributor workflow: local setup, sandbox usage, debugging/report URLs, validation commands, and CI-aligned day-to-day development.
 - [API Versioning](api-versioning.md) — Read this if you are changing JSON API behavior and need the canonical lifecycle and version-bump policy.
 - [Discovery Architecture](discovery-architecture.md) — Read this if you need the canonical reference for discovery, normalization, classification, and parameter resolution behavior.
 - [Discovery Workflow Visual Reference](discovery-workflows.md) — Read this if you want a visual companion to the discovery architecture document before or while reading the authoritative rules.

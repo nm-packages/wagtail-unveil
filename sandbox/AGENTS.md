@@ -1,12 +1,12 @@
 # AGENTS.md
 
-This file contains sandbox-specific guidance for the example Wagtail project.
+This file contains sandbox-specific guidance for the local Wagtail integration project used during contributor development and testing.
 
 ## Purpose
 
-`sandbox/` is a development and testing site for `wagtail_unveil`. It exists to exercise the package against a realistic Wagtail installation.
+`sandbox/` is the local integration environment for `wagtail_unveil`. It exists to exercise the package against a realistic Wagtail installation during feature development, debugging, and fixture-backed verification.
 
-Sandbox-only helpers, including management commands such as `create_sample_data`, are fixture and developer tooling for this example project. They are not part of the distributable `wagtail_unveil` package interface.
+Sandbox-only helpers, including management commands such as `create_sample_data`, are fixture and developer tooling for this project. They are not part of the distributable `wagtail_unveil` package interface.
 
 ## Structure
 
@@ -38,4 +38,4 @@ The sandbox mounts:
 
 `create_sample_data` creates representative objects used by URL discovery tests, including pages, images, documents, redirects, snippets, settings, chooser-backed models, form pages, and routable event pages.
 
-Use sandbox apps to exercise package behavior. Do not move reusable package logic into the sandbox.
+Use sandbox apps, sample data, and local-only routes to exercise package behavior and reproduce issues in a live Wagtail site. Do not move reusable package logic into the sandbox.

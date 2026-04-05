@@ -77,6 +77,7 @@ For installation details, configuration, API usage, reports, and extension recip
 - JSON API reference: [API Reference](https://nm-packages.github.io/wagtail-unveil/api/endpoints/)
 - Recipes: [Recipes](https://nm-packages.github.io/wagtail-unveil/recipes/)
 - Contributor docs: [Contributing](https://nm-packages.github.io/wagtail-unveil/contributing/)
+- Sandbox contributor workflow: [Development Guide](https://nm-packages.github.io/wagtail-unveil/contributing/development/)
 
 ## License
 
