@@ -15,7 +15,8 @@ This file is the canonical guidance for coding agents working in this repository
 
 ## Docs Map
 
-- `README.md` — user-facing package overview, install, quickstart, and key configuration
+- `README.md` — user-facing package overview and minimal quickstart
+- `docs/index.md` — canonical documentation hub for users, contributors, and maintainers
 - `docs/contributing/development.md` — human contributor setup, day-to-day workflow, and CI-aligned dev commands
 - `AGENTS.md` files — canonical agent-facing guidance and documentation contract
 
@@ -25,24 +26,61 @@ These commands are for contributors working in this repository's sandbox and tes
 
 Prefer the `Makefile` targets for standard workflows:
 
+Setup:
+
 ```bash
 make setup           # env, install, migrate, sample data
+make env             # copy .env.example to .env if needed
+make install         # install Python dependencies with uv
+make migrate         # run Django migrations
+make superuser       # create a superuser
+make sample-data     # create sample data
+```
+
+Development:
+
+```bash
 make runserver       # start the sandbox dev server
+make run             # alias for runserver
+make makemigrations  # create package migrations
+```
+
+Validation:
+
+```bash
 make test            # run package tests
 make test-js         # run JavaScript report tests
-make build-assets    # build report frontend assets (JavaScript + CSS)
-make lint-assets     # Biome frontend asset lint/format checks (JavaScript + CSS)
-make lint-assets-fix # Biome frontend asset lint/format with autofix
-make tox             # run the version matrix
-make tox-smoke       # run the fast smoke subset used in PR CI
 make lint            # ruff check
 make lint-fix        # ruff check --fix
+make lint-assets     # Biome frontend asset lint/format checks (JavaScript + CSS)
+make lint-assets-fix # Biome frontend asset lint/format with autofix
 make coverage        # run tests with coverage report
 make coverage-html   # generate HTML coverage report
 make pre-commit      # run all configured hooks
 ```
 
-Equivalent direct commands are also valid:
+Docs:
+
+```bash
+make docs-build      # build the HTML documentation site
+make docs-serve      # run the HTML documentation site locally
+```
+
+Matrix / release checks:
+
+```bash
+make tox             # run the version matrix
+make tox-smoke       # run the fast smoke subset used in PR CI
+make build-assets    # build report frontend assets (JavaScript + CSS)
+```
+
+Cleanup:
+
+```bash
+make clean           # remove db.sqlite3, .env, and media
+```
+
+Equivalent direct commands are also valid for the main workflows:
 
 ```bash
 uv sync
@@ -50,6 +88,8 @@ uv run --env-file .env django-admin migrate
 uv run --env-file .env django-admin runserver
 uv run --env-file .env django-admin test tests
 uv run ruff check .
+uv run --group docs mkdocs build --strict
+uv run --group docs mkdocs serve
 uv run tox
 uv run tox -m smoke
 npm run lint:assets
@@ -67,6 +107,7 @@ uvx twine check /tmp/wagtail-unveil-dist-check/*
 
 Maintainer release publishing is CI-driven from GitHub Releases via `.github/workflows/release.yml`.
 Use `docs/contributing/releasing.md` as the canonical release runbook.
+Use `mkdocs.yml` as the canonical HTML docs site configuration.
 
 ## Architecture Summary
 
@@ -141,6 +182,8 @@ After changing code in `wagtail_unveil/` or `tests/`:
 2. Run `make coverage`
 3. Inspect coverage for touched files and add tests for newly introduced uncovered lines
 4. Update `README.md` and relevant agent guidance files when behavior or structure changes
+
+For notable merged-but-unreleased work, update `CHANGELOG.md` under `## Unreleased` in the same PR. During release prep, convert those notes into the new versioned release entry and leave a fresh `## Unreleased` section in place.
 
 ## Directory-Specific Guidance
 

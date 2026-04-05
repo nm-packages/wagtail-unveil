@@ -2,24 +2,29 @@
 
 Discover and test every URL in your Wagtail site — frontend and admin.
 
-## Quick Links
+This is the canonical documentation hub for `wagtail-unveil`.
 
-| I want to... | Go to |
-|---|---|
-| Install and set up wagtail-unveil | [Getting Started](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/getting-started/index.md) |
-| Use the admin URL report | [Backend URLs Report](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/backend-urls-report.md) |
-| Use the frontend URL report | [Frontend URLs Report](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/frontend-urls-report.md) |
-| View the settings diagnostic page | [Settings Page](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/settings-page.md) |
-| Configure the package | [Settings Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md) |
-| Add custom admin URL resolvers | [Recipe](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/recipes/custom-admin-url-resolvers.md) |
-| Use the JSON API | [API Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/api/endpoints.md) |
-| Contribute to the package | [Contributing](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/index.md) |
+## Use wagtail-unveil
 
-## Sections
+- [Getting Started](getting-started/index.md) — Canonical starting point for installation, quick start, and first-time setup.
+- [Features](features/index.md) — Canonical user-facing guide to reports, the settings page, and the dashboard panel.
+- [Configuration](configuration/index.md) — Canonical reference for package settings and API key configuration.
+- [API Reference](api/index.md) — Canonical reference for versioned JSON API endpoints, auth, and response shape.
+- [Recipes](recipes/index.md) — Task-focused guides for extending `wagtail-unveil` in your own project.
 
-- [Getting Started](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/getting-started/index.md) — Installation, quickstart, and first steps
-- [Features](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/index.md) — URL reports, settings diagnostic page, and dashboard panel
-- [Configuration](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/index.md) — Package settings reference
-- [Recipes](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/recipes/index.md) — Task-focused guides for extending `wagtail-unveil` in your own project
-- [API Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/api/index.md) — JSON API endpoints, authentication, and response shape
-- [Contributing](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/index.md) — Contributor setup, architecture, and release workflow
+## Contribute / maintain
+
+- [Contributing](contributing/index.md) — Canonical contributor routing page for development, architecture, assets, API lifecycle, and release workflow.
+- [Development Guide](contributing/development.md) — Contributor workflow entry point for local setup, validation, and day-to-day commands.
+- [Discovery Architecture](contributing/discovery-architecture.md) — Canonical deep reference for discovery and resolution behavior.
+- [Releasing](contributing/releasing.md) — Canonical maintainer runbook for package releases.
+
+## Reference Map
+
+- `README.md` is a thin package overview and quick-start entry point for repository visitors.
+- `docs/index.md` is the canonical navigation hub for all documentation.
+- Section index pages under `docs/` route readers to the right reference area without duplicating deep content.
+- Contributor docs distinguish canonical references from companion material:
+  - `development.md` is the workflow entry point
+  - `discovery-architecture.md` is authoritative for discovery rules
+  - `discovery-workflows.md` is a visual companion to that architecture guide

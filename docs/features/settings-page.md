@@ -34,7 +34,7 @@ Each value also shows its source: environment variable, Django settings, or pack
 
 ## Related
 
-- [Backend URLs Report](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/backend-urls-report.md) — Test admin URLs
-- [Frontend URLs Report](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/frontend-urls-report.md) — Test frontend URLs
-- [Configuration](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md) — Change the effective settings
-- [Features Index](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/index.md) — Back to section overview
+- [Backend URLs Report](backend-urls-report.md) — Test admin URLs
+- [Frontend URLs Report](frontend-urls-report.md) — Test frontend URLs
+- [Configuration](../configuration/settings-reference.md) — Change the effective settings
+- [Features Index](index.md) — Back to section overview

@@ -2,29 +2,44 @@ UV = uv
 RUN = $(UV) run --env-file .env
 MANAGE = $(RUN) django-admin
 
-.PHONY: help setup env install migrate superuser sample-data runserver run test test-js build-assets tox tox-smoke lint lint-fix lint-assets lint-assets-fix makemigrations pre-commit coverage coverage-html clean
+.PHONY: help setup env install migrate superuser sample-data runserver run test test-js build-assets docs-build docs-serve tox tox-smoke lint lint-fix lint-assets lint-assets-fix makemigrations pre-commit coverage coverage-html clean
 
 help:
 	@echo "Usage: make <target>"
 	@echo ""
-	@echo "Targets:"
+	@echo "Setup:"
 	@echo "  setup           Full dev setup: env, install, migrate, sample-data"
+	@echo "  env             Copy .env.example to .env if needed"
+	@echo "  install         Install Python dependencies with uv"
+	@echo "  migrate         Run Django migrations"
 	@echo "  superuser       Create a superuser"
-	@echo "  runserver       Start the sandbox dev server (alias: run)"
+	@echo "  sample-data     Create sample data"
+	@echo ""
+	@echo "Development:"
+	@echo "  runserver       Start the sandbox dev server"
+	@echo "  run             Alias for runserver"
+	@echo "  makemigrations  Create package migrations"
+	@echo ""
+	@echo "Validation:"
 	@echo "  test            Run package tests"
 	@echo "  test-js         Run JavaScript report tests"
-	@echo "  build-assets    Build report frontend assets (JavaScript + CSS)"
-	@echo "  tox             Run tests across all Python/Django/Wagtail versions"
-	@echo "  tox-smoke       Run the fast smoke tox subset used for PR CI"
 	@echo "  lint            Run ruff check"
 	@echo "  lint-fix        Run ruff check --fix"
 	@echo "  lint-assets     Run Biome frontend asset checks (JavaScript + CSS)"
 	@echo "  lint-assets-fix Run Biome frontend asset checks with --write"
-	@echo "  pre-commit      Run pre-commit hooks on all files"
-	@echo "  makemigrations  Create package migrations"
-	@echo "  sample-data     Create sample data"
 	@echo "  coverage        Run tests with coverage and show terminal report"
 	@echo "  coverage-html   Generate HTML coverage report and open it"
+	@echo "  pre-commit      Run pre-commit hooks on all files"
+	@echo ""
+	@echo "Docs:"
+	@echo "  docs-build      Build the HTML documentation site"
+	@echo "  docs-serve      Run the HTML documentation site locally"
+	@echo ""
+	@echo "Matrix / Release Checks:"
+	@echo "  tox             Run tests across all Python/Django/Wagtail versions"
+	@echo "  tox-smoke       Run the fast smoke tox subset used for PR CI"
+	@echo ""
+	@echo "Cleanup:"
 	@echo "  clean           Remove db.sqlite3, .env, and media"
 
 setup: env install migrate sample-data
@@ -57,6 +72,12 @@ test-js:
 
 build-assets:
 	npm run build:assets
+
+docs-build:
+	$(UV) run --group docs mkdocs build --strict
+
+docs-serve:
+	$(UV) run --group docs mkdocs serve
 
 tox:
 	$(UV) run tox

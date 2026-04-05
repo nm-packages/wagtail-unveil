@@ -41,6 +41,7 @@ dependencies = [
 Homepage = "https://github.com/nm-packages/wagtail-unveil"
 Source = "https://github.com/nm-packages/wagtail-unveil"
 Issues = "https://github.com/nm-packages/wagtail-unveil/issues"
+Documentation = "https://nm-packages.github.io/wagtail-unveil/"
 
 [tool.hatch.build.targets.wheel]
 packages = ["wagtail_unveil"]
@@ -67,6 +68,11 @@ dev = [
     "tox-gh-actions>=3.3.0",
     "tox-uv>=1.29.0",
     "wagtail-modeladmin>=2.2.0",
+]
+docs = [
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.6.0",
+    "pymdown-extensions>=10.0.0",
 ]
 
 [tool.coverage.run]

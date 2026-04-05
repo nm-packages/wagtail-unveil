@@ -66,6 +66,19 @@ jobs:
       - run: npm run build:assets
       - run: git diff --exit-code -- wagtail_unveil/static/wagtail_unveil/js/report.bundle.js wagtail_unveil/static/wagtail_unveil/js/report.bundle.min.js wagtail_unveil/static/wagtail_unveil/css/admin_urls_report.css wagtail_unveil/static/wagtail_unveil/css/admin_urls_report.min.css
 
+  docs-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: astral-sh/setup-uv@v5
+
+      - run: uv run --group docs mkdocs build --strict
+
   python-coverage:
     needs: python-lint
     runs-on: ubuntu-latest

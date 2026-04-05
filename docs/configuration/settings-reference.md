@@ -70,7 +70,7 @@ WAGTAIL_UNVEIL_SKIP_URL_PREFIXES = ["__debug__/", "/silk/"]
 
 ## Related
 
-- [Getting Started](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/getting-started/installation.md) — Initial setup and API key configuration
-- [Frontend URLs Report](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/frontend-urls-report.md) — How page limits affect the report
-- [Settings Page](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/settings-page.md) — View effective values at runtime
-- [Configuration Index](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/index.md) — Back to section overview
+- [Getting Started](../getting-started/installation.md) — Initial setup and API key configuration
+- [Frontend URLs Report](../features/frontend-urls-report.md) — How page limits affect the report
+- [Settings Page](../features/settings-page.md) — View effective values at runtime
+- [Configuration Index](index.md) — Back to section overview

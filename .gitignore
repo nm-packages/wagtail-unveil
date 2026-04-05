@@ -15,6 +15,7 @@ node_modules/
 sdist/
 *.tar.gz
 *.whl
+site/
 
 # Testing / coverage
 .coverage

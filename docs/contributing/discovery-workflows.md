@@ -1,9 +1,11 @@
 # Discovery Workflow Visual Reference
 
+This page is a visual companion to the canonical discovery architecture reference.
+
 ## Purpose
 
 This document is a maintainer-facing visual companion to
-[discovery-architecture.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-architecture.md).
+[discovery-architecture.md](discovery-architecture.md).
 Use this page to understand the shape of the discovery pipelines and where
 classification, resolution, and final dataclass emission happen. Use the
 architecture document for the authoritative rules, special cases, and
@@ -201,7 +203,7 @@ reasons a discovered URL stays visible but is not directly testable are:
 ## Where To Change Behavior
 
 Start with the visual flow above, then use the canonical deep reference:
-[discovery-architecture.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-architecture.md).
+[discovery-architecture.md](discovery-architecture.md).
 
 The main implementation entry points are:
 

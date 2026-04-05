@@ -11,7 +11,7 @@
 
 ![Frontend URLs Report](https://raw.githubusercontent.com/nm-packages/wagtail-unveil/main/docs/features/frontend_report.jpg)
 
-## Why?
+## Overview
 
 Wagtail sites can accumulate many URLs across the admin site and frontend. Broken routes can hide until a user hits an error. **wagtail-unveil** discovers your URLs and helps you verify responses for your apps routes.
 
@@ -23,7 +23,7 @@ It exposes discovery through:
 
 ## Quick Start
 
-Detailed setup docs: [docs/getting-started/installation.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/getting-started/installation.md)
+Canonical documentation hub: [wagtail-unveil documentation](https://nm-packages.github.io/wagtail-unveil/)
 
 ```bash
 pip install wagtail-unveil==0.1.0a5
@@ -55,37 +55,12 @@ urlpatterns = [
 ]
 ```
 
-Try the reports (HTML admin views; requires superuser session and `DEBUG=True`):
-- `/unveil/report/backend-urls/` — [Backend URLs Report docs](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/backend-urls-report.md)
-- `/unveil/report/frontend-urls/` — [Frontend URLs Report docs](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/frontend-urls-report.md)
-- `/unveil/report/settings/` — [Settings Page docs](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/settings-page.md)
-
-You can open the report and settings pages from links in the Wagtail admin [dashboard panel](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/dashboard-panel.md).
-
-The settings page shows the current effective `wagtail-unveil` configuration and related runtime diagnostics.
-Because it is intended for local debugging, it also shows the full `WAGTAIL_UNVEIL_API_KEY` value to superusers while `DEBUG=True`.
-
-Try the API. Detailed endpoint docs: [docs/api/endpoints.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/api/endpoints.md)
-
 ```bash
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/backend-urls/
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/frontend-urls/
 ```
 
-The frontend API keeps canonical paths in the `url` field and, when needed, adds optional `resolved_url` or `query_params` data so the report UI can test parameterised and query-driven routes without rewriting the discovered URL itself.
-
-For admin discovery, `wagtail-unveil` already includes built-in resolvers for common Wagtail namespaces such as form submissions, workflow usage views, and GET-safe workflow task routes. Safe single-parameter page admin routes are listed once per concrete page type present in the database, and `add_subpage` is expanded per compatible parent page type. Projects can extend that behavior further for developer-installed Wagtail packages.
-
-Projects can also extend admin URL parameter resolution for developer-installed Wagtail packages by registering the `register_unveil_admin_instance_resolvers` Wagtail hook and returning `AdminInstanceResolver` objects from `wagtail_unveil.discovery.extensions`. `matches` and `resolver` must both be callables. If a third-party hook raises, returns an invalid shape, or provides a malformed resolver, `wagtail-unveil` logs a warning and skips only that broken contribution so the rest of admin discovery can continue. This is the intended way to support third-party admin packages such as `wagtail-modeladmin` in your own project. For a worked example and the general hook pattern, see [Add Custom Admin URL Resolvers](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/recipes/custom-admin-url-resolvers.md).
-
-## Key Configuration
-
-Most projects only need `WAGTAIL_UNVEIL_API_KEY` from the quickstart to use the JSON API.
-
-- `WAGTAIL_UNVEIL_PAGES_PER_TYPE` — controls how many page instances per type are included in frontend URL discovery; defaults to `1`
-- `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES` — excludes matching URL prefixes from frontend and admin discovery; defaults to `[]`
-
-For full setting details, including environment variable usage, normalization rules, and edge cases, see [docs/configuration/settings-reference.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md).
+For installation details, configuration, API usage, reports, and extension recipes, use the [documentation hub](https://nm-packages.github.io/wagtail-unveil/).
 
 ## Compatibility
 
@@ -95,21 +70,13 @@ For full setting details, including environment variable usage, normalization ru
 
 ## Documentation
 
-- Documentation index: [docs/index.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/index.md)
-- Installation guide: [docs/getting-started/installation.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/getting-started/installation.md)
-- Settings reference: [docs/configuration/settings-reference.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md)
-- Recipes: [docs/recipes/index.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/recipes/index.md)
-- API endpoints: [docs/api/endpoints.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/api/endpoints.md)
-- Report features: [docs/features/index.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/index.md)
-- Contributor/developer guide: [docs/contributing/development.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/development.md)
-- Coding conventions: [CONVENTIONS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/CONVENTIONS.md)
-- API versioning policy: [docs/contributing/api-versioning.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/api-versioning.md)
-- Discovery internals: [docs/contributing/discovery-architecture.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-architecture.md)
-- Discovery workflow diagrams: [docs/contributing/discovery-workflows.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-workflows.md)
-- Frontend asset workflow: [docs/contributing/frontend-assets.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/frontend-assets.md)
-- Changelog: [CHANGELOG.md](https://github.com/nm-packages/wagtail-unveil/blob/main/CHANGELOG.md)
-- Release runbook: [docs/contributing/releasing.md](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/releasing.md)
-- Agent-facing project guidance: [AGENTS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/AGENTS.md)
+- Documentation hub: [wagtail-unveil docs](https://nm-packages.github.io/wagtail-unveil/)
+- Installation and setup: [Getting Started](https://nm-packages.github.io/wagtail-unveil/getting-started/installation/)
+- Settings and API key configuration: [Settings Reference](https://nm-packages.github.io/wagtail-unveil/configuration/settings-reference/)
+- Feature guides: [Features](https://nm-packages.github.io/wagtail-unveil/features/)
+- JSON API reference: [API Reference](https://nm-packages.github.io/wagtail-unveil/api/endpoints/)
+- Recipes: [Recipes](https://nm-packages.github.io/wagtail-unveil/recipes/)
+- Contributor docs: [Contributing](https://nm-packages.github.io/wagtail-unveil/contributing/)
 
 ## License
 

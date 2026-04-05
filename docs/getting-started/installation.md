@@ -75,7 +75,7 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 
 ## Related
 
-- [Configuration](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md) — Customise page limits and URL exclusions
-- [Features](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/index.md) — Explore what the reports can do
-- [API Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/api/endpoints.md) — Full API endpoint documentation
-- [Getting Started Index](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/getting-started/index.md) — Back to section overview
+- [Configuration](../configuration/settings-reference.md) — Customise page limits and URL exclusions
+- [Features](../features/index.md) — Explore what the reports can do
+- [API Reference](../api/endpoints.md) — Full API endpoint documentation
+- [Getting Started Index](index.md) — Back to section overview

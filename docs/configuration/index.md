@@ -4,7 +4,7 @@ wagtail-unveil is configured via Django settings or environment variables.
 
 ## In This Section
 
-- [Settings Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/configuration/settings-reference.md) — All `WAGTAIL_UNVEIL_*` settings with defaults and examples
+- [Settings Reference](settings-reference.md) — All `WAGTAIL_UNVEIL_*` settings with defaults and examples
 
 ## Quick Reference
 
@@ -16,7 +16,7 @@ wagtail-unveil is configured via Django settings or environment variables.
 
 ## Related
 
-- [Getting Started](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/getting-started/installation.md) — Set up the API key
-- [Features](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/features/index.md) — See how configuration affects reports
-- [API Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/api/endpoints.md) — API authentication details
-- [Documentation Index](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/index.md) — Back to overview
+- [Getting Started](../getting-started/installation.md) — Set up the API key
+- [Features](../features/index.md) — See how configuration affects reports
+- [API Reference](../api/endpoints.md) — API authentication details
+- [Documentation Index](../index.md) — Back to overview

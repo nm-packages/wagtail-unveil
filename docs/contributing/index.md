@@ -1,15 +1,19 @@
 # Contributing
 
-Guidance for contributors working in this repository.
+Guidance for contributors and maintainers working in this repository.
 
-## In This Section
+## Start Here
 
-- [Development Guide](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/development.md) — Local setup, day-to-day workflow, and CI expectations
-- [API Versioning](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/api-versioning.md) — Lifecycle policy and version bump workflow for the JSON API
-- [Discovery Architecture](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-architecture.md) — How URL discovery, normalization, and resolution works
-- [Discovery Workflow Visual Reference](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/discovery-workflows.md) — Maintainer-facing Mermaid diagrams for backend and frontend discovery flows
-- [Frontend Assets](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/frontend-assets.md) — Report asset source, build/test workflow, and CI expectations
-- [Releasing](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/contributing/releasing.md) — Maintainer runbook for publishing releases to PyPI
+Read the [Development Guide](development.md) first if you are setting up the repo or looking for the standard contributor workflow.
+
+## Choose The Right Page
+
+- [Development Guide](development.md) — Read this if you need the canonical contributor workflow: local setup, validation commands, and CI-aligned day-to-day development.
+- [API Versioning](api-versioning.md) — Read this if you are changing JSON API behavior and need the canonical lifecycle and version-bump policy.
+- [Discovery Architecture](discovery-architecture.md) — Read this if you need the canonical reference for discovery, normalization, classification, and parameter resolution behavior.
+- [Discovery Workflow Visual Reference](discovery-workflows.md) — Read this if you want a visual companion to the discovery architecture document before or while reading the authoritative rules.
+- [Frontend Assets](frontend-assets.md) — Read this if you are changing report JavaScript or CSS and need the canonical asset workflow and CI expectations.
+- [Releasing](releasing.md) — Read this if you are preparing or publishing a package release and need the canonical maintainer runbook.
 
 ## Quick Reference
 
@@ -24,4 +28,4 @@ make coverage       # run tests with coverage
 
 - [AGENTS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/AGENTS.md) — Agent-facing project guidance
 - [CONVENTIONS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/CONVENTIONS.md) — Coding standards and patterns
-- [Documentation Index](https://github.com/nm-packages/wagtail-unveil/blob/main/docs/index.md) — Back to overview
+- [Documentation Hub](../index.md) — Canonical top-level documentation entry point
