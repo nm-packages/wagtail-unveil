@@ -26,26 +26,61 @@ These commands are for contributors working in this repository's sandbox and tes
 
 Prefer the `Makefile` targets for standard workflows:
 
+Setup:
+
 ```bash
 make setup           # env, install, migrate, sample data
+make env             # copy .env.example to .env if needed
+make install         # install Python dependencies with uv
+make migrate         # run Django migrations
+make superuser       # create a superuser
+make sample-data     # create sample data
+```
+
+Development:
+
+```bash
 make runserver       # start the sandbox dev server
+make run             # alias for runserver
+make makemigrations  # create package migrations
+```
+
+Validation:
+
+```bash
 make test            # run package tests
 make test-js         # run JavaScript report tests
-make build-assets    # build report frontend assets (JavaScript + CSS)
-make docs-build      # build the HTML documentation site
-make docs-serve      # run the HTML documentation site locally
-make lint-assets     # Biome frontend asset lint/format checks (JavaScript + CSS)
-make lint-assets-fix # Biome frontend asset lint/format with autofix
-make tox             # run the version matrix
-make tox-smoke       # run the fast smoke subset used in PR CI
 make lint            # ruff check
 make lint-fix        # ruff check --fix
+make lint-assets     # Biome frontend asset lint/format checks (JavaScript + CSS)
+make lint-assets-fix # Biome frontend asset lint/format with autofix
 make coverage        # run tests with coverage report
 make coverage-html   # generate HTML coverage report
 make pre-commit      # run all configured hooks
 ```
 
-Equivalent direct commands are also valid:
+Docs:
+
+```bash
+make docs-build      # build the HTML documentation site
+make docs-serve      # run the HTML documentation site locally
+```
+
+Matrix / release checks:
+
+```bash
+make tox             # run the version matrix
+make tox-smoke       # run the fast smoke subset used in PR CI
+make build-assets    # build report frontend assets (JavaScript + CSS)
+```
+
+Cleanup:
+
+```bash
+make clean           # remove db.sqlite3, .env, and media
+```
+
+Equivalent direct commands are also valid for the main workflows:
 
 ```bash
 uv sync

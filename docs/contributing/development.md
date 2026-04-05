@@ -8,8 +8,14 @@ Read this page first if you are setting up the repo, running the sandbox, or loo
 
 ## Local Setup
 
+Setup commands:
+
 ```bash
 make setup
+make env
+make install
+make migrate
+make sample-data
 ```
 
 Optional: create a superuser for report UI access.
@@ -23,6 +29,7 @@ Run the sandbox server:
 
 ```bash
 make runserver
+make run
 ```
 
 ## Day-to-Day Workflow
@@ -34,6 +41,12 @@ make test
 make test-js
 make lint
 make coverage
+```
+
+Development-only helpers:
+
+```bash
+make makemigrations
 ```
 
 ## Extended Workflows
@@ -60,12 +73,13 @@ make docs-build
 make docs-serve
 ```
 
-Other useful targets:
+Other validation and maintenance targets:
 
 ```bash
 make lint-fix
 make coverage-html
 make pre-commit
+make clean
 ```
 
 ## CI Expectations
