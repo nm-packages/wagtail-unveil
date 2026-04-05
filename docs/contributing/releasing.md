@@ -1,9 +1,5 @@
 # Releasing wagtail-unveil
 
-## Read This If...
-
-Read this page if you are preparing or publishing a release and need the canonical maintainer runbook for the GitHub Release to PyPI workflow.
-
 This is the maintainer runbook for publishing package releases to PyPI via GitHub Actions.
 
 ## Release Workflow

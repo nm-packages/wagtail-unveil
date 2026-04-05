@@ -1,10 +1,6 @@
 # Development Guide
 
-This guide is for contributors working in this repository (sandbox + tests). It is not part of the public package interface.
-
-## Read This If...
-
-Read this page first if you are setting up the repo, running the sandbox, or looking for the canonical contributor workflow and CI-aligned commands.
+This guide is for contributors working in this repository (sandbox + tests). It is the canonical contributor workflow guide and is not part of the public package interface.
 
 ## Local Setup
 

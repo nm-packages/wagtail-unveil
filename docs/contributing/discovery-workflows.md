@@ -1,8 +1,6 @@
 # Discovery Workflow Visual Reference
 
-## Read This If...
-
-Read this page if you want a visual companion to the discovery pipeline before or alongside the canonical architecture reference.
+This page is a visual companion to the canonical discovery architecture reference.
 
 ## Purpose
 

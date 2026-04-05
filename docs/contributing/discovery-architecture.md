@@ -1,8 +1,6 @@
 # Discovery and Resolution Architecture
 
-## Read This If...
-
-Read this page if you need the canonical contributor reference for how discovery, normalization, classification, and parameter resolution work.
+This is the canonical contributor reference for how discovery, normalization, classification, and parameter resolution work.
 
 ## Purpose
 

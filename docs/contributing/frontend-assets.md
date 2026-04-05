@@ -3,10 +3,6 @@
 This guide covers how to work on report frontend assets in this repository.
 It is contributor-focused and describes source layout, build/test workflows, and CI expectations.
 
-## Read This If...
-
-Read this page if you are changing report CSS or JavaScript and need the canonical contributor workflow for asset source, tests, generated files, and CI behavior.
-
 ## Source And Output Layout
 
 - `assets_src/css/` — editable report CSS source
