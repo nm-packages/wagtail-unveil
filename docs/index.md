@@ -4,19 +4,6 @@ Discover and test every URL in your Wagtail site — frontend and admin.
 
 This is the canonical documentation hub for `wagtail-unveil`.
 
-## Common Tasks
-
-| I need to... | Go to |
-|---|---|
-| Install and set up `wagtail-unveil` | [Getting Started](getting-started/installation.md) |
-| Configure the API key and settings | [Settings Reference](configuration/settings-reference.md) |
-| Learn what the reports and dashboard do | [Features](features/index.md) |
-| Use the JSON API | [API Reference](api/endpoints.md) |
-| Add custom admin URL resolvers | [Add Custom Admin URL Resolvers](recipes/custom-admin-url-resolvers.md) |
-| Understand discovery internals | [Discovery Architecture](contributing/discovery-architecture.md) |
-| Work on the project locally | [Development Guide](contributing/development.md) |
-| Release the package | [Releasing](contributing/releasing.md) |
-
 ## Use wagtail-unveil
 
 - [Getting Started](getting-started/index.md) — Canonical starting point for installation, quick start, and first-time setup.
