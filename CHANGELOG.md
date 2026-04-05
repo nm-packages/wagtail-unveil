@@ -2,6 +2,16 @@
 
 All notable changes to `wagtail-unveil` are documented in this file.
 
+## Unreleased
+
+Changes merged to `main` since the last release.
+
+### Highlights
+
+- simplified documentation IA by keeping `README.md` as the GitHub/PyPI overview, tightening the docs hub, removing `docs/usage.md`, and reducing repetitive contributor-page scaffolding
+- added an MkDocs + Material HTML docs site with Mermaid rendering, CI validation, and GitHub Pages deployment
+- grouped `make help` commands by workflow and aligned contributor command guidance across the development docs and AGENTS guidance
+
 ## 0.1.0a5 - 2026-04-02
 
 Fifth public alpha release.

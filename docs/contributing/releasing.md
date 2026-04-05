@@ -29,18 +29,25 @@ The GitHub repository and workflow identity must match exactly, or publish will 
 
 ## Maintainer Release Steps
 
-1. Update `version` in `pyproject.toml` to the intended release version.
-2. Update `CHANGELOG.md` with a concise entry for the new release and any migration or alpha-status notes worth calling out.
-3. Merge the release-prep changes to `main`.
-4. Ensure normal CI on `main` is green (`CI` workflow).
-5. Create a GitHub Release with a tag that matches the package version with `v` prefix.
-6. Use the matching `.github/release-*.md` file or the `CHANGELOG.md` entry as the GitHub Release body.
-7. Publish the GitHub Release.
-8. Confirm `.github/workflows/release.yml` succeeds and the version appears on PyPI.
+1. Keep `CHANGELOG.md` updated under `## Unreleased` as notable unreleased work lands on `main`.
+2. Update `version` in `pyproject.toml` to the intended release version.
+3. Convert the current `## Unreleased` notes in `CHANGELOG.md` into the new release entry, then leave a fresh `## Unreleased` placeholder for future work.
+4. Merge the release-prep changes to `main`.
+5. Ensure normal CI on `main` is green (`CI` workflow).
+6. Create a GitHub Release with a tag that matches the package version with `v` prefix.
+7. Use the matching `.github/release-*.md` file or the `CHANGELOG.md` entry as the GitHub Release body.
+8. Publish the GitHub Release.
+9. Confirm `.github/workflows/release.yml` succeeds and the version appears on PyPI.
 
 For local sandbox/test command workflows before a release, use:
 - [`development.md`](development.md) for canonical developer workflow and quickstart commands
 - [`AGENTS.md`](https://github.com/nm-packages/wagtail-unveil/blob/main/AGENTS.md) for canonical contributor command/reference guidance
+
+## Changelog Maintenance
+
+- Add notable merged-but-unreleased work to `CHANGELOG.md` under `## Unreleased` in the same PR.
+- During release prep, move or rewrite the `Unreleased` notes into the new versioned release section.
+- After release prep, keep an empty `## Unreleased` section in place for subsequent work.
 
 Examples:
 

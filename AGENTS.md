@@ -183,6 +183,8 @@ After changing code in `wagtail_unveil/` or `tests/`:
 3. Inspect coverage for touched files and add tests for newly introduced uncovered lines
 4. Update `README.md` and relevant agent guidance files when behavior or structure changes
 
+For notable merged-but-unreleased work, update `CHANGELOG.md` under `## Unreleased` in the same PR. During release prep, convert those notes into the new versioned release entry and leave a fresh `## Unreleased` section in place.
+
 ## Directory-Specific Guidance
 
 More focused guidance lives in:

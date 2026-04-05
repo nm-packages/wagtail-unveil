@@ -94,6 +94,11 @@ When changing contributor commands or Make targets:
 3. Keep `README.md` focused and linked to this file.
 4. Keep those command-doc updates in the same PR as the Makefile/command change.
 
+When making notable user-visible, contributor-visible, or maintainer-relevant changes that are not yet released:
+
+1. Add a concise note under `CHANGELOG.md` -> `## Unreleased`.
+2. Keep that changelog update in the same PR as the change itself.
+
 ## Related Docs
 
 - User-facing package overview: [README.md](https://github.com/nm-packages/wagtail-unveil/blob/main/README.md)
