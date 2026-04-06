@@ -28,6 +28,69 @@ make runserver
 make run
 ```
 
+## Using the Sandbox
+
+`sandbox/` is the local integration environment for contributor work on `wagtail_unveil`. Use it to exercise package behavior inside a realistic Wagtail project while keeping reusable package logic inside `wagtail_unveil/`.
+
+The boundary matters:
+
+- `wagtail_unveil/` is the distributable package and must stay reusable across consuming projects.
+- `sandbox/` is where local fixture data, example apps, and debugging helpers live so contributors can inspect behavior in a live Wagtail site.
+
+The normal local sandbox loop is:
+
+```bash
+make setup
+make runserver
+make superuser      # optional, needed for report UI access
+make sample-data    # optional, rerun when you want fresh representative content
+```
+
+The sandbox defaults are tuned for local development. The `.env` file created from `.env.example` sets `WAGTAIL_UNVEIL_API_KEY=dev-secret` by default so the JSON endpoints work locally with Bearer token auth, and `sandbox.settings` keeps `DEBUG=True` so report views are available to a superuser.
+
+### What Sample Data Gives You
+
+`make sample-data` runs the sandbox-only `create_sample_data` management command. It creates representative content and objects that make local discovery output useful instead of empty:
+
+- Wagtail pages, including listing/detail-style content
+- images and documents
+- redirects and promoted search results
+- snippets, chooser-backed models, and site settings
+- form pages and related form submissions
+- routable event pages and related page types
+- an `editor` user for non-superuser/admin-role checks
+
+This matters when you are developing discovery changes, testing parameterized admin routes, checking resolver output in the reports, or reproducing bugs that only appear when real objects exist to resolve against.
+
+### Useful Local URLs
+
+Once the sandbox server is running, these are the main URLs to use while developing:
+
+- `/admin/` - Wagtail admin
+- `/unveil/report/backend-urls/` - backend/admin discovery report
+- `/unveil/report/frontend-urls/` - frontend discovery report
+- `/unveil/report/settings/` - local settings and diagnostics view
+- `/unveil/api/v1/backend-urls/` - backend URLs JSON endpoint
+- `/unveil/api/v1/frontend-urls/` - frontend URLs JSON endpoint
+- `/intentional-error/` - deliberate frontend 500 route for debugging failure handling
+
+For the JSON endpoints, pass the local API key from `.env`, for example:
+
+```bash
+curl -H "Authorization: Bearer dev-secret" http://localhost:8000/unveil/api/v1/backend-urls/
+curl -H "Authorization: Bearer dev-secret" http://localhost:8000/unveil/api/v1/frontend-urls/
+```
+
+### Common Contributor Workflows
+
+Use the sandbox when you need to:
+
+- verify new discovery behavior against realistic Wagtail content before or alongside adding tests
+- reproduce report or API bugs in a live Wagtail app instead of reasoning from unit tests alone
+- inspect whether sandbox apps and extension hooks expose the expected concrete admin/frontend URLs
+- confirm parameterized/admin routes become testable once sample objects exist
+- use sample data to understand current behavior before tightening tests or changing fixtures in `tests/`
+
 ## Day-to-Day Workflow
 
 Run the standard validation loop while developing:
