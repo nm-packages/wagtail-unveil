@@ -20,6 +20,19 @@ This file is the canonical guidance for coding agents working in this repository
 - `docs/contributing/development.md` — human contributor setup, day-to-day workflow, and CI-aligned dev commands
 - `AGENTS.md` files — canonical agent-facing guidance and documentation contract
 
+## Issue Startup Workflow
+
+When starting work from a GitHub issue, pull the issue context first and confirm whether GitHub already has a linked branch for that issue.
+
+Required startup sequence for issue work:
+
+1. Fetch and read the issue before making local changes.
+2. Check whether the issue already has a linked branch.
+3. Fetch remote refs and switch to the linked branch locally before editing files.
+4. If no linked branch exists, create and link a branch for the issue, then switch to that branch before making changes.
+
+Safety rule: do not start implementation for issue-scoped work on `main` when the issue is expected to have its own branch. Issue work should begin from the linked issue branch when one exists, or from a newly created linked branch when one does not.
+
 ## Development Commands
 
 These commands are for contributors working in this repository's sandbox and test environment. They are not package-level interfaces exposed by `wagtail_unveil`.
