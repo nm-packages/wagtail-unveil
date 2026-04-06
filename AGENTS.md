@@ -22,7 +22,7 @@ This file is the canonical guidance for coding agents working in this repository
 
 ## Issue Startup Workflow
 
-When starting work from a GitHub issue, pull the issue context first and confirm whether GitHub already has a linked branch for that issue.
+When starting work from a GitHub issue, pull the issue context first and confirm whether GitHub already has a linked branch for that issue. When starting a new piece of scoped work from the current local branch state, check whether you are on `main` before implementation begins.
 
 Required startup sequence for issue work:
 
@@ -31,7 +31,21 @@ Required startup sequence for issue work:
 3. Fetch remote refs and switch to the linked branch locally before editing files.
 4. If no linked branch exists, create and link a branch for the issue, then switch to that branch before making changes.
 
-Safety rule: do not start implementation for issue-scoped work on `main` when the issue is expected to have its own branch. Issue work should begin from the linked issue branch when one exists, or from a newly created linked branch when one does not.
+Required startup sequence for new scoped work begun outside an existing issue branch:
+
+1. Check the current local branch before making changes.
+2. If you are already on a suitable non-`main` working branch, continue there only if it clearly matches the new task.
+3. If you are on `main`, pause before implementation and ask the user whether a new branch should be created.
+4. When asking, suggest a suitable branch title instead of asking an open-ended branch question.
+
+Required PR-metadata check when working on an existing branch:
+
+1. If the current branch has an open PR, review whether the PR title and summary still match the actual scope of the branch.
+2. If the PR metadata has drifted from the work now on the branch, tell the user that the current title and summary appear outdated.
+3. Offer a short set of concrete replacement PR title suggestions for the user to choose from.
+4. Treat the PR summary/body as needing the same drift check and update discussion, not just the title.
+
+Safety rule: do not start implementation for issue-scoped work on `main` when the issue is expected to have its own branch. Do not start newly scoped work on `main` without first checking whether the user wants a branch created and proposing a suitable branch title. When working on a branch with an open PR, do not ignore title/summary drift if the branch scope has materially changed.
 
 ## Development Commands
 
