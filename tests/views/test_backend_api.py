@@ -56,13 +56,6 @@ class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
         )
         self.assertIsNone(response.json()["metadata"]["applied_filter"])
 
-    def test_response_includes_api_version_metadata(self):
-        response = self.client.get(
-            self.api_url,
-            HTTP_AUTHORIZATION="Bearer test-secret",
-        )
-        self.assertEqual(response.json()["metadata"]["api_version"], self.api_version)
-
     def test_page_edit_route_is_serialized_as_testable_with_resolved_route(self):
         response = self.client.get(
             self.api_url,

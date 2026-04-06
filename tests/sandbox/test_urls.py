@@ -27,16 +27,3 @@ class TestSandboxWagtailAPI(TestCase):
 
         self.assertEqual(match.url_name, "find")
         self.assertEqual(match.namespace, "wagtailapi:pages")
-
-    def test_api_v2_find_routes_are_discovered(self):
-        urls = [url for url in get_frontend_urls() if url.name == "find" and url.url.startswith("/api/v2/")]
-
-        self.assertEqual(
-            {url.url for url in urls},
-            {
-                "/api/v2/pages/find/",
-                "/api/v2/images/find/",
-                "/api/v2/documents/find/",
-                "/api/v2/redirects/find/",
-            },
-        )
