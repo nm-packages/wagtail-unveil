@@ -8,6 +8,13 @@ from wagtail_unveil.settings import get_api_key, get_pages_per_type, get_skip_ur
 
 
 class TestGetPagesPerType(TestCase):
+    def setUp(self):
+        self._orig_env = os.environ.pop("WAGTAIL_UNVEIL_PAGES_PER_TYPE", None)
+
+    def tearDown(self):
+        if self._orig_env is not None:
+            os.environ["WAGTAIL_UNVEIL_PAGES_PER_TYPE"] = self._orig_env
+
     def test_missing_setting_returns_one(self):
         with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
             self.assertEqual(get_pages_per_type(), 1)

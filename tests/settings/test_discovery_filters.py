@@ -13,6 +13,7 @@ class TestPagesPerTypeLimit(TestCase):
     """Test that WAGTAIL_UNVEIL_PAGES_PER_TYPE limits page URLs per type."""
 
     def setUp(self):
+        self._orig_env = os.environ.pop("WAGTAIL_UNVEIL_PAGES_PER_TYPE", None)
         root = Page.objects.first()
         home = root.get_children().first()
 
@@ -23,6 +24,10 @@ class TestPagesPerTypeLimit(TestCase):
                     slug=f"standard-{i}",
                 )
             )
+
+    def tearDown(self):
+        if self._orig_env is not None:
+            os.environ["WAGTAIL_UNVEIL_PAGES_PER_TYPE"] = self._orig_env
 
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
     def test_zero_means_no_limit(self):
