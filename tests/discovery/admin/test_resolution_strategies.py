@@ -3,6 +3,7 @@ from unittest import mock
 from django.contrib.auth.models import User
 from django.test import TestCase
 
+from sandbox.core.models import SocialMediaSettings
 from wagtail_unveil.discovery.backend_resolution import (
     _apply_admin_instance_resolvers,
     _get_instance_for_model,
@@ -578,8 +579,6 @@ class TestParameterizedResolutionStrategies(TestCase):
         self.assertEqual(result.attempts, ["settings:no-model-instance"])
 
     def test_settings_resolution_records_reverse_failures(self):
-        from sandbox.core.models import SocialMediaSettings
-
         instance = mock.Mock(pk=3, site_id=11)
         with mock.patch.object(SocialMediaSettings.objects, "first", return_value=instance):
             with mock.patch(
