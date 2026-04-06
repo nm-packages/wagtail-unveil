@@ -8,6 +8,7 @@ Changes merged to `main` since the last release.
 
 ### Highlights
 
+- removed two unused singular backend resolution helpers so the supported admin page-resolution surface now matches the runtime discovery path
 - simplified documentation IA by keeping `README.md` as the GitHub/PyPI overview, tightening the docs hub, removing `docs/usage.md`, and reducing repetitive contributor-page scaffolding
 - added an MkDocs + Material HTML docs site with Mermaid rendering, CI validation, and GitHub Pages deployment
 - grouped `make help` commands by workflow and aligned contributor command guidance across the development docs and AGENTS guidance
