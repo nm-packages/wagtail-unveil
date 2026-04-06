@@ -46,7 +46,7 @@ make superuser      # optional, needed for report UI access
 make sample-data    # optional, rerun when you want fresh representative content
 ```
 
-The sandbox defaults are tuned for local development. `.env.example` sets `WAGTAIL_UNVEIL_API_KEY=dev-secret` so the JSON endpoints work locally with Bearer token auth, and `sandbox.settings` keeps `DEBUG=True` so report views are available to a superuser.
+The sandbox defaults are tuned for local development. The `.env` file created from `.env.example` sets `WAGTAIL_UNVEIL_API_KEY=dev-secret` by default so the JSON endpoints work locally with Bearer token auth, and `sandbox.settings` keeps `DEBUG=True` so report views are available to a superuser.
 
 ### What Sample Data Gives You
 
