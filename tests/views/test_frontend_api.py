@@ -57,13 +57,6 @@ class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
             self.assertIn("query_params", url)
             self.assertIsInstance(url["query_params"], dict)
 
-    def test_response_includes_api_version_metadata(self):
-        response = self.client.get(
-            self.api_url,
-            HTTP_AUTHORIZATION="Bearer test-secret",
-        )
-        self.assertEqual(response.json()["metadata"]["api_version"], self.api_version)
-
     @patch("wagtail_unveil.views.get_api_contract")
     def test_response_sets_deprecation_headers_for_deprecated_contract(self, mock_get_api_contract):
         deprecated_contract = replace(

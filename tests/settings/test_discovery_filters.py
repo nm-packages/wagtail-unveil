@@ -25,13 +25,6 @@ class TestPagesPerTypeLimit(TestCase):
                 )
             )
 
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
-    def test_default_returns_all_pages(self):
-        urls = get_frontend_urls()
-        page_urls = [u for u in urls if u.source == "page"]
-        standard_urls = [u for u in page_urls if "StandardPage" in u.page_type]
-        self.assertEqual(len(standard_urls), 3)
-
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1)
     def test_limit_one_per_type(self):
         urls = get_frontend_urls()
@@ -53,7 +46,7 @@ class TestPagesPerTypeLimit(TestCase):
         self.assertEqual(standard_count, 2)
 
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
-    def test_zero_means_no_limit(self):
+    def test_zero_means_no_limit_at_frontend_discovery_layer(self):
         urls = get_frontend_urls()
         page_urls = [u for u in urls if u.source == "page"]
         standard_urls = [u for u in page_urls if "StandardPage" in u.page_type]
