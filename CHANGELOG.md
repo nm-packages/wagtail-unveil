@@ -11,6 +11,7 @@ Changes merged to `main` since the last release.
 - simplified documentation IA by keeping `README.md` as the GitHub/PyPI overview, tightening the docs hub, removing `docs/usage.md`, and reducing repetitive contributor-page scaffolding
 - added an MkDocs + Material HTML docs site with Mermaid rendering, CI validation, and GitHub Pages deployment
 - grouped `make help` commands by workflow and aligned contributor command guidance across the development docs and AGENTS guidance
+- clarified agent workflow for issue-linked branches, new scoped work started from `main`, and open-PR title/summary drift checks
 
 ## 0.1.0a5 - 2026-04-02
 
