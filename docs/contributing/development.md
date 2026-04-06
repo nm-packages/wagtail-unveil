@@ -90,9 +90,11 @@ See `.github/workflows/ci.yml` for exact job definitions. The HTML docs site is 
 When changing contributor commands or Make targets:
 
 1. Update `Makefile`.
-2. Update command docs in `AGENTS.md` and this file.
+2. Update command docs in this file.
 3. Keep `README.md` focused and linked to this file.
 4. Keep those command-doc updates in the same PR as the Makefile/command change.
+
+`AGENTS.md` should continue to point agents at this guide for command and validation workflow, but it should not duplicate the full command catalog.
 
 When making notable user-visible, contributor-visible, or maintainer-relevant changes that are not yet released:
 
@@ -103,7 +105,7 @@ When making notable user-visible, contributor-visible, or maintainer-relevant ch
 
 - User-facing package overview: [README.md](https://github.com/nm-packages/wagtail-unveil/blob/main/README.md)
 - Coding conventions: [CONVENTIONS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/CONVENTIONS.md)
-- Agent project guidance: [AGENTS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/AGENTS.md)
+- Agent project guidance: [AGENTS.md](https://github.com/nm-packages/wagtail-unveil/blob/main/AGENTS.md) — agent-facing repo context and startup workflow; use this page as the canonical command and validation reference.
 - Documentation hub: [../index.md](../index.md)
 - Frontend assets: [frontend-assets.md](frontend-assets.md)
 - API lifecycle/versioning: [api-versioning.md](api-versioning.md)

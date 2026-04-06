@@ -12,6 +12,7 @@ Changes merged to `main` since the last release.
 - added an MkDocs + Material HTML docs site with Mermaid rendering, CI validation, and GitHub Pages deployment
 - grouped `make help` commands by workflow and aligned contributor command guidance across the development docs and AGENTS guidance
 - clarified agent workflow for issue-linked branches, new scoped work started from `main`, and open-PR title/summary drift checks
+- slimmed `AGENTS.md` and moved coding, testing, documentation, and command-workflow ownership more clearly into `CONVENTIONS.md` and contributor docs
 
 ## 0.1.0a5 - 2026-04-02
 
