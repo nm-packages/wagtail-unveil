@@ -4,6 +4,7 @@ from functools import cached_property
 
 from django.urls import reverse
 from django.utils.functional import cached_property as django_cached_property
+from wagtail.contrib.forms.models import FormMixin
 
 from wagtail_unveil.discovery.extensions import (
     AdminInstanceResolverContext,
@@ -139,11 +140,6 @@ def _get_model_from_callback(callback):
 
 def get_form_page_instance():
     """Find a live form page instance for wagtailforms URL resolution."""
-    try:
-        from wagtail.contrib.forms.models import FormMixin
-    except ImportError:
-        return None
-
     from wagtail.models import Page
 
     for page in Page.objects.live().specific().iterator():

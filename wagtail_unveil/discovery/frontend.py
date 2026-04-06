@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from urllib.parse import urlparse
 
 from django.urls import get_resolver
+from wagtail.contrib.forms.models import FormMixin
 
 from wagtail_unveil.discovery.frontend_resolution import (
     get_default_site,
@@ -59,11 +60,6 @@ def _should_skip_frontend_url(url, skip_prefixes):
 def _discover_page_candidates():
     """Discover frontend page candidates before classification."""
     try:
-        from wagtail.contrib.forms.models import FormMixin
-    except ImportError:
-        FormMixin = None
-
-    try:
         from wagtail.contrib.routable_page.models import RoutablePageMixin
     except ImportError:
         RoutablePageMixin = None
@@ -119,7 +115,7 @@ def _discover_page_candidates():
                 is_cross_site=is_cross_site,
             )
         )
-        if FormMixin is not None and isinstance(page, FormMixin):
+        if isinstance(page, FormMixin):
             results.append(
                 _FrontendCandidate(
                     url=path,
