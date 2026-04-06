@@ -1,6 +1,7 @@
 from django.test import TestCase
 from wagtail.models import Site
 
+from sandbox.core.models import BrandingSettings, SocialMediaSettings
 from wagtail_unveil.discovery.backend import get_admin_urls
 
 
@@ -8,8 +9,6 @@ class TestSettingsURLDiscovery(TestCase):
     """Test that Wagtail site and generic settings URLs are discovered and testable."""
 
     def setUp(self):
-        from sandbox.core.models import BrandingSettings, SocialMediaSettings
-
         site = Site.objects.first()
         SocialMediaSettings.objects.get_or_create(
             site=site,
@@ -69,8 +68,6 @@ class TestSettingsURLDiscovery(TestCase):
 
     def test_settings_edit_url_uses_site_pk(self):
         """For BaseSiteSetting edit URL, resolved_route should contain site pk, not settings row pk."""
-        from sandbox.core.models import SocialMediaSettings
-
         settings_instance = SocialMediaSettings.objects.first()
         self.assertIsNotNone(settings_instance)
         expected_site_pk = settings_instance.site_id

@@ -3,6 +3,7 @@ from unittest import mock
 from django.test import TestCase
 from django.urls import get_resolver
 
+from sandbox.taxonomy.models import Person
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.backend_resolution import resolve_parameterized_url
 from wagtail_unveil.discovery.utils import walk_patterns
@@ -12,8 +13,6 @@ class TestModeladminURLDiscoveryWithoutProjectExtension(TestCase):
     """Test the default contract for wagtail-modeladmin routes without a project hook."""
 
     def setUp(self):
-        from sandbox.taxonomy.models import Person
-
         Person.objects.create(name="Test Person", email="test@example.com")
         self.modeladmin_rows = [
             (route, name, namespace, callback)
@@ -92,8 +91,6 @@ class TestSandboxModeladminResolverExtension(TestCase):
     """Test that the sandbox project hook makes wagtail-modeladmin detail URLs testable."""
 
     def setUp(self):
-        from sandbox.taxonomy.models import Person
-
         Person.objects.create(name="Test Person", email="test@example.com")
         self.urls = get_admin_urls()
         self.modeladmin_urls = [u for u in self.urls if "modeladmin" in u.name]

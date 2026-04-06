@@ -3,11 +3,15 @@ from unittest import mock
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
+from wagtail.contrib.redirects.models import Redirect
+from wagtail.contrib.search_promotions.models import Query
 from wagtail.documents.models import Document
 from wagtail.images.models import Image
 from wagtail.images.tests.utils import get_test_image_file
 from wagtail.models import Page, Site, Task, Workflow
 
+from sandbox.inventory.models import Product, Supplier
+from sandbox.taxonomy.models import Banner, Category, Colour
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.backend_resolution import (
     WAGTAILADMIN_PAGE_FALLBACK_NAMES,
@@ -35,9 +39,6 @@ class TestParameterisedURLResolution(TestCase):
     """Test that parameterised admin URLs are resolved using real model instances."""
 
     def setUp(self):
-        from wagtail.contrib.redirects.models import Redirect
-        from wagtail.contrib.search_promotions.models import Query
-
         self.query = Query.objects.create(query_string="test search")
         self.redirect = Redirect.objects.create(
             old_path="/test-redirect",
@@ -79,9 +80,6 @@ class TestParameterisedURLResolution(TestCase):
             ),
             None,
         )
-
-        from sandbox.inventory.models import Product, Supplier
-        from sandbox.taxonomy.models import Banner, Category, Colour
 
         self.supplier = Supplier.objects.create(
             name="Test supplier",

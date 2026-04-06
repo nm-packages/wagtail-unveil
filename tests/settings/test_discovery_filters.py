@@ -1,7 +1,10 @@
 import os
 
 from django.test import TestCase, override_settings
+from wagtail.models import Page
 
+from sandbox.core.models import StandardPage
+from sandbox.events.models import EventIndexPage
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.frontend import get_frontend_urls
 
@@ -10,10 +13,6 @@ class TestPagesPerTypeLimit(TestCase):
     """Test that WAGTAIL_UNVEIL_PAGES_PER_TYPE limits page URLs per type."""
 
     def setUp(self):
-        from wagtail.models import Page
-
-        from sandbox.core.models import StandardPage
-
         root = Page.objects.first()
         home = root.get_children().first()
 
@@ -119,10 +118,6 @@ class TestSkipUrlPrefixesFilter(TestCase):
 
     @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["events/past/"])
     def test_skip_prefix_excludes_routable_sub_url(self):
-        from wagtail.models import Page
-
-        from sandbox.events.models import EventIndexPage
-
         root = Page.objects.first()
         home = root.get_children().first()
         home.add_child(instance=EventIndexPage(title="Events", slug="events"))
@@ -133,10 +128,6 @@ class TestSkipUrlPrefixesFilter(TestCase):
 
     @override_settings(WAGTAIL_UNVEIL_SKIP_URL_PREFIXES=["api-page/"])
     def test_skip_prefix_excludes_page_source_url(self):
-        from wagtail.models import Page
-
-        from sandbox.core.models import StandardPage
-
         root = Page.objects.first()
         home = root.get_children().first()
         home.add_child(instance=StandardPage(title="API Page", slug="api-page"))
