@@ -32,15 +32,11 @@ class TestMultisiteFrontendUrls(TestCase):
 
         self.urls = get_frontend_urls()
 
-    def test_non_default_site_page_is_discovered(self):
-        matches = [u for u in self.urls if u.source == "page" and u.page_title == "Subsite About"]
-        self.assertEqual(len(matches), 1)
-        self.assertEqual(matches[0].url, "/subsite-about/")
-
-    def test_non_default_site_page_is_marked_untestable(self):
+    def test_non_default_site_page_is_discovered_but_marked_untestable(self):
         matches = [u for u in self.urls if u.source == "page" and u.page_title == "Subsite About"]
         self.assertEqual(len(matches), 1)
         match = matches[0]
+        self.assertEqual(match.url, "/subsite-about/")
         self.assertFalse(match.is_testable)
         self.assertEqual(match.skip_reason, "Belongs to non-default site host: sub.localhost:8000")
 

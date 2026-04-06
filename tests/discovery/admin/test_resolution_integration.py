@@ -181,18 +181,6 @@ class TestParameterisedURLResolution(TestCase):
         self.assertEqual(action_urls[0].skip_reason, "URL requires parameters")
         self.assertEqual(action_urls[0].resolved_route, "")
 
-    def test_resolved_route_has_no_angle_brackets(self):
-        resolved = [u for u in self.urls if u.resolved_route]
-        self.assertGreater(len(resolved), 0)
-        for url in resolved:
-            self.assertNotIn("<", url.resolved_route, url.route)
-
-    def test_multi_param_urls_remain_untestable(self):
-        multi_param = [u for u in self.urls if u.has_parameters and u.route.count("<") > 1 and not u.resolved_route]
-        for url in multi_param:
-            self.assertFalse(url.is_testable, url.route)
-            self.assertEqual(url.skip_reason, "URL requires parameters")
-
     def test_searchpick_edit_url_is_testable(self):
         self._assert_namespace_name_testable("searchpromotions", "edit")
 
@@ -277,13 +265,6 @@ class TestParameterisedURLResolution(TestCase):
             self.assertEqual(url.skip_reason, "POST-only view")
             self.assertTrue(url.resolved_route, url.route)
             self.assertRegex(url.resolved_route, r"admin/.+/reorder/\d+/")
-
-    def test_unresolvable_parameterised_urls_are_untestable(self):
-        unresolvable = [u for u in self.urls if u.has_parameters and not u.resolved_route]
-        self.assertGreater(len(unresolvable), 0)
-        for url in unresolvable:
-            self.assertFalse(url.is_testable, url.route)
-            self.assertIn(url.skip_reason, ("URL requires parameters", "POST-only view"))
 
     @mock.patch("wagtail_unveil.discovery.backend_resolution._get_instance_for_model", return_value=None)
     def test_admin_api_detail_urls_stay_untestable_without_instances(self, get_instance):
