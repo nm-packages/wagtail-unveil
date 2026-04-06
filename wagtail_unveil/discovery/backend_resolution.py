@@ -5,6 +5,7 @@ from functools import cached_property
 from django.urls import reverse
 from django.utils.functional import cached_property as django_cached_property
 from wagtail.contrib.forms.models import FormMixin
+from wagtail.models import Page, Task, Workflow
 
 from wagtail_unveil.discovery.extensions import (
     AdminInstanceResolverContext,
@@ -140,8 +141,6 @@ def _get_model_from_callback(callback):
 
 def get_form_page_instance():
     """Find a live form page instance for wagtailforms URL resolution."""
-    from wagtail.models import Page
-
     for page in Page.objects.live().specific().iterator():
         if isinstance(page, FormMixin):
             return page
@@ -150,21 +149,11 @@ def get_form_page_instance():
 
 def get_page_instance():
     """Return a representative non-root page instance for admin URL resolution."""
-    try:
-        from wagtail.models import Page
-    except Exception:
-        return None
-
     return _get_instance_for_model(Page)
 
 
 def get_page_instances_by_type():
     """Return one representative non-root page instance per concrete page type."""
-    try:
-        from wagtail.models import Page
-    except Exception:
-        return []
-
     instances_by_type = {}
     for page in Page.objects.exclude(depth=1).select_related("content_type").order_by("path").iterator():
         page_type = _get_page_type_label(page)
@@ -174,11 +163,6 @@ def get_page_instances_by_type():
 
 def get_add_subpage_parent_page_instance():
     """Return a parent page that can actually host at least one creatable child page."""
-    try:
-        from wagtail.models import Page
-    except Exception:
-        return None
-
     for page in Page.objects.exclude(depth=1).specific().iterator():
         specific_class = getattr(page, "specific_class", None)
         if specific_class is None:
@@ -192,11 +176,6 @@ def get_add_subpage_parent_page_instance():
 
 def get_add_subpage_parent_page_instances_by_type():
     """Return one compatible add-subpage parent page per concrete page type."""
-    try:
-        from wagtail.models import Page
-    except Exception:
-        return []
-
     instances_by_type = {}
     for page in Page.objects.exclude(depth=1).select_related("content_type").order_by("path").iterator():
         specific_class = getattr(page, "specific_class", None)
@@ -213,8 +192,6 @@ def get_add_subpage_parent_page_instances_by_type():
 def get_workflow_instance():
     """Return the first available Workflow instance."""
     try:
-        from wagtail.models import Workflow
-
         return Workflow.objects.first()
     except Exception:
         return None
@@ -223,14 +200,14 @@ def get_workflow_instance():
 def get_workflow_task_instance():
     """Return the first available workflow task instance."""
     try:
-        from wagtail.models import Task
-
         return Task.objects.first()
     except Exception:
         return None
 
 
 # Concrete resolution steps
+
+# Keep wagtail.contrib.settings imports local so settings URL resolution still degrades when that optional app is absent.
 
 
 def _resolve_settings_url(name, route):

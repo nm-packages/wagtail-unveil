@@ -1,6 +1,7 @@
 import re
 
 from django.db import models
+from wagtail.models import Page, Site
 
 from wagtail_unveil.discovery.utils import route_contains_regex, route_has_parameters
 
@@ -34,11 +35,6 @@ def _unique_values(values):
 
 def get_default_site():
     """Return the default Wagtail Site instance when available."""
-    try:
-        from wagtail.models import Site
-    except ImportError:
-        return None
-
     return Site.objects.filter(is_default_site=True).first()
 
 
@@ -149,14 +145,11 @@ def resolve_routable_page_url(page, pattern, page_path, sub_route):
 
 # Resolver-backed API ID helpers
 
+# Optional contrib and API imports stay local below so discovery degrades gracefully when those apps are absent.
+
 
 def _get_first_live_page_id():
     """Return the first live page ID when available."""
-    try:
-        from wagtail.models import Page
-    except ImportError:
-        return ""
-
     page_id = Page.objects.live().order_by("path").values_list("pk", flat=True).first()
     return str(page_id) if page_id else ""
 

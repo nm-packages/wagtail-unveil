@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 
 from django.urls import get_resolver
 from wagtail.contrib.forms.models import FormMixin
+from wagtail.models import Page
 
 from wagtail_unveil.discovery.frontend_resolution import (
     get_default_site,
@@ -59,12 +60,11 @@ def _should_skip_frontend_url(url, skip_prefixes):
 
 def _discover_page_candidates():
     """Discover frontend page candidates before classification."""
+    # Keep routable-page imports local so discovery still degrades when that optional app is absent.
     try:
         from wagtail.contrib.routable_page.models import RoutablePageMixin
     except ImportError:
         RoutablePageMixin = None
-
-    from wagtail.models import Page
 
     skip_prefixes = get_skip_url_prefixes()
     limit = get_pages_per_type()
