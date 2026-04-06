@@ -12,57 +12,43 @@ class TestGetPagesPerType(TestCase):
         with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
             self.assertEqual(get_pages_per_type(), 1)
 
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=0)
-    def test_zero_means_no_limit(self):
-        self.assertEqual(get_pages_per_type(), 0)
+    def test_valid_setting_values_return_expected_results(self):
+        valid_cases = [
+            (0, 0),
+            (None, 1),
+            (1, 1),
+            (5, 5),
+            ("2", 2),
+            ("0", 0),
+        ]
 
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=None)
-    def test_none_returns_one(self):
-        self.assertEqual(get_pages_per_type(), 1)
+        for configured_value, expected in valid_cases:
+            with self.subTest(configured_value=configured_value):
+                with self.settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=configured_value):
+                    self.assertEqual(get_pages_per_type(), expected)
 
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1)
-    def test_returns_configured_value(self):
-        self.assertEqual(get_pages_per_type(), 1)
+    def test_invalid_setting_values_fall_back_to_one(self):
+        for configured_value in (-1, "abc", 1.5):
+            with self.subTest(configured_value=configured_value):
+                with self.settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=configured_value):
+                    self.assertEqual(get_pages_per_type(), 1)
 
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=5)
-    def test_returns_higher_value(self):
-        self.assertEqual(get_pages_per_type(), 5)
+    def test_valid_env_var_values_return_expected_results(self):
+        valid_cases = [
+            ("3", 3),
+            ("0", 0),
+        ]
 
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE="2")
-    def test_numeric_string_is_coerced(self):
-        self.assertEqual(get_pages_per_type(), 2)
+        for env_value, expected in valid_cases:
+            with self.subTest(env_value=env_value):
+                with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": env_value}):
+                    self.assertEqual(get_pages_per_type(), expected)
 
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE="0")
-    def test_zero_string_is_coerced(self):
-        self.assertEqual(get_pages_per_type(), 0)
-
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=-1)
-    def test_negative_int_falls_back_to_one(self):
-        self.assertEqual(get_pages_per_type(), 1)
-
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE="abc")
-    def test_invalid_string_falls_back_to_one(self):
-        self.assertEqual(get_pages_per_type(), 1)
-
-    @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=1.5)
-    def test_float_falls_back_to_one(self):
-        self.assertEqual(get_pages_per_type(), 1)
-
-    def test_env_var_numeric_string_is_coerced(self):
-        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "3"}):
-            self.assertEqual(get_pages_per_type(), 3)
-
-    def test_env_var_zero_string_means_no_limit(self):
-        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "0"}):
-            self.assertEqual(get_pages_per_type(), 0)
-
-    def test_env_var_negative_string_falls_back_to_one(self):
-        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "-1"}):
-            self.assertEqual(get_pages_per_type(), 1)
-
-    def test_env_var_invalid_string_falls_back_to_one(self):
-        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "abc"}):
-            self.assertEqual(get_pages_per_type(), 1)
+    def test_invalid_env_var_values_fall_back_to_one(self):
+        for env_value in ("-1", "abc"):
+            with self.subTest(env_value=env_value):
+                with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": env_value}):
+                    self.assertEqual(get_pages_per_type(), 1)
 
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=5)
     def test_env_var_wins_over_django_setting(self):

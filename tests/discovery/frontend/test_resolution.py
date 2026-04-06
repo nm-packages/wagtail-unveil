@@ -191,34 +191,23 @@ class TestWagtailAPIFrontendUrls(TestCase):
         self.assertEqual(len(matches), 1)
         return matches[0]
 
-    def test_pages_detail_route_uses_default_site_root_page_id(self):
-        match = self._get_match("/api/v2/pages/<int:pk>/", "detail")
+    def test_detail_routes_use_expected_instance_ids(self):
+        expected_matches = [
+            ("/api/v2/pages/<int:pk>/", self.default_site.root_page_id),
+            ("/api/v2/images/<int:pk>/", self.image.pk),
+            ("/api/v2/documents/<int:pk>/", self.document.pk),
+            ("/api/v2/redirects/<int:pk>/", self.redirect.pk),
+        ]
 
-        self.assertTrue(match.is_testable)
-        self.assertEqual(match.skip_reason, "")
-        self.assertEqual(match.resolved_url, f"/api/v2/pages/{self.default_site.root_page_id}/")
-        self.assertEqual(match.query_params, {})
+        for path, expected_pk in expected_matches:
+            with self.subTest(path=path):
+                match = self._get_match(path, "detail")
+                expected_url = path.replace("<int:pk>", str(expected_pk))
 
-    def test_images_detail_route_uses_image_id(self):
-        match = self._get_match("/api/v2/images/<int:pk>/", "detail")
-
-        self.assertTrue(match.is_testable)
-        self.assertEqual(match.resolved_url, f"/api/v2/images/{self.image.pk}/")
-        self.assertEqual(match.query_params, {})
-
-    def test_documents_detail_route_uses_document_id(self):
-        match = self._get_match("/api/v2/documents/<int:pk>/", "detail")
-
-        self.assertTrue(match.is_testable)
-        self.assertEqual(match.resolved_url, f"/api/v2/documents/{self.document.pk}/")
-        self.assertEqual(match.query_params, {})
-
-    def test_redirects_detail_route_uses_redirect_id(self):
-        match = self._get_match("/api/v2/redirects/<int:pk>/", "detail")
-
-        self.assertTrue(match.is_testable)
-        self.assertEqual(match.resolved_url, f"/api/v2/redirects/{self.redirect.pk}/")
-        self.assertEqual(match.query_params, {})
+                self.assertTrue(match.is_testable)
+                self.assertEqual(match.skip_reason, "")
+                self.assertEqual(match.resolved_url, expected_url)
+                self.assertEqual(match.query_params, {})
 
     def test_wagtail_api_find_routes_stay_visible_but_untestable(self):
         expected_paths = {
