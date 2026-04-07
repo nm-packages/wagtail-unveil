@@ -226,23 +226,20 @@ def _discover_resolver_candidates():
     return results
 
 
-def _format_cross_site_skip_reason(candidate):
-    """Build a skip reason for candidates that belong to a non-default site host."""
-    if not candidate.site_hostname:
-        return "Belongs to non-default site host"
-
-    if candidate.site_port and candidate.site_port not in (80, 443):
-        return f"Belongs to non-default site host: {candidate.site_hostname}:{candidate.site_port}"
-
-    return f"Belongs to non-default site host: {candidate.site_hostname}"
-
-
 def _classify_frontend_candidate(candidate):
     """Classify a frontend candidate and assign any skip reason."""
     if candidate.is_cross_site:
+        if not candidate.site_hostname:
+            skip_reason = "Belongs to non-default site host"
+        elif candidate.site_port and candidate.site_port not in (80, 443):
+            skip_reason = (
+                f"Belongs to non-default site host: {candidate.site_hostname}:{candidate.site_port}"
+            )
+        else:
+            skip_reason = f"Belongs to non-default site host: {candidate.site_hostname}"
         return _FrontendClassification(
             is_testable=False,
-            skip_reason=_format_cross_site_skip_reason(candidate),
+            skip_reason=skip_reason,
         )
     if candidate.requires_post:
         return _FrontendClassification(
@@ -266,22 +263,6 @@ def _classify_frontend_candidate(candidate):
         )
     return _FrontendClassification()
 
-
-def _build_frontend_url(candidate, classification):
-    """Emit a FrontendURL from candidate and classification state."""
-    return FrontendURL(
-        url=candidate.url,
-        source=candidate.source,
-        page_type=candidate.page_type,
-        page_title=candidate.page_title,
-        name=candidate.name,
-        resolved_url=candidate.resolved_url,
-        query_params=dict(candidate.query_params),
-        is_testable=classification.is_testable,
-        skip_reason=classification.skip_reason,
-    )
-
-
 def get_frontend_urls():
     """Discover all frontend URLs from pages and the URL resolver.
 
@@ -292,5 +273,17 @@ def get_frontend_urls():
     candidates = _discover_page_candidates() + _discover_resolver_candidates()
     for candidate in candidates:
         classification = _classify_frontend_candidate(candidate)
-        results.append(_build_frontend_url(candidate, classification))
+        results.append(
+            FrontendURL(
+                url=candidate.url,
+                source=candidate.source,
+                page_type=candidate.page_type,
+                page_title=candidate.page_title,
+                name=candidate.name,
+                resolved_url=candidate.resolved_url,
+                query_params=dict(candidate.query_params),
+                is_testable=classification.is_testable,
+                skip_reason=classification.skip_reason,
+            )
+        )
     return results

@@ -42,14 +42,6 @@ def get_default_site():
     return Site.objects.filter(is_default_site=True).first()
 
 
-def _get_default_site_root_page_id():
-    """Return the default site's root page ID when available."""
-    default_site = get_default_site()
-    if default_site and default_site.root_page_id:
-        return str(default_site.root_page_id)
-    return ""
-
-
 # Routable page parameter helpers
 
 
@@ -215,7 +207,12 @@ def get_wagtail_api_detail_resolved_url(callback, url):
         return ""
 
     if callback_cls is PagesAPIViewSet:
-        page_id = _get_default_site_root_page_id() or _get_first_live_page_id()
+        default_site = get_default_site()
+        page_id = (
+            str(default_site.root_page_id)
+            if default_site and default_site.root_page_id
+            else _get_first_live_page_id()
+        )
         return url.replace("<int:pk>", page_id, 1) if page_id else ""
 
     if callback_cls is ImagesAPIViewSet:
