@@ -14,7 +14,7 @@ Changes merged to `main` since the last release.
 - clarified agent workflow for issue-linked branches, new scoped work started from `main`, and open-PR title/summary drift checks
 - slimmed `AGENTS.md` and moved coding, testing, documentation, and command-workflow ownership more clearly into `CONVENTIONS.md` and contributor docs
 - documented the sandbox as the intentional contributor workflow for local feature development, debugging, and realistic discovery verification
-- restored a public backend admin URL reversal helper so cross-module discovery code no longer imports a private resolution symbol
+- inlined trivial backend discovery helpers and removed unused backend resolution helpers while preserving backend URL discovery behavior and the public admin URL reversal helper
 - improved report runner pause/cancel state handling so paused runs finish correctly on the last in-flight completion and canceled runs stop queuing further work
 - inlined trivial frontend discovery and resolution helpers while keeping frontend URL discovery behavior unchanged
 
