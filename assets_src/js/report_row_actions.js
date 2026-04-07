@@ -2,19 +2,10 @@
   var report = window.UnveilReport;
   var helpers = report.helpers;
 
-  function setBusyState(button) {
-    button.disabled = true;
-    button.textContent = "\u2026";
-  }
-
-  function resetBusyState(button) {
-    button.disabled = false;
-    button.textContent = "Test";
-  }
-
   function finalizeResult(button, row, statusCell, result, options) {
     helpers.renderStatus(statusCell, result.statusClass, result.label);
-    resetBusyState(button);
+    button.disabled = false;
+    button.textContent = "Test";
 
     if (!options || options.moveFailedRow !== false) {
       helpers.moveFailedRowToTop(row, result.statusClass);
@@ -40,7 +31,8 @@
     row = button.closest("tr");
     statusCell = button.closest("td").nextElementSibling;
 
-    setBusyState(button);
+    button.disabled = true;
+    button.textContent = "\u2026";
     statusCell.innerHTML = "\u2014";
 
     return fetch(url, { credentials: "include" })

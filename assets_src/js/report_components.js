@@ -1,12 +1,6 @@
 (() => {
   var report = window.UnveilReport;
 
-  function defineCustomElement(name, constructor) {
-    if (!customElements.get(name)) {
-      customElements.define(name, constructor);
-    }
-  }
-
   class UnveilResetButton extends HTMLElement {
     connectedCallback() {
       var button;
@@ -197,17 +191,20 @@
   }
 
   function defineCustomElements() {
-    defineCustomElement("unveil-reset-button", UnveilResetButton);
-    defineCustomElement(
-      "unveil-toggle-untestable-button",
-      UnveilToggleUntestableButton,
-    );
-    defineCustomElement("unveil-test-all-button", UnveilTestAllButton);
-    defineCustomElement("unveil-pause-button", UnveilPauseButton);
-    defineCustomElement("unveil-cancel-button", UnveilCancelButton);
-    defineCustomElement("unveil-search-input", UnveilSearchInput);
-    defineCustomElement("unveil-test-button", UnveilTestButton);
-    defineCustomElement("unveil-open-button", UnveilOpenButton);
+    [
+      ["unveil-reset-button", UnveilResetButton],
+      ["unveil-toggle-untestable-button", UnveilToggleUntestableButton],
+      ["unveil-test-all-button", UnveilTestAllButton],
+      ["unveil-pause-button", UnveilPauseButton],
+      ["unveil-cancel-button", UnveilCancelButton],
+      ["unveil-search-input", UnveilSearchInput],
+      ["unveil-test-button", UnveilTestButton],
+      ["unveil-open-button", UnveilOpenButton],
+    ].forEach(([name, constructor]) => {
+      if (!customElements.get(name)) {
+        customElements.define(name, constructor);
+      }
+    });
   }
 
   report.components = {
