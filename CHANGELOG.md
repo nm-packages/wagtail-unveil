@@ -8,13 +8,13 @@ Changes merged to `main` since the last release.
 
 ### Highlights
 
-- removed two unused singular backend resolution helpers so the supported admin page-resolution surface now matches the runtime discovery path
 - simplified documentation IA by keeping `README.md` as the GitHub/PyPI overview, tightening the docs hub, removing `docs/usage.md`, and reducing repetitive contributor-page scaffolding
 - added an MkDocs + Material HTML docs site with Mermaid rendering, CI validation, and GitHub Pages deployment
 - grouped `make help` commands by workflow and aligned contributor command guidance across the development docs and AGENTS guidance
 - clarified agent workflow for issue-linked branches, new scoped work started from `main`, and open-PR title/summary drift checks
 - slimmed `AGENTS.md` and moved coding, testing, documentation, and command-workflow ownership more clearly into `CONVENTIONS.md` and contributor docs
 - documented the sandbox as the intentional contributor workflow for local feature development, debugging, and realistic discovery verification
+- inlined trivial backend discovery helpers and removed unused backend resolution helpers while preserving backend URL discovery behavior and the public admin URL reversal helper
 - improved report runner pause/cancel state handling so paused runs finish correctly on the last in-flight completion and canceled runs stop queuing further work
 - inlined trivial frontend discovery and resolution helpers while keeping frontend URL discovery behavior unchanged
 

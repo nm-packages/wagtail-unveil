@@ -77,11 +77,6 @@ IMAGE_GENERATOR_NAMES = {
 }
 
 
-def _is_url_registered(url_name):
-    """Return True if the given URL name exists in the root URLconf."""
-    return url_name in get_resolver().reverse_dict
-
-
 def _discover_admin_routes():
     """Return raw admin routes discovered from the resolver."""
     resolver = get_resolver()
@@ -99,35 +94,28 @@ def _discover_admin_routes():
     return results
 
 
-def _has_unsafe_admin_regex(route):
-    """Return True when a cleaned admin route still contains unsafe regex syntax."""
-    return bool(re.search(r"[.][*+?]|\(", route))
-
-
-def _get_view_name(callback):
-    """Return a dotted path for a view callback."""
-    if hasattr(callback, "view_class"):
-        cls = callback.view_class
-        return f"{cls.__module__}.{cls.__qualname__}"
-    if hasattr(callback, "__module__") and hasattr(callback, "__qualname__"):
-        return f"{callback.__module__}.{callback.__qualname__}"
-    return repr(callback)
-
-
 def _normalize_admin_route(discovered_route, skip_prefixes):
     """Normalize a raw admin route and filter unsupported patterns."""
     route = clean_regex_route(discovered_route.raw_route)
-    if _has_unsafe_admin_regex(route):
+    if re.search(r"[.][*+?]|\(", route):
         return None
     if skip_prefixes and any(route.startswith(prefix) for prefix in skip_prefixes):
         return None
+    callback = discovered_route.callback
+    if hasattr(callback, "view_class"):
+        view_class = callback.view_class
+        view_name = f"{view_class.__module__}.{view_class.__qualname__}"
+    elif hasattr(callback, "__module__") and hasattr(callback, "__qualname__"):
+        view_name = f"{callback.__module__}.{callback.__qualname__}"
+    else:
+        view_name = repr(callback)
     return _NormalizedAdminRoute(
         route=route,
         name=discovered_route.name,
         namespace=discovered_route.namespace,
-        callback=discovered_route.callback,
+        callback=callback,
         has_parameters=route_has_parameters(route),
-        view_name=_get_view_name(discovered_route.callback),
+        view_name=view_name,
     )
 
 
@@ -157,17 +145,6 @@ def _classify_admin_route(normalized_route, docs_serve_available, images_serve_a
     return _AdminClassification()
 
 
-def _iter_callback_view_classes(callback):
-    """Yield distinct view classes exposed by a callback."""
-    seen = set()
-    for attr_name in ("view_class", "cls"):
-        view_class = getattr(callback, attr_name, None)
-        if view_class is None or view_class in seen:
-            continue
-        seen.add(view_class)
-        yield view_class
-
-
 def _get_callback_allowed_http_methods(callback):
     """Return declared HTTP methods for the callback when discoverable."""
     allowed_methods = set()
@@ -175,7 +152,12 @@ def _get_callback_allowed_http_methods(callback):
     if callback_actions:
         allowed_methods.update(str(method_name).upper() for method_name in callback_actions)
 
-    for view_class in _iter_callback_view_classes(callback):
+    seen_view_classes = set()
+    for attr_name in ("view_class", "cls"):
+        view_class = getattr(callback, attr_name, None)
+        if view_class is None or view_class in seen_view_classes:
+            continue
+        seen_view_classes.add(view_class)
         declared_methods = getattr(view_class, "http_method_names", None)
         if declared_methods is None:
             continue
@@ -300,8 +282,9 @@ def get_admin_urls():
     Returns a list of BackendURL dataclass instances for every URL pattern
     under the admin/ prefix.
     """
-    images_serve_available = _is_url_registered("wagtailimages_serve")
-    docs_serve_available = _is_url_registered("wagtaildocs_serve")
+    resolver = get_resolver()
+    images_serve_available = "wagtailimages_serve" in resolver.reverse_dict
+    docs_serve_available = "wagtaildocs_serve" in resolver.reverse_dict
     skip_prefixes = get_skip_url_prefixes()
     page_instances_by_type = get_page_instances_by_type()
     add_subpage_parent_instances_by_type = get_add_subpage_parent_page_instances_by_type()

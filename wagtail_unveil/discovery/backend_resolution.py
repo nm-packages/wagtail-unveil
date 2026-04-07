@@ -344,7 +344,7 @@ def _reverse_with_instance(namespace, name, instance):
 
 
 def resolve_parameterized_url_with_instance(namespace, name, instance):
-    """Resolve a parameterized admin URL using the provided instance."""
+    """Public helper for reversing an admin URL against a selected instance."""
     return _reverse_with_instance(namespace, name, instance)
 
 
@@ -390,7 +390,7 @@ def resolve_parameterized_url(namespace, name, callback, route=""):
             result.detail = "No model-backed instance was available for URL parameters"
         return result
 
-    reverse_result = _reverse_with_instance(namespace, name, selected_instance)
+    reverse_result = resolve_parameterized_url_with_instance(namespace, name, selected_instance)
     result.attempts.extend(reverse_result.attempts)
     if reverse_result.resolved:
         result.resolved = True
