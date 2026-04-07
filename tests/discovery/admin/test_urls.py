@@ -1,6 +1,7 @@
 from unittest import mock
 
 from django.test import TestCase
+from django.urls import get_resolver
 
 from wagtail_unveil.discovery.backend import (
     BackendURL,
@@ -288,9 +289,17 @@ class TestMissingServeUrls(TestCase):
     """Test that admin URLs are marked non-testable when required serve URLs are absent."""
 
     def _get_admin_urls_without(self, *missing_names):
+        resolver = get_resolver()
+        reverse_dict = resolver.reverse_dict.copy()
+        for name in missing_names:
+            reverse_dict.pop(name, None)
+
         with mock.patch(
-            "wagtail_unveil.discovery.backend._is_url_registered",
-            side_effect=lambda name: name not in missing_names,
+            "wagtail_unveil.discovery.backend.get_resolver",
+            return_value=mock.Mock(
+                reverse_dict=reverse_dict,
+                url_patterns=resolver.url_patterns,
+            ),
         ):
             return get_admin_urls()
 

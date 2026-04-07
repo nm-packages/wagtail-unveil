@@ -152,6 +152,16 @@ def get_form_page_instance():
     return None
 
 
+def get_page_instance():
+    """Return a representative non-root page instance for admin URL resolution."""
+    try:
+        from wagtail.models import Page
+    except Exception:
+        return None
+
+    return _get_instance_for_model(Page)
+
+
 def get_page_instances_by_type():
     """Return one representative non-root page instance per concrete page type."""
     try:
@@ -164,6 +174,24 @@ def get_page_instances_by_type():
         page_type = _get_page_type_label(page)
         instances_by_type.setdefault(page_type, page)
     return list(instances_by_type.values())
+
+
+def get_add_subpage_parent_page_instance():
+    """Return a parent page that can actually host at least one creatable child page."""
+    try:
+        from wagtail.models import Page
+    except Exception:
+        return None
+
+    for page in Page.objects.exclude(depth=1).specific().iterator():
+        specific_class = getattr(page, "specific_class", None)
+        if specific_class is None:
+            continue
+
+        if any(model.can_create_at(page) for model in specific_class.creatable_subpage_models()):
+            return page
+
+    return None
 
 
 def get_add_subpage_parent_page_instances_by_type():
@@ -344,7 +372,7 @@ def _reverse_with_instance(namespace, name, instance):
 
 
 def resolve_parameterized_url_with_instance(namespace, name, instance):
-    """Resolve a parameterized admin URL using the provided instance."""
+    """Public helper for reversing an admin URL against a selected instance."""
     return _reverse_with_instance(namespace, name, instance)
 
 
@@ -390,7 +418,7 @@ def resolve_parameterized_url(namespace, name, callback, route=""):
             result.detail = "No model-backed instance was available for URL parameters"
         return result
 
-    reverse_result = _reverse_with_instance(namespace, name, selected_instance)
+    reverse_result = resolve_parameterized_url_with_instance(namespace, name, selected_instance)
     result.attempts.extend(reverse_result.attempts)
     if reverse_result.resolved:
         result.resolved = True

@@ -83,7 +83,7 @@ If you are using `wagtail-unveil` in your own project and want to extend URL res
    - `wagtailforms` falls back to the first live form page instance when no earlier instance exists
    - `wagtailadmin_workflows` usage views override earlier model-derived instances with the first `Workflow` instance, and fail closed if no workflow exists
    - `wagtailadmin_workflows:tasks` resolves the GET-safe task routes `edit_task` and `task_chosen` from the first available `Task` instance
-6. Reverse the URL with `_reverse_with_instance()` using the selected instance.
+6. Reverse the URL with `resolve_parameterized_url_with_instance()` using the selected instance.
 7. If no instance can be selected, keep the route visible but untestable.
 
 The `wagtailadmin_pages` per-type behavior does not come from `get_registered_admin_instance_resolvers()`. It is handled only by a core backend discovery special-case in `wagtail_unveil/discovery/backend.py`, where `_iter_page_backed_admin_urls()` expands:
@@ -92,6 +92,8 @@ The `wagtailadmin_pages` per-type behavior does not come from `get_registered_ad
 - `wagtailadmin_pages:add_subpage` into one backend row per concrete non-root parent page type that exposes at least one creatable child model at that specific parent page
 
 Third-party and other non-core namespace-specific behavior should still use project-level resolver hooks rather than new package-specific branches in core discovery.
+
+`wagtail_unveil/discovery/backend_resolution.py` keeps most of its helpers internal, but exposes the small cross-module helper layer used by backend discovery: `resolve_parameterized_url()` and `resolve_parameterized_url_with_instance()`.
 
 `_get_model_from_callback()` still checks callback init kwargs first, then inspects classes exposed on `callback.view_class` and `callback.cls`, including direct `model` attributes plus cached-property and MRO-based variants of `model`. For treebeard-backed models, `_get_instance_for_model()` excludes the root node (`depth=1`) before selecting the first instance.
 

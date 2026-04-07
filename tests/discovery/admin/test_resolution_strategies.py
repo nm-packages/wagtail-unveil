@@ -8,12 +8,27 @@ from wagtail_unveil.discovery.backend_resolution import (
     _get_instance_for_model,
     _resolve_settings_url,
     resolve_parameterized_url,
+    resolve_parameterized_url_with_instance,
 )
 from wagtail_unveil.discovery.extensions import AdminInstanceResolver
 from wagtail_unveil.wagtail_hooks import register_unveil_admin_instance_resolvers
 
 
 class TestParameterizedResolutionStrategies(TestCase):
+    def test_public_instance_helper_reverses_url(self):
+        instance = mock.Mock(pk=42)
+
+        with mock.patch(
+            "wagtail_unveil.discovery.backend_resolution.reverse",
+            return_value="/admin/users/42/",
+        ) as reverse_mock:
+            result = resolve_parameterized_url_with_instance("wagtailusers_users", "edit", instance)
+
+        reverse_mock.assert_called_once_with("wagtailusers_users:edit", args=[42])
+        self.assertTrue(result.resolved)
+        self.assertEqual(result.resolved_route, "admin/users/42/")
+        self.assertEqual(result.attempts, ["reverse:resolved"])
+
     def test_settings_resolution_runs_first_and_stops(self):
         with mock.patch(
             "wagtail_unveil.discovery.backend_resolution._resolve_settings_url",
