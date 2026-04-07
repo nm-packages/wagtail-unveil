@@ -1,29 +1,10 @@
 (() => {
   var report = window.UnveilReport;
 
-  function getConfig() {
-    return {
-      apiUrl: document.body.dataset.apiUrl || "",
-      reportKind: document.body.dataset.reportKind || "",
-    };
-  }
-
-  function getSummaryElements() {
-    return {
-      total: document.getElementById("report-total"),
-      testable: document.getElementById("report-testable"),
-      untestable: document.getElementById("report-untestable"),
-    };
-  }
-
-  function setText(element, value) {
-    if (element) {
-      element.textContent = value;
-    }
-  }
-
   function updateSummary(metadata, fallbackCount) {
-    var summary = getSummaryElements();
+    var total = document.getElementById("report-total");
+    var testable = document.getElementById("report-testable");
+    var untestable = document.getElementById("report-untestable");
     var totalCount =
       metadata && typeof metadata.total_count === "number"
         ? metadata.total_count
@@ -37,33 +18,36 @@
         ? metadata.untestable_count
         : 0;
 
-    setText(summary.total, String(totalCount));
-    setText(summary.testable, String(testableCount));
-    setText(summary.untestable, String(untestableCount));
-  }
-
-  function getRequestUrl(item, reportKind) {
-    if (reportKind === "backend") {
-      return "/" + (item.resolved_route || item.route);
+    if (total) {
+      total.textContent = String(totalCount);
     }
-
-    var requestUrl = item.resolved_url || item.url;
-    var queryParams = item.query_params || {};
-    var encodedParams = new URLSearchParams(queryParams).toString();
-
-    if (!encodedParams) {
-      return requestUrl;
+    if (testable) {
+      testable.textContent = String(testableCount);
     }
-
-    return (
-      requestUrl + (requestUrl.indexOf("?") === -1 ? "?" : "&") + encodedParams
-    );
+    if (untestable) {
+      untestable.textContent = String(untestableCount);
+    }
   }
 
   function createActionCell(item, reportKind) {
     var cell = document.createElement("td");
     var testButton = document.createElement("unveil-test-button");
-    var requestUrl = getRequestUrl(item, reportKind);
+    var requestUrl;
+
+    if (reportKind === "backend") {
+      requestUrl = "/" + (item.resolved_route || item.route);
+    } else {
+      var queryParams = item.query_params || {};
+      var encodedParams = new URLSearchParams(queryParams).toString();
+
+      requestUrl = item.resolved_url || item.url;
+      if (encodedParams) {
+        requestUrl +=
+          requestUrl.indexOf("?") === -1
+            ? "?" + encodedParams
+            : "&" + encodedParams;
+      }
+    }
 
     if (item.is_testable) {
       var group = document.createElement("span");
@@ -159,24 +143,20 @@
     return row;
   }
 
-  function createEmptyRow() {
-    var row = document.createElement("tr");
-    var cell = document.createElement("td");
-
-    row.className = "empty-row";
-    cell.setAttribute("colspan", "7");
-    cell.textContent = "No URLs found.";
-    row.appendChild(cell);
-    return row;
-  }
-
   function renderRows(urls, reportKind) {
     var tbody = report.helpers.getTableBody();
 
     tbody.innerHTML = "";
 
     if (!urls.length) {
-      tbody.appendChild(createEmptyRow());
+      var row = document.createElement("tr");
+      var cell = document.createElement("td");
+
+      row.className = "empty-row";
+      cell.setAttribute("colspan", "7");
+      cell.textContent = "No URLs found.";
+      row.appendChild(cell);
+      tbody.appendChild(row);
       return;
     }
 
@@ -190,22 +170,15 @@
     });
   }
 
-  function extractErrorMessage(response, data) {
-    if (data && data.error) {
-      return data.error;
-    }
-
-    return "Report data request failed (" + response.status + ").";
-  }
-
   function loadReportData() {
-    var config = getConfig();
+    var apiUrl = document.body.dataset.apiUrl || "";
+    var reportKind = document.body.dataset.reportKind || "";
 
-    if (!config.apiUrl || !config.reportKind) {
+    if (!apiUrl || !reportKind) {
       return Promise.reject(new Error("Report configuration is missing."));
     }
 
-    return fetch(config.apiUrl, {
+    return fetch(apiUrl, {
       credentials: "include",
       headers: {
         Accept: "application/json",
@@ -219,7 +192,11 @@
           })
           .then((data) => {
             if (!response.ok) {
-              throw new Error(extractErrorMessage(response, data));
+              throw new Error(
+                data && data.error
+                  ? data.error
+                  : "Report data request failed (" + response.status + ").",
+              );
             }
 
             if (!data || !Array.isArray(data.urls)) {
@@ -233,7 +210,7 @@
         var urls = Array.isArray(data.urls) ? data.urls : [];
 
         updateSummary(data.metadata || null, data.count || urls.length);
-        renderRows(urls, config.reportKind);
+        renderRows(urls, reportKind);
         return data;
       })
       .catch((error) => {

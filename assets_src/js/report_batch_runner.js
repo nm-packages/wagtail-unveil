@@ -16,23 +16,6 @@
     };
   }
 
-  function syncControlsForIdle() {
-    var controls = getControls();
-
-    controls.testAllButton.classList.remove("hidden");
-    controls.pauseButton.classList.add("hidden");
-    controls.cancelButton.classList.add("hidden");
-  }
-
-  function syncControlsForRunning() {
-    var controls = getControls();
-
-    controls.testAllButton.classList.add("hidden");
-    controls.pauseButton.classList.remove("hidden");
-    controls.cancelButton.classList.add("hidden");
-    controls.summary.classList.remove("hidden");
-  }
-
   function finishTests() {
     var controls = getControls();
     var runState = state.testState;
@@ -45,8 +28,9 @@
     }
 
     runState.status = RUN_STATUS_FINISHED;
-
-    syncControlsForIdle();
+    controls.testAllButton.classList.remove("hidden");
+    controls.pauseButton.classList.add("hidden");
+    controls.cancelButton.classList.add("hidden");
 
     runState.summaryEl.innerHTML =
       'Results: <span class="pass">' +
@@ -208,15 +192,8 @@
       runState.status = RUN_STATUS_STOPPED;
       state.testState = null;
     }
-    window.location.reload();
-  }
 
-  function resetVisibleStatuses() {
-    document
-      .querySelectorAll("tbody tr:not(.hidden):not(.untestable) .status-cell")
-      .forEach((cell) => {
-        cell.innerHTML = "\u2014";
-      });
+    window.location.reload();
   }
 
   function testAll() {
@@ -227,10 +204,17 @@
       return;
     }
 
-    syncControlsForRunning();
+    controls.testAllButton.classList.add("hidden");
+    controls.pauseButton.classList.remove("hidden");
+    controls.cancelButton.classList.add("hidden");
+    controls.summary.classList.remove("hidden");
     controls.pauseButton.textContent = "Pause";
     helpers.clearSuccessBanner();
-    resetVisibleStatuses();
+    document
+      .querySelectorAll("tbody tr:not(.hidden):not(.untestable) .status-cell")
+      .forEach((cell) => {
+        cell.innerHTML = "\u2014";
+      });
 
     state.testState = {
       buttons: buttons,

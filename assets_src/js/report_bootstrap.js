@@ -1,19 +1,7 @@
 (() => {
-  function bindRetryButton() {
-    var button = document.getElementById("report-retry-button");
-
-    if (!button || button.dataset.unveilRetryBound === "true") {
-      return;
-    }
-
-    button.dataset.unveilRetryBound = "true";
-    button.addEventListener("click", () => {
-      window.location.reload();
-    });
-  }
-
   function initReport() {
     var report = window.UnveilReport;
+    var retryButton;
 
     if (!report || document.body.dataset.unveilReportInitialized === "true") {
       return;
@@ -23,7 +11,13 @@
     report.helpers.showLoadingScreen("Loading report data...", {
       delayMs: 200,
     });
-    bindRetryButton();
+    retryButton = document.getElementById("report-retry-button");
+    if (retryButton && retryButton.dataset.unveilRetryBound !== "true") {
+      retryButton.dataset.unveilRetryBound = "true";
+      retryButton.addEventListener("click", () => {
+        window.location.reload();
+      });
+    }
     report.components.defineCustomElements();
     report.data
       .loadReportData()
