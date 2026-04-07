@@ -86,6 +86,11 @@
       return;
     }
 
+    if (runState.done >= runState.total) {
+      finishTests();
+      return;
+    }
+
     if (runState.status === RUN_STATUS_PAUSED) {
       controls.pauseButton.textContent = "Continue";
       runState.summaryEl.innerHTML =
@@ -93,15 +98,10 @@
       return;
     }
 
-    if (runState.done < runState.total) {
-      controls.pauseButton.textContent =
-        "Pause (" + runState.done + "/" + runState.total + ")";
-      runState.summaryEl.innerHTML =
-        "Progress: " + runState.done + "/" + runState.total;
-      return;
-    }
-
-    finishTests();
+    controls.pauseButton.textContent =
+      "Pause (" + runState.done + "/" + runState.total + ")";
+    runState.summaryEl.innerHTML =
+      "Progress: " + runState.done + "/" + runState.total;
   }
 
   function runNext(index) {
@@ -202,8 +202,11 @@
   }
 
   function cancelTests() {
-    if (state.testState) {
-      state.testState.status = RUN_STATUS_STOPPED;
+    var runState = state.testState;
+
+    if (runState) {
+      runState.status = RUN_STATUS_STOPPED;
+      state.testState = null;
     }
     window.location.reload();
   }
