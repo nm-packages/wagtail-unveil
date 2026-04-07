@@ -1,16 +1,33 @@
 from types import SimpleNamespace
+from unittest import mock
 
 from django.test import TestCase
 
 from wagtail_unveil.discovery.frontend import (
-    _build_frontend_url,
     _classify_frontend_candidate,
     _discover_routable_page_candidates,
     _FrontendCandidate,
+    get_frontend_urls,
 )
 
 
 class TestFrontendDiscoveryPhases(TestCase):
+    def _get_frontend_result(self, candidate):
+        with (
+            mock.patch(
+                "wagtail_unveil.discovery.frontend._discover_page_candidates",
+                return_value=[candidate],
+            ),
+            mock.patch(
+                "wagtail_unveil.discovery.frontend._discover_resolver_candidates",
+                return_value=[],
+            ),
+        ):
+            results = get_frontend_urls()
+
+        self.assertEqual(len(results), 1)
+        return results[0]
+
     def test_parameterized_resolver_candidate_with_resolved_url_is_testable(self):
         candidate = _FrontendCandidate(
             url="/api/v2/pages/<int:pk>/",
@@ -23,11 +40,12 @@ class TestFrontendDiscoveryPhases(TestCase):
         )
 
         classification = _classify_frontend_candidate(candidate)
-        result = _build_frontend_url(candidate, classification)
+        result = self._get_frontend_result(candidate)
 
         self.assertTrue(result.is_testable)
         self.assertEqual(result.skip_reason, "")
         self.assertEqual(result.resolved_url, "/api/v2/pages/2/")
+        self.assertTrue(classification.is_testable)
 
     def test_query_driven_candidate_without_query_params_is_untestable(self):
         candidate = _FrontendCandidate(
@@ -80,11 +98,12 @@ class TestFrontendDiscoveryPhases(TestCase):
         )
 
         classification = _classify_frontend_candidate(candidate)
-        result = _build_frontend_url(candidate, classification)
+        result = self._get_frontend_result(candidate)
 
         self.assertTrue(result.is_testable)
         self.assertEqual(result.skip_reason, "")
         self.assertEqual(result.resolved_url, "/events/year/2025/")
+        self.assertTrue(classification.is_testable)
 
     def test_plain_page_candidate_is_testable(self):
         candidate = _FrontendCandidate(
@@ -96,10 +115,11 @@ class TestFrontendDiscoveryPhases(TestCase):
         )
 
         classification = _classify_frontend_candidate(candidate)
-        result = _build_frontend_url(candidate, classification)
+        result = self._get_frontend_result(candidate)
 
         self.assertTrue(result.is_testable)
         self.assertEqual(result.skip_reason, "")
+        self.assertTrue(classification.is_testable)
 
     def test_form_landing_candidate_requires_post(self):
         candidate = _FrontendCandidate(

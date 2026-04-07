@@ -134,9 +134,6 @@
     var report = window.UnveilReport;
     var state = report.state;
     var helpers = report.helpers;
-    function getSearchableColumns() {
-      return document.querySelectorAll("th[data-sort-col]");
-    }
     function rowMatchesSearch(row) {
       var searchTerm = state.currentSearchTerm;
       var sortableCols;
@@ -149,7 +146,7 @@
       if (!searchTerm) {
         return true;
       }
-      sortableCols = getSearchableColumns();
+      sortableCols = document.querySelectorAll("th[data-sort-col]");
       for (index = 0; index < sortableCols.length; index++) {
         colIdx = Number.parseInt(
           sortableCols[index].getAttribute("data-sort-col"),
@@ -162,18 +159,12 @@
       }
       return false;
     }
-    function rowMatchesUntestableFilter(row) {
-      if (!helpers.isDataRow(row)) {
-        return true;
-      }
-      if (!state.hideUntestable) {
-        return true;
-      }
-      return !row.classList.contains("untestable");
-    }
     function applyFilters() {
       document.querySelectorAll("tbody tr").forEach((row) => {
-        var visible = rowMatchesSearch(row) && rowMatchesUntestableFilter(row);
+        var visible = rowMatchesSearch(row);
+        if (visible && helpers.isDataRow(row) && state.hideUntestable && row.classList.contains("untestable")) {
+          visible = false;
+        }
         row.classList.toggle("hidden", !visible);
       });
     }
@@ -283,17 +274,10 @@
   (() => {
     var report = window.UnveilReport;
     var helpers = report.helpers;
-    function setBusyState(button) {
-      button.disabled = true;
-      button.textContent = "\u2026";
-    }
-    function resetBusyState(button) {
-      button.disabled = false;
-      button.textContent = "Test";
-    }
     function finalizeResult(button, row, statusCell, result, options) {
       helpers.renderStatus(statusCell, result.statusClass, result.label);
-      resetBusyState(button);
+      button.disabled = false;
+      button.textContent = "Test";
       if (!options || options.moveFailedRow !== false) {
         helpers.moveFailedRowToTop(row, result.statusClass);
       }
@@ -312,7 +296,8 @@
       url = button.dataset.url;
       row = button.closest("tr");
       statusCell = button.closest("td").nextElementSibling;
-      setBusyState(button);
+      button.disabled = true;
+      button.textContent = "\u2026";
       statusCell.innerHTML = "\u2014";
       return fetch(url, { credentials: "include" }).then(
         (response) => finalizeResult(
@@ -362,19 +347,6 @@
         testAllButton: document.querySelector(".test-all-btn")
       };
     }
-    function syncControlsForIdle() {
-      var controls = getControls();
-      controls.testAllButton.classList.remove("hidden");
-      controls.pauseButton.classList.add("hidden");
-      controls.cancelButton.classList.add("hidden");
-    }
-    function syncControlsForRunning() {
-      var controls = getControls();
-      controls.testAllButton.classList.add("hidden");
-      controls.pauseButton.classList.remove("hidden");
-      controls.cancelButton.classList.add("hidden");
-      controls.summary.classList.remove("hidden");
-    }
     function finishTests() {
       var controls = getControls();
       var runState = state.testState;
@@ -385,7 +357,9 @@
         return;
       }
       runState.status = RUN_STATUS_FINISHED;
-      syncControlsForIdle();
+      controls.testAllButton.classList.remove("hidden");
+      controls.pauseButton.classList.add("hidden");
+      controls.cancelButton.classList.add("hidden");
       runState.summaryEl.innerHTML = 'Results: <span class="pass">' + runState.passed + ' passed</span>, <span class="fail">' + runState.failed + " failed</span> out of " + runState.done + "/" + runState.total;
       state.testState = null;
       if (runState.failed === 0 && runState.total > 0) {
@@ -501,21 +475,21 @@
       }
       window.location.reload();
     }
-    function resetVisibleStatuses() {
-      document.querySelectorAll("tbody tr:not(.hidden):not(.untestable) .status-cell").forEach((cell) => {
-        cell.innerHTML = "\u2014";
-      });
-    }
     function testAll() {
       var controls = getControls();
       var buttons = helpers.getVisibleTestButtons();
       if (buttons.length === 0) {
         return;
       }
-      syncControlsForRunning();
+      controls.testAllButton.classList.add("hidden");
+      controls.pauseButton.classList.remove("hidden");
+      controls.cancelButton.classList.add("hidden");
+      controls.summary.classList.remove("hidden");
       controls.pauseButton.textContent = "Pause";
       helpers.clearSuccessBanner();
-      resetVisibleStatuses();
+      document.querySelectorAll("tbody tr:not(.hidden):not(.untestable) .status-cell").forEach((cell) => {
+        cell.innerHTML = "\u2014";
+      });
       state.testState = {
         buttons,
         done: 0,
@@ -541,11 +515,6 @@
   // assets_src/js/report_components.js
   (() => {
     var report = window.UnveilReport;
-    function defineCustomElement(name, constructor) {
-      if (!customElements.get(name)) {
-        customElements.define(name, constructor);
-      }
-    }
     class UnveilResetButton extends HTMLElement {
       connectedCallback() {
         var button;
@@ -701,17 +670,20 @@
       }
     }
     function defineCustomElements() {
-      defineCustomElement("unveil-reset-button", UnveilResetButton);
-      defineCustomElement(
-        "unveil-toggle-untestable-button",
-        UnveilToggleUntestableButton
-      );
-      defineCustomElement("unveil-test-all-button", UnveilTestAllButton);
-      defineCustomElement("unveil-pause-button", UnveilPauseButton);
-      defineCustomElement("unveil-cancel-button", UnveilCancelButton);
-      defineCustomElement("unveil-search-input", UnveilSearchInput);
-      defineCustomElement("unveil-test-button", UnveilTestButton);
-      defineCustomElement("unveil-open-button", UnveilOpenButton);
+      [
+        ["unveil-reset-button", UnveilResetButton],
+        ["unveil-toggle-untestable-button", UnveilToggleUntestableButton],
+        ["unveil-test-all-button", UnveilTestAllButton],
+        ["unveil-pause-button", UnveilPauseButton],
+        ["unveil-cancel-button", UnveilCancelButton],
+        ["unveil-search-input", UnveilSearchInput],
+        ["unveil-test-button", UnveilTestButton],
+        ["unveil-open-button", UnveilOpenButton]
+      ].forEach(([name, constructor]) => {
+        if (!customElements.get(name)) {
+          customElements.define(name, constructor);
+        }
+      });
     }
     report.components = {
       defineCustomElements
@@ -721,49 +693,37 @@
   // assets_src/js/report_data.js
   (() => {
     var report = window.UnveilReport;
-    function getConfig() {
-      return {
-        apiUrl: document.body.dataset.apiUrl || "",
-        reportKind: document.body.dataset.reportKind || ""
-      };
-    }
-    function getSummaryElements() {
-      return {
-        total: document.getElementById("report-total"),
-        testable: document.getElementById("report-testable"),
-        untestable: document.getElementById("report-untestable")
-      };
-    }
-    function setText(element, value) {
-      if (element) {
-        element.textContent = value;
-      }
-    }
     function updateSummary(metadata, fallbackCount) {
-      var summary = getSummaryElements();
+      var total = document.getElementById("report-total");
+      var testable = document.getElementById("report-testable");
+      var untestable = document.getElementById("report-untestable");
       var totalCount = metadata && typeof metadata.total_count === "number" ? metadata.total_count : fallbackCount;
       var testableCount = metadata && typeof metadata.testable_count === "number" ? metadata.testable_count : 0;
       var untestableCount = metadata && typeof metadata.untestable_count === "number" ? metadata.untestable_count : 0;
-      setText(summary.total, String(totalCount));
-      setText(summary.testable, String(testableCount));
-      setText(summary.untestable, String(untestableCount));
-    }
-    function getRequestUrl(item, reportKind) {
-      if (reportKind === "backend") {
-        return "/" + (item.resolved_route || item.route);
+      if (total) {
+        total.textContent = String(totalCount);
       }
-      var requestUrl = item.resolved_url || item.url;
-      var queryParams = item.query_params || {};
-      var encodedParams = new URLSearchParams(queryParams).toString();
-      if (!encodedParams) {
-        return requestUrl;
+      if (testable) {
+        testable.textContent = String(testableCount);
       }
-      return requestUrl + (requestUrl.indexOf("?") === -1 ? "?" : "&") + encodedParams;
+      if (untestable) {
+        untestable.textContent = String(untestableCount);
+      }
     }
     function createActionCell(item, reportKind) {
       var cell = document.createElement("td");
       var testButton = document.createElement("unveil-test-button");
-      var requestUrl = getRequestUrl(item, reportKind);
+      var requestUrl;
+      if (reportKind === "backend") {
+        requestUrl = "/" + (item.resolved_route || item.route);
+      } else {
+        var queryParams = item.query_params || {};
+        var encodedParams = new URLSearchParams(queryParams).toString();
+        requestUrl = item.resolved_url || item.url;
+        if (encodedParams) {
+          requestUrl += requestUrl.indexOf("?") === -1 ? "?" + encodedParams : "&" + encodedParams;
+        }
+      }
       if (item.is_testable) {
         var group = document.createElement("span");
         var openButton = document.createElement("unveil-open-button");
@@ -841,20 +801,17 @@
       row.appendChild(createStatusCell(item));
       return row;
     }
-    function createEmptyRow() {
-      var row = document.createElement("tr");
-      var cell = document.createElement("td");
-      row.className = "empty-row";
-      cell.setAttribute("colspan", "7");
-      cell.textContent = "No URLs found.";
-      row.appendChild(cell);
-      return row;
-    }
     function renderRows(urls, reportKind) {
       var tbody = report.helpers.getTableBody();
       tbody.innerHTML = "";
       if (!urls.length) {
-        tbody.appendChild(createEmptyRow());
+        var row = document.createElement("tr");
+        var cell = document.createElement("td");
+        row.className = "empty-row";
+        cell.setAttribute("colspan", "7");
+        cell.textContent = "No URLs found.";
+        row.appendChild(cell);
+        tbody.appendChild(row);
         return;
       }
       urls.forEach((item) => {
@@ -865,18 +822,13 @@
         tbody.appendChild(createFrontendRow(item));
       });
     }
-    function extractErrorMessage(response, data) {
-      if (data && data.error) {
-        return data.error;
-      }
-      return "Report data request failed (" + response.status + ").";
-    }
     function loadReportData() {
-      var config = getConfig();
-      if (!config.apiUrl || !config.reportKind) {
+      var apiUrl = document.body.dataset.apiUrl || "";
+      var reportKind = document.body.dataset.reportKind || "";
+      if (!apiUrl || !reportKind) {
         return Promise.reject(new Error("Report configuration is missing."));
       }
-      return fetch(config.apiUrl, {
+      return fetch(apiUrl, {
         credentials: "include",
         headers: {
           Accept: "application/json"
@@ -886,7 +838,9 @@
           throw new Error("Report data response was not valid JSON.");
         }).then((data) => {
           if (!response.ok) {
-            throw new Error(extractErrorMessage(response, data));
+            throw new Error(
+              data && data.error ? data.error : "Report data request failed (" + response.status + ")."
+            );
           }
           if (!data || !Array.isArray(data.urls)) {
             throw new Error("Report data response was not valid JSON.");
@@ -896,7 +850,7 @@
       ).then((data) => {
         var urls = Array.isArray(data.urls) ? data.urls : [];
         updateSummary(data.metadata || null, data.count || urls.length);
-        renderRows(urls, config.reportKind);
+        renderRows(urls, reportKind);
         return data;
       }).catch((error) => {
         updateSummary(null, 0);
@@ -911,18 +865,9 @@
 
   // assets_src/js/report_bootstrap.js
   (() => {
-    function bindRetryButton() {
-      var button = document.getElementById("report-retry-button");
-      if (!button || button.dataset.unveilRetryBound === "true") {
-        return;
-      }
-      button.dataset.unveilRetryBound = "true";
-      button.addEventListener("click", () => {
-        window.location.reload();
-      });
-    }
     function initReport() {
       var report = window.UnveilReport;
+      var retryButton;
       if (!report || document.body.dataset.unveilReportInitialized === "true") {
         return;
       }
@@ -930,7 +875,13 @@
       report.helpers.showLoadingScreen("Loading report data...", {
         delayMs: 200
       });
-      bindRetryButton();
+      retryButton = document.getElementById("report-retry-button");
+      if (retryButton && retryButton.dataset.unveilRetryBound !== "true") {
+        retryButton.dataset.unveilRetryBound = "true";
+        retryButton.addEventListener("click", () => {
+          window.location.reload();
+        });
+      }
       report.components.defineCustomElements();
       report.data.loadReportData().then(() => {
         report.sorting.init();

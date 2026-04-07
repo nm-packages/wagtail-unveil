@@ -9,8 +9,8 @@ from wagtail.images.tests.utils import get_test_image_file
 from wagtail.models import Site
 
 from wagtail_unveil.discovery.frontend import (
+    _classify_frontend_candidate,
     _discover_routable_page_candidates,
-    _format_cross_site_skip_reason,
     _FrontendCandidate,
     get_frontend_urls,
 )
@@ -38,7 +38,7 @@ class TestFrontendDiscoveryHelpers(TestCase):
 
         self.assertEqual(get_wagtail_api_detail_resolved_url(callback, "/api/v2/pages/<int:pk>/"), "")
 
-    def test_format_cross_site_skip_reason_with_standard_port_omits_port(self):
+    def test_classify_frontend_candidate_omits_standard_port_in_cross_site_skip_reason(self):
         candidate = _FrontendCandidate(
             url="/about/",
             source="page",
@@ -49,9 +49,10 @@ class TestFrontendDiscoveryHelpers(TestCase):
             site_port=80,
             is_cross_site=True,
         )
+        classification = _classify_frontend_candidate(candidate)
 
         self.assertEqual(
-            _format_cross_site_skip_reason(candidate),
+            classification.skip_reason,
             "Belongs to non-default site host: sub.localhost",
         )
 

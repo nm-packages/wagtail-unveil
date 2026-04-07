@@ -3,10 +3,6 @@
   var state = report.state;
   var helpers = report.helpers;
 
-  function getSearchableColumns() {
-    return document.querySelectorAll("th[data-sort-col]");
-  }
-
   function rowMatchesSearch(row) {
     var searchTerm = state.currentSearchTerm;
     var sortableCols;
@@ -22,7 +18,7 @@
       return true;
     }
 
-    sortableCols = getSearchableColumns();
+    sortableCols = document.querySelectorAll("th[data-sort-col]");
     for (index = 0; index < sortableCols.length; index++) {
       colIdx = Number.parseInt(
         sortableCols[index].getAttribute("data-sort-col"),
@@ -37,21 +33,19 @@
     return false;
   }
 
-  function rowMatchesUntestableFilter(row) {
-    if (!helpers.isDataRow(row)) {
-      return true;
-    }
-
-    if (!state.hideUntestable) {
-      return true;
-    }
-
-    return !row.classList.contains("untestable");
-  }
-
   function applyFilters() {
     document.querySelectorAll("tbody tr").forEach((row) => {
-      var visible = rowMatchesSearch(row) && rowMatchesUntestableFilter(row);
+      var visible = rowMatchesSearch(row);
+
+      if (
+        visible &&
+        helpers.isDataRow(row) &&
+        state.hideUntestable &&
+        row.classList.contains("untestable")
+      ) {
+        visible = false;
+      }
+
       row.classList.toggle("hidden", !visible);
     });
   }
