@@ -15,6 +15,7 @@ Changes merged to `main` since the last release.
 - clarified agent workflow for issue-linked branches, new scoped work started from `main`, and open-PR title/summary drift checks
 - slimmed `AGENTS.md` and moved coding, testing, documentation, and command-workflow ownership more clearly into `CONVENTIONS.md` and contributor docs
 - documented the sandbox as the intentional contributor workflow for local feature development, debugging, and realistic discovery verification
+- improved report runner pause/cancel state handling so paused runs finish correctly on the last in-flight completion and canceled runs stop queuing further work
 
 ## 0.1.0a5 - 2026-04-02
 
