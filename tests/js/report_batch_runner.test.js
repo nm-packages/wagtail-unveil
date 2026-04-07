@@ -55,15 +55,19 @@ describe("report batch runner", () => {
 
     window.UnveilReport.batchRunner.testAll();
 
+    expect(window.UnveilReport.state.testState.status).toBe("running");
+
     expect(controls.testAllButton.classList.contains("hidden")).toBe(true);
     expect(controls.pauseButton.classList.contains("hidden")).toBe(false);
     expect(controls.summary.classList.contains("hidden")).toBe(false);
 
     window.UnveilReport.batchRunner.handlePauseClick();
+    expect(window.UnveilReport.state.testState.status).toBe("paused");
     expect(controls.pauseButton.textContent).toBe("Continue");
     expect(controls.cancelButton.classList.contains("hidden")).toBe(false);
 
     window.UnveilReport.batchRunner.handlePauseClick();
+    expect(window.UnveilReport.state.testState.status).toBe("running");
     expect(controls.pauseButton.textContent).toBe("Pause");
     expect(controls.cancelButton.classList.contains("hidden")).toBe(true);
 
@@ -75,5 +79,58 @@ describe("report batch runner", () => {
     expect(controls.pauseButton.classList.contains("hidden")).toBe(true);
     expect(controls.summary.innerHTML).toContain("Results:");
     expect(controls.summary.innerHTML).toContain("out of 2/2");
+  });
+
+  test("keeps paused UI state when the in-flight request completes", async () => {
+    const controls = {
+      cancelButton: document.querySelector(".cancel-btn"),
+      pauseButton: document.querySelector(".pause-btn"),
+      summary: document.getElementById("test-all-summary"),
+    };
+    const completions = [];
+
+    window.UnveilReport.rowActions.testUrlButton = vi.fn((button, options) => {
+      completions.push(() => {
+        options.onComplete({
+          statusClass: button.dataset.statusClass,
+        });
+      });
+
+      return Promise.resolve({
+        statusClass: button.dataset.statusClass,
+      });
+    });
+
+    window.UnveilReport.batchRunner.testAll();
+    window.UnveilReport.batchRunner.handlePauseClick();
+
+    expect(window.UnveilReport.state.testState.status).toBe("paused");
+    expect(controls.pauseButton.textContent).toBe("Continue");
+    expect(controls.cancelButton.classList.contains("hidden")).toBe(false);
+    expect(controls.summary.textContent).toBe("Paused: 0/2");
+
+    completions[0]();
+    await Promise.resolve();
+
+    expect(window.UnveilReport.state.testState.status).toBe("paused");
+    expect(controls.pauseButton.textContent).toBe("Continue");
+    expect(controls.cancelButton.classList.contains("hidden")).toBe(false);
+    expect(controls.summary.textContent).toBe("Paused: 1/2");
+
+    vi.runOnlyPendingTimers();
+
+    expect(window.UnveilReport.state.testState.nextIndex).toBe(1);
+    expect(window.UnveilReport.rowActions.testUrlButton).toHaveBeenCalledTimes(
+      1,
+    );
+
+    window.UnveilReport.batchRunner.handlePauseClick();
+
+    expect(window.UnveilReport.state.testState.status).toBe("running");
+    expect(controls.pauseButton.textContent).toBe("Pause");
+    expect(controls.cancelButton.classList.contains("hidden")).toBe(true);
+    expect(window.UnveilReport.rowActions.testUrlButton).toHaveBeenCalledTimes(
+      2,
+    );
   });
 });
