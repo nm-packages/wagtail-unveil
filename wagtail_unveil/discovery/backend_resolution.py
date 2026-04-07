@@ -152,16 +152,6 @@ def get_form_page_instance():
     return None
 
 
-def get_page_instance():
-    """Return a representative non-root page instance for admin URL resolution."""
-    try:
-        from wagtail.models import Page
-    except Exception:
-        return None
-
-    return _get_instance_for_model(Page)
-
-
 def get_page_instances_by_type():
     """Return one representative non-root page instance per concrete page type."""
     try:
@@ -174,24 +164,6 @@ def get_page_instances_by_type():
         page_type = _get_page_type_label(page)
         instances_by_type.setdefault(page_type, page)
     return list(instances_by_type.values())
-
-
-def get_add_subpage_parent_page_instance():
-    """Return a parent page that can actually host at least one creatable child page."""
-    try:
-        from wagtail.models import Page
-    except Exception:
-        return None
-
-    for page in Page.objects.exclude(depth=1).specific().iterator():
-        specific_class = getattr(page, "specific_class", None)
-        if specific_class is None:
-            continue
-
-        if any(model.can_create_at(page) for model in specific_class.creatable_subpage_models()):
-            return page
-
-    return None
 
 
 def get_add_subpage_parent_page_instances_by_type():
