@@ -8,8 +8,8 @@ This is the canonical documentation hub for `wagtail-unveil`.
 
 - [Getting Started](getting-started/index.md) — Canonical starting point for installation, quick start, and first-time setup.
 - [Features](features/index.md) — Canonical user-facing guide to reports, the settings page, and the dashboard panel.
-- [Configuration](configuration/index.md) — Canonical reference for package settings and API key configuration.
-- [API Reference](api/index.md) — Canonical reference for versioned JSON API endpoints, auth, and response shape.
+- [Configuration](configuration/index.md) — Canonical reference for package settings, API key configuration, and platform dependency manifest configuration.
+- [API Reference](api/index.md) — Canonical reference for versioned JSON API endpoints, including URL discovery and platform runtime metadata.
 - [Recipes](recipes/index.md) — Task-focused guides for extending `wagtail-unveil` in your own project.
 
 ## Contribute / maintain

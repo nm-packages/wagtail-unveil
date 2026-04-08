@@ -20,6 +20,7 @@ It exposes discovery through:
 - interactive HTML reports in Wagtail admin (superuser + `DEBUG=True`, or `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`)
 - a dedicated settings and diagnostics page in Wagtail admin (superuser + `DEBUG=True`, or `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`)
 - a dashboard panel linking to the admin report, frontend report, and settings page
+- a platform runtime API endpoint for Python/Wagtail/Django version and dependency inventory
 
 ## Quick Start
 
@@ -58,6 +59,7 @@ urlpatterns = [
 ```bash
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/backend-urls/
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/frontend-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/platform/
 ```
 
 For installation details, configuration, API usage, reports, and extension recipes, use the [documentation hub](https://nm-packages.github.io/wagtail-unveil/).
