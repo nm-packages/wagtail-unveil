@@ -62,6 +62,7 @@ HTML reports require a **superuser login** and either **`DEBUG=True`** or **`WAG
 
 - `/unveil/report/backend-urls/` — admin URL discovery report
 - `/unveil/report/frontend-urls/` — frontend URL discovery report
+- `/unveil/report/platform/` — runtime versions and dependency inventory report
 - `/unveil/report/settings/` — settings diagnostic page
 
 You can also open these pages from links in the Wagtail admin dashboard panel.

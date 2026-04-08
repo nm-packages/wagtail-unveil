@@ -12,6 +12,7 @@ The panel is visible on the Wagtail admin home page to superusers when `DEBUG=Tr
 
 - [Backend URLs Report](backend-urls-report.md) — admin URL discovery report
 - [Frontend URLs Report](frontend-urls-report.md) — frontend URL discovery report
+- [Platform Report](platform-report.md) — runtime versions and Python dependency inventory
 - [Settings Page](settings-page.md) — settings diagnostic page
 
 ## Related

@@ -32,11 +32,12 @@ Each value also shows its source: environment variable, Django settings, or pack
 **Package information:**
 
 - Package version and Python/Django/Wagtail runtime versions
-- Resolved Unveil API and report URLs as registered in the URL config, including the platform runtime API
+- Resolved Unveil API and report URLs as registered in the URL config, including the platform runtime API and platform report page
 
 ## Related
 
 - [Backend URLs Report](backend-urls-report.md) — Test admin URLs
 - [Frontend URLs Report](frontend-urls-report.md) — Test frontend URLs
+- [Platform Report](platform-report.md) — Inspect runtime and dependency inventory data
 - [Configuration](../configuration/settings-reference.md) — Change the effective settings
 - [Features Index](index.md) — Back to section overview

@@ -19,7 +19,8 @@ It exposes discovery through:
 - JSON API endpoints (Bearer token auth)
 - interactive HTML reports in Wagtail admin (superuser + `DEBUG=True`, or `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`)
 - a dedicated settings and diagnostics page in Wagtail admin (superuser + `DEBUG=True`, or `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`)
-- a dashboard panel linking to the admin report, frontend report, and settings page
+- a platform HTML report for runtime and dependency inventory diagnostics
+- a dashboard panel linking to the admin report, frontend report, platform report, and settings page
 - a platform runtime API endpoint for Python/Wagtail/Django version and dependency inventory
 
 ## Quick Start
