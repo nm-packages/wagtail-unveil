@@ -7,6 +7,7 @@ from wagtail_unveil.views import (
     build_frontend_urls_json_view,
     build_platform_json_view,
     frontend_urls_report,
+    platform_report,
     settings_report,
 )
 
@@ -42,6 +43,7 @@ urlpatterns.extend(
     [
         path("report/backend-urls/", backend_urls_report, name="report_backend_urls"),
         path("report/frontend-urls/", frontend_urls_report, name="report_frontend_urls"),
+        path("report/platform/", platform_report, name="report_platform"),
         path("report/settings/", settings_report, name="report_settings"),
     ],
 )

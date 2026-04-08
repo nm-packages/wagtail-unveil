@@ -49,15 +49,17 @@
                 {% block summary %}{% endblock %}
             </p>
 
-            <div class="filters">
-                <unveil-search-input placeholder="{% block search_placeholder %}{% endblock %}"></unveil-search-input>
-                <unveil-toggle-untestable-button></unveil-toggle-untestable-button>
-                <unveil-test-all-button></unveil-test-all-button>
-                <unveil-pause-button></unveil-pause-button>
-                <unveil-cancel-button></unveil-cancel-button>
-                <unveil-reset-button></unveil-reset-button>
-            </div>
-            <p class="test-all-summary hidden" id="test-all-summary"></p>
+            {% block controls %}
+                <div class="filters">
+                    <unveil-search-input placeholder="{% block search_placeholder %}{% endblock %}"></unveil-search-input>
+                    <unveil-toggle-untestable-button></unveil-toggle-untestable-button>
+                    <unveil-test-all-button></unveil-test-all-button>
+                    <unveil-pause-button></unveil-pause-button>
+                    <unveil-cancel-button></unveil-cancel-button>
+                    <unveil-reset-button></unveil-reset-button>
+                </div>
+                <p class="test-all-summary hidden" id="test-all-summary"></p>
+            {% endblock %}
 
             {% block table %}{% endblock %}
         </div>

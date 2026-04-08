@@ -1,0 +1,95 @@
+{% extends "wagtail_unveil/base_report.html" %}
+
+{% block title %}Platform Report{% endblock %}
+{% block heading %}Platform Report{% endblock %}
+
+{% block summary %}
+Total: <span id="report-total">…</span> packages (<span id="report-testable">…</span> installed, <span id="report-untestable">…</span> missing, <span id="report-warning-count">…</span> warnings)
+{% endblock %}
+
+{% block controls %}{% endblock %}
+
+{% block table %}
+<div class="help-panel">
+    <div class="help-intro">
+        <h3>Runtime</h3>
+        <p>Interpreter and framework versions reported by the platform endpoint.</p>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody id="platform-runtime-body"></tbody>
+    </table>
+</div>
+
+<div class="help-panel">
+    <div class="help-intro">
+        <h3>Dependency Source</h3>
+        <p>Manifest path and format used to build the dependency inventory.</p>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody id="platform-source-body"></tbody>
+    </table>
+</div>
+
+<div class="help-panel">
+    <div class="help-intro">
+        <h3>Warnings</h3>
+        <p>Warnings emitted while inspecting the dependency manifest.</p>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Warning</th>
+            </tr>
+        </thead>
+        <tbody id="platform-warnings-body"></tbody>
+    </table>
+</div>
+
+<div class="help-panel">
+    <div class="help-intro">
+        <h3>Python Dependencies</h3>
+        <p>Declared dependencies and whether each package is currently installed.</p>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Specifier</th>
+                <th>Installed Version</th>
+                <th>Installed</th>
+                <th>Source Kind</th>
+                <th>Source Name</th>
+            </tr>
+        </thead>
+        <tbody id="platform-packages-body"></tbody>
+    </table>
+</div>
+
+<div class="help-panel">
+    <div class="help-intro">
+        <h3>Metadata</h3>
+        <p>Versioning and generation metadata for this response.</p>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody id="platform-metadata-body"></tbody>
+    </table>
+</div>
+{% endblock %}

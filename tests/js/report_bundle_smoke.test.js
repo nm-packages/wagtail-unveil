@@ -308,4 +308,150 @@ describe("report bundle", () => {
       }),
     );
   });
+
+  test("platform report sends the signed report access header and renders sectioned tables", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+      reportAccessToken: "signed-report-token",
+    });
+
+    const fetchMock = stubFetchResponse({
+      platform: {
+        runtime: {
+          python_version: "3.12.1",
+          python_implementation: "CPython",
+          django_version: "5.2.1",
+          wagtail_version: "7.3.1",
+        },
+        python_dependencies: {
+          source: {
+            path: "pyproject.toml",
+            format: "pyproject.toml",
+          },
+          packages: [
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+            {
+              name: "mkdocs",
+              specifier: ">=1.6.0",
+              installed_version: "",
+              is_installed: false,
+              source_kind: "group",
+              source_name: "docs",
+            },
+          ],
+        },
+        warnings: ["Dependency manifest is missing or inaccessible."],
+      },
+      metadata: {
+        api_version: "v1",
+        api_lifecycle: {
+          status: "stable",
+        },
+        generated_at: "2026-04-08T20:27:18.791636+00:00",
+        package_version: "0.1.0a5",
+      },
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(
+      fetchMock.mock.calls[0][1].headers["X-Wagtail-Unveil-Report-Access"],
+    ).toBe("signed-report-token");
+    expect(document.body.dataset.reportState).toBe("ready");
+    expect(document.getElementById("report-total").textContent).toBe("2");
+    expect(document.getElementById("report-testable").textContent).toBe("1");
+    expect(document.getElementById("report-untestable").textContent).toBe("1");
+    expect(document.getElementById("report-warning-count").textContent).toBe(
+      "1",
+    );
+    expect(
+      document.querySelector("#platform-runtime-body tr td:last-child")
+        .textContent,
+    ).toBe("3.12.1");
+    expect(document.querySelectorAll("#platform-packages-body tr").length).toBe(
+      2,
+    );
+    expect(
+      document.querySelector(
+        "#platform-metadata-body tr:last-child td:last-child",
+      ).textContent,
+    ).toBe("0.1.0a5");
+  });
+
+  test("platform report renders empty states for warnings and dependencies", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    stubFetchResponse({
+      platform: {
+        runtime: {
+          python_version: "3.12.1",
+          python_implementation: "CPython",
+          django_version: "5.2.1",
+          wagtail_version: "7.3.1",
+        },
+        python_dependencies: {
+          source: {
+            path: "",
+            format: null,
+          },
+          packages: [],
+        },
+        warnings: [],
+      },
+      metadata: {
+        api_version: "v1",
+        api_lifecycle: {
+          status: "stable",
+        },
+        generated_at: "2026-04-08T20:27:18.791636+00:00",
+        package_version: "0.1.0a5",
+      },
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(
+      document.querySelector("#platform-warnings-body td").textContent,
+    ).toBe("No warnings.");
+    expect(
+      document.querySelector("#platform-packages-body td").textContent,
+    ).toBe("No dependencies found.");
+  });
+
+  test("platform report shows the error screen for invalid payload shape", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    stubFetchResponse({
+      metadata: {
+        api_version: "v1",
+      },
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(document.body.dataset.reportState).toBe("error");
+    expect(document.getElementById("report-error-message").textContent).toBe(
+      "Report data response was not valid JSON.",
+    );
+  });
 });

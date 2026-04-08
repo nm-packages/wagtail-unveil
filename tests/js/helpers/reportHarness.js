@@ -27,8 +27,24 @@ const sourceScriptOrder = [
 
 function setFixtureBody(options = {}) {
   const rowsHtml = options.rowsHtml || "";
+  const isPlatformReport = options.reportKind === "platform";
 
-  document.body.innerHTML = `
+  document.body.innerHTML = isPlatformReport
+    ? `
+        <button type="button" id="report-retry-button">Retry</button>
+        <p>Total: <span id="report-total"></span></p>
+        <p>Installed: <span id="report-testable"></span></p>
+        <p>Missing: <span id="report-untestable"></span></p>
+        <p>Warnings: <span id="report-warning-count"></span></p>
+        <p id="report-loading-message"></p>
+        <p id="report-error-message"></p>
+        <table><tbody id="platform-runtime-body"></tbody></table>
+        <table><tbody id="platform-source-body"></tbody></table>
+        <table><tbody id="platform-warnings-body"></tbody></table>
+        <table><tbody id="platform-packages-body"></tbody></table>
+        <table><tbody id="platform-metadata-body"></tbody></table>
+    `
+    : `
         <div class="filters">
             <unveil-search-input placeholder="Search URLs"></unveil-search-input>
             <unveil-toggle-untestable-button></unveil-toggle-untestable-button>
@@ -56,6 +72,7 @@ function setFixtureBody(options = {}) {
     `;
 
   document.body.dataset.apiUrl = options.apiUrl || "/unveil/api/backend-urls/";
+  document.body.dataset.apiAuthToken = options.apiAuthToken || "";
   document.body.dataset.reportKind = options.reportKind || "backend";
   document.body.dataset.reportAccessToken = options.reportAccessToken || "";
   document.body.dataset.reportState = "loading";

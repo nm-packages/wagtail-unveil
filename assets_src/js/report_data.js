@@ -1,10 +1,15 @@
 (() => {
   var report = window.UnveilReport;
 
+  function setSummaryValue(id, value) {
+    var element = document.getElementById(id);
+
+    if (element) {
+      element.textContent = String(value);
+    }
+  }
+
   function updateSummary(metadata, fallbackCount) {
-    var total = document.getElementById("report-total");
-    var testable = document.getElementById("report-testable");
-    var untestable = document.getElementById("report-untestable");
     var totalCount =
       metadata && typeof metadata.total_count === "number"
         ? metadata.total_count
@@ -18,15 +23,18 @@
         ? metadata.untestable_count
         : 0;
 
-    if (total) {
-      total.textContent = String(totalCount);
-    }
-    if (testable) {
-      testable.textContent = String(testableCount);
-    }
-    if (untestable) {
-      untestable.textContent = String(untestableCount);
-    }
+    setSummaryValue("report-total", totalCount);
+    setSummaryValue("report-testable", testableCount);
+    setSummaryValue("report-untestable", untestableCount);
+  }
+
+  function updatePlatformSummary(packages, warnings) {
+    var installedCount = packages.filter((item) => item.is_installed).length;
+
+    setSummaryValue("report-total", packages.length);
+    setSummaryValue("report-testable", installedCount);
+    setSummaryValue("report-untestable", packages.length - installedCount);
+    setSummaryValue("report-warning-count", warnings.length);
   }
 
   function createActionCell(item, reportKind) {
@@ -182,6 +190,176 @@
     return headers;
   }
 
+  function getPlatformSectionBody(id) {
+    return document.getElementById(id);
+  }
+
+  function clearPlatformSections() {
+    [
+      "platform-runtime-body",
+      "platform-source-body",
+      "platform-warnings-body",
+      "platform-packages-body",
+      "platform-metadata-body",
+    ].forEach((id) => {
+      var tbody = getPlatformSectionBody(id);
+
+      if (tbody) {
+        tbody.innerHTML = "";
+      }
+    });
+  }
+
+  function createPlatformRow(label, value) {
+    var row = document.createElement("tr");
+
+    row.appendChild(createTextCell(label));
+    row.appendChild(createTextCell(value));
+    return row;
+  }
+
+  function createSingleCellRow(text, colspan) {
+    var row = document.createElement("tr");
+    var cell = document.createElement("td");
+
+    row.className = "empty-row";
+    cell.setAttribute("colspan", String(colspan));
+    cell.textContent = text;
+    row.appendChild(cell);
+    return row;
+  }
+
+  function renderPlatformRuntime(runtime) {
+    var tbody = getPlatformSectionBody("platform-runtime-body");
+
+    tbody.innerHTML = "";
+    tbody.appendChild(
+      createPlatformRow("Python Version", runtime.python_version || ""),
+    );
+    tbody.appendChild(
+      createPlatformRow(
+        "Python Implementation",
+        runtime.python_implementation || "",
+      ),
+    );
+    tbody.appendChild(
+      createPlatformRow("Django Version", runtime.django_version || ""),
+    );
+    tbody.appendChild(
+      createPlatformRow("Wagtail Version", runtime.wagtail_version || ""),
+    );
+  }
+
+  function renderPlatformSource(source) {
+    var tbody = getPlatformSectionBody("platform-source-body");
+
+    tbody.innerHTML = "";
+    tbody.appendChild(createPlatformRow("Path", source.path || ""));
+    tbody.appendChild(createPlatformRow("Format", source.format || ""));
+  }
+
+  function renderPlatformWarnings(warnings) {
+    var tbody = getPlatformSectionBody("platform-warnings-body");
+
+    tbody.innerHTML = "";
+    if (!warnings.length) {
+      tbody.appendChild(createSingleCellRow("No warnings.", 1));
+      return;
+    }
+
+    warnings.forEach((warning) => {
+      var row = document.createElement("tr");
+
+      row.appendChild(createTextCell(warning));
+      tbody.appendChild(row);
+    });
+  }
+
+  function renderPlatformPackages(packages) {
+    var tbody = getPlatformSectionBody("platform-packages-body");
+
+    tbody.innerHTML = "";
+    if (!packages.length) {
+      tbody.appendChild(createSingleCellRow("No dependencies found.", 6));
+      return;
+    }
+
+    packages.forEach((item) => {
+      var row = document.createElement("tr");
+
+      row.appendChild(createTextCell(item.name || ""));
+      row.appendChild(createTextCell(item.specifier || ""));
+      row.appendChild(createTextCell(item.installed_version || ""));
+      row.appendChild(createTextCell(item.is_installed ? "Yes" : "No"));
+      row.appendChild(createTextCell(item.source_kind || ""));
+      row.appendChild(createTextCell(item.source_name || "\u2014"));
+      tbody.appendChild(row);
+    });
+  }
+
+  function renderPlatformMetadata(metadata) {
+    var tbody = getPlatformSectionBody("platform-metadata-body");
+    var lifecycleStatus =
+      metadata &&
+      metadata.api_lifecycle &&
+      typeof metadata.api_lifecycle.status === "string"
+        ? metadata.api_lifecycle.status
+        : "";
+
+    tbody.innerHTML = "";
+    tbody.appendChild(
+      createPlatformRow("API Version", metadata.api_version || ""),
+    );
+    tbody.appendChild(createPlatformRow("Lifecycle Status", lifecycleStatus));
+    tbody.appendChild(
+      createPlatformRow("Generated At", metadata.generated_at || ""),
+    );
+    tbody.appendChild(
+      createPlatformRow("Package Version", metadata.package_version || ""),
+    );
+  }
+
+  function renderPlatformSnapshot(data) {
+    var platformData = data.platform || {};
+    var runtime = platformData.runtime || {};
+    var dependencyData = platformData.python_dependencies || {};
+    var source = dependencyData.source || {};
+    var packages = Array.isArray(dependencyData.packages)
+      ? dependencyData.packages
+      : [];
+    var warnings = Array.isArray(platformData.warnings)
+      ? platformData.warnings
+      : [];
+    var metadata = data.metadata || {};
+
+    updatePlatformSummary(packages, warnings);
+    renderPlatformRuntime(runtime);
+    renderPlatformSource(source);
+    renderPlatformWarnings(warnings);
+    renderPlatformPackages(packages);
+    renderPlatformMetadata(metadata);
+  }
+
+  function validateResponsePayload(data, reportKind) {
+    if (reportKind === "platform") {
+      if (
+        !data ||
+        typeof data !== "object" ||
+        typeof data.platform !== "object" ||
+        typeof data.metadata !== "object"
+      ) {
+        throw new Error("Report data response was not valid JSON.");
+      }
+
+      return data;
+    }
+
+    if (!data || !Array.isArray(data.urls)) {
+      throw new Error("Report data response was not valid JSON.");
+    }
+
+    return data;
+  }
   function loadReportData() {
     var apiUrl = document.body.dataset.apiUrl || "";
     var reportKind = document.body.dataset.reportKind || "";
@@ -210,14 +388,15 @@
               );
             }
 
-            if (!data || !Array.isArray(data.urls)) {
-              throw new Error("Report data response was not valid JSON.");
-            }
-
-            return data;
+            return validateResponsePayload(data, reportKind);
           }),
       )
       .then((data) => {
+        if (reportKind === "platform") {
+          renderPlatformSnapshot(data);
+          return data;
+        }
+
         var urls = Array.isArray(data.urls) ? data.urls : [];
 
         updateSummary(data.metadata || null, data.count || urls.length);
@@ -225,8 +404,13 @@
         return data;
       })
       .catch((error) => {
-        updateSummary(null, 0);
-        report.helpers.getTableBody().innerHTML = "";
+        if (reportKind === "platform") {
+          updatePlatformSummary([], []);
+          clearPlatformSections();
+        } else {
+          updateSummary(null, 0);
+          report.helpers.getTableBody().innerHTML = "";
+        }
         throw error;
       });
   }
