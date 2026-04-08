@@ -23,7 +23,7 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 | Valid Bearer token | `200` with data |
 | Invalid Bearer token | `403` |
 | No key configured | `500` |
-| Superuser session + `DEBUG=True` | `200` (session auth accepted when not attempting Bearer auth) |
+| Superuser session + `DEBUG=True` | `200` for URL discovery endpoints; `/unveil/api/v1/platform/` still requires Bearer auth |
 | Superuser session + built-in production report flow | `200` when `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True` |
 
 For normal programmatic or third-party use, authenticate with `Authorization: Bearer <key>`. The production superuser session path is reserved for the built-in HTML reports and settings page; it is not a general replacement for Bearer-token API access.
@@ -202,6 +202,7 @@ GET /unveil/api/v1/platform/
 
 - Set `WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE` to a supported manifest file such as `pyproject.toml` or `requirements.txt`
 - The endpoint still returns `200` when dependency metadata is unavailable, and reports the problem in `platform.warnings`
+- Unlike the URL discovery endpoints, this endpoint requires Bearer auth even when `DEBUG=True`
 
 **Examples:**
 
@@ -222,7 +223,7 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
     },
     "python_dependencies": {
       "source": {
-        "path": "/app/pyproject.toml",
+        "path": "pyproject.toml",
         "format": "pyproject.toml"
       },
       "packages": [
@@ -267,10 +268,10 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 | `platform.runtime.python_implementation` | Python implementation such as `CPython` |
 | `platform.runtime.django_version` | Installed Django version |
 | `platform.runtime.wagtail_version` | Installed Wagtail version |
-| `platform.python_dependencies.source.path` | The configured manifest path after relative-path resolution |
+| `platform.python_dependencies.source.path` | Basename of the configured manifest file, such as `pyproject.toml` or `base.txt` |
 | `platform.python_dependencies.source.format` | Detected manifest type: `pyproject.toml`, `poetry-pyproject`, `requirements.txt`, `unknown`, or `null` when no manifest is configured |
 | `platform.python_dependencies.packages` | Sorted list of declared Python dependency entries |
-| `platform.warnings` | Human-readable warnings when dependency metadata is incomplete or unavailable |
+| `platform.warnings` | Human-readable warnings when dependency metadata is incomplete or unavailable; warnings do not include internal paths or raw exception details |
 
 **Dependency item fields:**
 

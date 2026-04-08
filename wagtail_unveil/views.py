@@ -121,7 +121,7 @@ def _has_valid_report_access_token(request):
     return compare_digest(claims.get("session_nonce", ""), session_nonce)
 
 
-def _authenticate_api_request(request):
+def _authenticate_api_request(request, *, allow_debug_superuser_session=True):
     """Validate the configured API key against the request Authorization header."""
     auth_header = request.headers.get("Authorization", "")
     parts = auth_header.split(" ", 1)
@@ -139,9 +139,9 @@ def _authenticate_api_request(request):
 
     user = getattr(request, "user", None)
     if user and user.is_authenticated and user.is_superuser:
-        if settings.DEBUG:
+        if allow_debug_superuser_session and settings.DEBUG:
             return None
-        if get_enable_production_reports() and _has_valid_report_access_token(request):
+        if allow_debug_superuser_session and get_enable_production_reports() and _has_valid_report_access_token(request):
             return None
 
     return _json_error("Invalid or missing API key", status=403)
@@ -337,9 +337,10 @@ def _build_settings_report_context():
                 "label": "Superuser session API access",
                 "value": "Enabled" if settings.DEBUG or production_reports_enabled else "Disabled",
                 "detail": (
-                    "Session-based JSON access is allowed for superusers in DEBUG "
-                    "mode, or for signed report requests when production reports "
-                    "are enabled."
+                    "Session-based JSON access is allowed for URL discovery endpoints "
+                    "for superusers in DEBUG mode, or for signed report requests when "
+                    "production reports are enabled. The platform API still requires "
+                    "Bearer authentication."
                 ),
             },
             {
@@ -504,7 +505,7 @@ def _frontend_urls_json_for_version(request, api_version):
 def _platform_json_for_version(request, api_version):
     """Return platform runtime and dependency metadata for a specific API version."""
     contract = get_api_contract(api_version)
-    auth_error = _authenticate_api_request(request)
+    auth_error = _authenticate_api_request(request, allow_debug_superuser_session=False)
     if auth_error is not None:
         return auth_error
 

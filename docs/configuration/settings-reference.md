@@ -62,7 +62,7 @@ WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE = "pyproject.toml"
 
 - If both are set, the environment variable is used
 - Blank or non-string values are treated as unset
-- Relative paths are resolved from Django `BASE_DIR`
+- Relative paths are resolved from Django `BASE_DIR` and must stay within that directory
 - Absolute paths are used directly
 - Supported formats in v1 are `pyproject.toml` and requirements-style text files
 - If the setting is unset, unreadable, missing, or unsupported, the platform endpoint still returns runtime data and adds a warning instead of failing the whole response

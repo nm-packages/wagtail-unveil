@@ -80,6 +80,8 @@ To include Python dependency inventory in the platform response, also set:
 WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE = "pyproject.toml"
 ```
 
+The platform endpoint always requires Bearer auth, even in local `DEBUG=True` development.
+
 ## Related
 
 - [Configuration](../configuration/settings-reference.md) — Customise API, platform, and discovery settings

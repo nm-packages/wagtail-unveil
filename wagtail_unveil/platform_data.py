@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import platform
 import re
 from dataclasses import dataclass
@@ -16,6 +17,17 @@ try:
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover - exercised on Python 3.10 only
     import tomli as tomllib
+
+
+logger = logging.getLogger(__name__)
+
+_DEPENDENCY_MANIFEST_NOT_CONFIGURED_WARNING = "No dependency manifest is configured."
+_DEPENDENCY_MANIFEST_INACCESSIBLE_WARNING = "Dependency manifest is missing or inaccessible."
+_DEPENDENCY_MANIFEST_PARSE_WARNING = "Dependency manifest could not be parsed."
+_DEPENDENCY_MANIFEST_UNSUPPORTED_WARNING = "Dependency manifest format is unsupported."
+_DEPENDENCY_MANIFEST_OUTSIDE_BASE_DIR_WARNING = (
+    "Dependency manifest must stay within BASE_DIR when configured relatively."
+)
 
 
 @dataclass(frozen=True)
@@ -65,40 +77,64 @@ def get_platform_snapshot() -> PlatformSnapshot:
             runtime=runtime,
             dependency_source=PlatformDependencySource(path="", format=None),
             python_dependencies=[],
-            warnings=["No dependency manifest is configured."],
+            warnings=[_DEPENDENCY_MANIFEST_NOT_CONFIGURED_WARNING],
         )
-
-    manifest_path = _resolve_dependency_path(configured_path)
-    if not manifest_path.exists():
-        return PlatformSnapshot(
-            runtime=runtime,
-            dependency_source=PlatformDependencySource(path=str(manifest_path), format=None),
-            python_dependencies=[],
-            warnings=[f"Dependency manifest does not exist: {manifest_path}"],
-        )
-
-    dependency_format = _guess_dependency_format_from_name(manifest_path)
 
     try:
-        dependency_format = _detect_dependency_format(manifest_path)
+        manifest_path = _resolve_dependency_path(configured_path)
+    except ValueError:
+        logger.warning(
+            "Rejected relative dependency manifest path %r because it resolved outside BASE_DIR.",
+            configured_path,
+        )
+        return PlatformSnapshot(
+            runtime=runtime,
+            dependency_source=PlatformDependencySource(path="", format=None),
+            python_dependencies=[],
+            warnings=[_DEPENDENCY_MANIFEST_OUTSIDE_BASE_DIR_WARNING],
+        )
+
+    source_path = manifest_path.name
+    if not manifest_path.exists():
+        logger.warning("Dependency manifest is missing or inaccessible: %s", manifest_path)
+        return PlatformSnapshot(
+            runtime=runtime,
+            dependency_source=PlatformDependencySource(path=source_path, format=None),
+            python_dependencies=[],
+            warnings=[_DEPENDENCY_MANIFEST_INACCESSIBLE_WARNING],
+        )
+
+    manifest_text = None
+    dependency_format = _guess_dependency_format_from_name(manifest_path)
+    try:
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        # Keep the fallback guess above so the except path still has a stable format hint.
+        dependency_format = _detect_dependency_format(manifest_path, manifest_text)
         if dependency_format == "unknown":
+            logger.warning("Dependency manifest format is unsupported for %s", manifest_path)
             return PlatformSnapshot(
                 runtime=runtime,
-                dependency_source=PlatformDependencySource(path=str(manifest_path), format="unknown"),
+                dependency_source=PlatformDependencySource(path=source_path, format="unknown"),
                 python_dependencies=[],
-                warnings=[f"Unsupported dependency manifest format: {manifest_path.name}"],
+                warnings=[_DEPENDENCY_MANIFEST_UNSUPPORTED_WARNING],
             )
 
         if dependency_format in {"pyproject.toml", "poetry-pyproject"}:
-            dependencies, warnings = _parse_pyproject_dependencies(manifest_path)
+            dependencies, warnings = _parse_pyproject_dependencies(manifest_text)
         else:
-            dependencies, warnings = _parse_requirements_file(manifest_path)
+            dependencies, warnings = _parse_requirements_file(manifest_text)
     except (OSError, tomllib.TOMLDecodeError) as error:
+        logger.warning("Failed to inspect dependency manifest %s.", manifest_path, exc_info=error)
+        warning_message = (
+            _DEPENDENCY_MANIFEST_PARSE_WARNING
+            if manifest_text is not None
+            else _DEPENDENCY_MANIFEST_INACCESSIBLE_WARNING
+        )
         return PlatformSnapshot(
             runtime=runtime,
-            dependency_source=PlatformDependencySource(path=str(manifest_path), format=dependency_format),
+            dependency_source=PlatformDependencySource(path=source_path, format=dependency_format),
             python_dependencies=[],
-            warnings=[f"Could not read dependency manifest {manifest_path}: {error}"],
+            warnings=[warning_message],
         )
 
     dependencies = sorted(
@@ -112,7 +148,7 @@ def get_platform_snapshot() -> PlatformSnapshot:
     )
     return PlatformSnapshot(
         runtime=runtime,
-        dependency_source=PlatformDependencySource(path=str(manifest_path), format=dependency_format),
+        dependency_source=PlatformDependencySource(path=source_path, format=dependency_format),
         python_dependencies=dependencies,
         warnings=warnings,
     )
@@ -121,18 +157,21 @@ def get_platform_snapshot() -> PlatformSnapshot:
 def _resolve_dependency_path(configured_path: str) -> Path:
     path = Path(configured_path)
     if path.is_absolute():
-        return path
-    base_dir = getattr(settings, "BASE_DIR", Path.cwd())
-    return Path(base_dir) / path
+        return path.resolve()
+    base_dir = Path(getattr(settings, "BASE_DIR", Path.cwd())).resolve()
+    resolved_path = (base_dir / path).resolve()
+    if not resolved_path.is_relative_to(base_dir):
+        raise ValueError("Relative dependency manifest path resolves outside BASE_DIR.")
+    return resolved_path
 
 
-def _detect_dependency_format(path: Path) -> str:
+def _detect_dependency_format(path: Path, manifest_text: str) -> str:
     if path.name == "pyproject.toml":
-        return _detect_pyproject_format(path)
+        return _detect_pyproject_format(manifest_text)
     return _guess_dependency_format_from_name(path)
 
 
-def _guess_dependency_format_from_name(path: Path) -> str | None:
+def _guess_dependency_format_from_name(path: Path) -> str:
     if path.name == "pyproject.toml":
         return "pyproject.toml"
     if path.suffix in {".txt", ".in", ".pip"} or "requirements" in path.name.lower():
@@ -140,8 +179,8 @@ def _guess_dependency_format_from_name(path: Path) -> str | None:
     return "unknown"
 
 
-def _detect_pyproject_format(path: Path) -> str:
-    data = tomllib.loads(path.read_text(encoding="utf-8"))
+def _detect_pyproject_format(manifest_text: str) -> str:
+    data = tomllib.loads(manifest_text)
     tool_data = data.get("tool", {})
     poetry_data = tool_data.get("poetry", {})
     if poetry_data.get("dependencies") or poetry_data.get("group") or poetry_data.get("extras"):
@@ -149,8 +188,8 @@ def _detect_pyproject_format(path: Path) -> str:
     return "pyproject.toml"
 
 
-def _parse_pyproject_dependencies(path: Path) -> tuple[list[PlatformDependency], list[str]]:
-    data = tomllib.loads(path.read_text(encoding="utf-8"))
+def _parse_pyproject_dependencies(manifest_text: str) -> tuple[list[PlatformDependency], list[str]]:
+    data = tomllib.loads(manifest_text)
     dependencies: list[PlatformDependency] = []
     warnings: list[str] = []
 
@@ -207,11 +246,11 @@ def _parse_pyproject_dependencies(path: Path) -> tuple[list[PlatformDependency],
     return dependencies, warnings
 
 
-def _parse_requirements_file(path: Path) -> tuple[list[PlatformDependency], list[str]]:
+def _parse_requirements_file(manifest_text: str) -> tuple[list[PlatformDependency], list[str]]:
     dependencies: list[PlatformDependency] = []
     warnings: list[str] = []
 
-    for line_number, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for line_number, raw_line in enumerate(manifest_text.splitlines(), start=1):
         line = raw_line.split("#", 1)[0].strip()
         if not line:
             continue
@@ -250,6 +289,7 @@ def _flatten_dependency_group_entries(
     seen = seen | {group_name}
     flattened_entries: list[str] = []
     warnings: list[str] = []
+    included_groups: set[str] = set()
 
     if not isinstance(entries, list):
         return [], [f"Skipped unsupported dependency group definition for {group_name!r}."]
@@ -261,6 +301,10 @@ def _flatten_dependency_group_entries(
 
         if isinstance(entry, dict) and isinstance(entry.get("include-group"), str):
             included_group_name = entry["include-group"]
+            if included_group_name in included_groups:
+                warnings.append(f"Skipped duplicate dependency group reference for {included_group_name!r}.")
+                continue
+            included_groups.add(included_group_name)
             nested_entries, nested_warnings = _flatten_dependency_group_entries(
                 all_groups,
                 group_name=included_group_name,
