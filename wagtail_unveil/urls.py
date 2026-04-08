@@ -5,6 +5,7 @@ from wagtail_unveil.views import (
     backend_urls_report,
     build_admin_urls_json_view,
     build_frontend_urls_json_view,
+    build_platform_json_view,
     frontend_urls_report,
     settings_report,
 )
@@ -27,6 +28,13 @@ for api_version in get_supported_api_versions():
             contract.frontend_url_path,
             build_frontend_urls_json_view(api_version),
             name=contract.frontend_url_name,
+        ),
+    )
+    urlpatterns.append(
+        path(
+            contract.platform_url_path,
+            build_platform_json_view(api_version),
+            name=contract.platform_url_name,
         ),
     )
 

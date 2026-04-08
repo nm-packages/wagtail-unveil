@@ -19,6 +19,7 @@ Changes merged to `main` since the last release.
 - inlined trivial frontend discovery and resolution helpers while keeping frontend URL discovery behavior unchanged
 - hardened JSON API and report access for production use with masked settings diagnostics, constant-time bearer-key checks, private/no-store cache headers, and `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS` support for superuser HTML reports
 - excluded private Wagtail pages from frontend discovery, tightened report-page caching for built-in production report access, and simplified shared report test helpers and documentation
+- added an authenticated `/unveil/api/v1/platform/` endpoint for runtime metadata and Python dependency inventory, including manifest warnings instead of hard failures when dependency metadata is incomplete
 
 ## 0.1.0a5 - 2026-04-02
 

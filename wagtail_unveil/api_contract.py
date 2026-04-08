@@ -15,8 +15,10 @@ class APIVersionContract:
     sunset_on: date | None
     backend_url_path: str
     frontend_url_path: str
+    platform_url_path: str
     backend_url_name: str
     frontend_url_name: str
+    platform_url_name: str
 
 
 def _parse_version_number(version: str) -> int:
@@ -57,12 +59,20 @@ def validate_api_version_registry(registry: dict[str, APIVersionContract]) -> No
         if contract.deprecated_on and contract.sunset_on and contract.deprecated_on > contract.sunset_on:
             raise ValueError(f"API contract {contract.version!r} has deprecated_on after sunset_on.")
 
-        for path in (contract.backend_url_path, contract.frontend_url_path):
+        for path in (
+            contract.backend_url_path,
+            contract.frontend_url_path,
+            contract.platform_url_path,
+        ):
             if path in seen_paths:
                 raise ValueError(f"Duplicate API path in registry: {path!r}")
             seen_paths.add(path)
 
-        for name in (contract.backend_url_name, contract.frontend_url_name):
+        for name in (
+            contract.backend_url_name,
+            contract.frontend_url_name,
+            contract.platform_url_name,
+        ):
             if name in seen_names:
                 raise ValueError(f"Duplicate API URL name in registry: {name!r}")
             seen_names.add(name)
@@ -82,8 +92,10 @@ API_VERSION_REGISTRY: dict[str, APIVersionContract] = {
         sunset_on=None,
         backend_url_path="api/v1/backend-urls/",
         frontend_url_path="api/v1/frontend-urls/",
+        platform_url_path="api/v1/platform/",
         backend_url_name="api_v1_backend_urls",
         frontend_url_name="api_v1_frontend_urls",
+        platform_url_name="api_v1_platform",
     ),
 }
 

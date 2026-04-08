@@ -52,7 +52,9 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
         self.assertContains(response, "URL Diagnostics")
         self.assertContains(response, "WAGTAIL_UNVEIL_API_KEY")
         self.assertContains(response, "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
+        self.assertContains(response, "WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE")
         self.assertContains(response, "/unveil/api/v1/backend-urls/")
+        self.assertContains(response, "/unveil/api/v1/platform/")
         self.assertContains(response, "/unveil/report/frontend-urls/")
 
     @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "full-secret-value"})

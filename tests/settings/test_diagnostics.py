@@ -164,3 +164,31 @@ class TestSettingDiagnostics(TestCase):
         self.assertEqual(diagnostic.source, "django")
         self.assertEqual(diagnostic.effective_value, "")
         self.assertIn("leave Bearer authentication unconfigured", diagnostic.notes)
+
+    def test_platform_dependency_file_diagnostics_use_default_source_when_unset(self):
+        with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
+            with patch.dict("os.environ", {}, clear=True):
+                diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE")
+
+        self.assertEqual(diagnostic.source, "default")
+        self.assertEqual(diagnostic.raw_display, "Not set")
+        self.assertEqual(diagnostic.effective_value, "")
+        self.assertIn("unconfigured", diagnostic.notes)
+
+    @override_settings(WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE="  requirements/base.txt  ")
+    def test_platform_dependency_file_diagnostics_note_whitespace_stripping(self):
+        with patch.dict("os.environ", {}, clear=True):
+            diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE")
+
+        self.assertEqual(diagnostic.source, "django")
+        self.assertEqual(diagnostic.effective_value, "requirements/base.txt")
+        self.assertIn("whitespace is stripped", diagnostic.notes)
+
+    @override_settings(WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE="settings.txt")
+    def test_platform_dependency_file_diagnostics_prefer_env_source(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE": "pyproject.toml"}):
+            diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE")
+
+        self.assertEqual(diagnostic.source, "env")
+        self.assertEqual(diagnostic.raw_value, "pyproject.toml")
+        self.assertEqual(diagnostic.effective_value, "pyproject.toml")
