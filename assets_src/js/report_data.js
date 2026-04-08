@@ -1,5 +1,25 @@
 (() => {
   var report = window.UnveilReport;
+  var PYPI_LOOKUP_CONCURRENCY = 4;
+
+  function setPlatformPypiButtonState(options) {
+    var button = document.getElementById("platform-pypi-lookup-button");
+    var isLoading =
+      options && typeof options.isLoading === "boolean"
+        ? options.isLoading
+        : false;
+    var label =
+      options && typeof options.label === "string"
+        ? options.label
+        : "Fetch Latest PyPI Versions";
+
+    if (!button) {
+      return;
+    }
+
+    button.disabled = isLoading;
+    button.textContent = label;
+  }
 
   function setSummaryValue(id, value) {
     var element = document.getElementById(id);
@@ -110,6 +130,22 @@
     }
 
     cell.textContent = text || "";
+    return cell;
+  }
+
+  function createPypiLookupCell() {
+    var cell = document.createElement("td");
+    var value = document.createElement("span");
+    var marker = document.createElement("small");
+
+    cell.className = "platform-pypi-cell";
+    value.className = "platform-pypi-version";
+    value.textContent = "\u2014";
+    marker.className = "platform-pypi-status";
+    marker.textContent = "";
+    cell.appendChild(value);
+    cell.appendChild(document.createTextNode(" "));
+    cell.appendChild(marker);
     return cell;
   }
 
@@ -280,7 +316,7 @@
 
     tbody.innerHTML = "";
     if (!packages.length) {
-      tbody.appendChild(createSingleCellRow("No dependencies found.", 6));
+      tbody.appendChild(createSingleCellRow("No dependencies found.", 7));
       return;
     }
 
@@ -290,10 +326,244 @@
       row.appendChild(createTextCell(item.name || ""));
       row.appendChild(createTextCell(item.specifier || ""));
       row.appendChild(createTextCell(item.installed_version || ""));
+      row.appendChild(createPypiLookupCell());
       row.appendChild(createTextCell(item.is_installed ? "Yes" : "No"));
       row.appendChild(createTextCell(item.source_kind || ""));
       row.appendChild(createTextCell(item.source_name || "\u2014"));
+      row.dataset.packageName = item.name || "";
+      row.dataset.installedVersion = item.installed_version || "";
       tbody.appendChild(row);
+    });
+  }
+
+  function setPypiLookupCell(row, options) {
+    var cell = row.querySelector(".platform-pypi-cell");
+    var value = cell ? cell.querySelector(".platform-pypi-version") : null;
+    var marker = cell ? cell.querySelector(".platform-pypi-status") : null;
+
+    if (!value || !marker) {
+      return;
+    }
+
+    value.textContent = options.versionText;
+    marker.textContent = options.markerText || "";
+  }
+
+  function setPypiLookupRows(packageName, options) {
+    document
+      .querySelectorAll("#platform-packages-body tr[data-package-name]")
+      .forEach((row) => {
+        if (row.dataset.packageName === packageName) {
+          setPypiLookupCell(row, options);
+        }
+      });
+  }
+
+  function classifyPypiVersion(installedVersion, latestVersion) {
+    if (!installedVersion || !latestVersion) {
+      return "Unknown";
+    }
+
+    if (installedVersion === latestVersion) {
+      return "Latest";
+    }
+
+    return "Different";
+  }
+
+  function fetchLatestPyPiVersion(packageName) {
+    return fetch(
+      "https://pypi.org/pypi/" + encodeURIComponent(packageName) + "/json",
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      },
+    ).then((response) => {
+      if (response.status === 404) {
+        return {
+          marker: "",
+          status: "not_found",
+          version: "Not on PyPI",
+        };
+      }
+
+      if (!response.ok) {
+        throw new Error("PyPI lookup failed.");
+      }
+
+      return response.json().then((data) => {
+        if (
+          !data ||
+          typeof data !== "object" ||
+          !data.info ||
+          typeof data.info.version !== "string"
+        ) {
+          throw new Error("PyPI lookup failed.");
+        }
+
+        return {
+          marker: "",
+          status: "ok",
+          version: data.info.version,
+        };
+      });
+    });
+  }
+
+  function runWithConcurrency(taskFactories, limit) {
+    var results = new Array(taskFactories.length);
+    var nextIndex = 0;
+    var activeCount = 0;
+
+    return new Promise((resolve) => {
+      function startNext() {
+        if (nextIndex >= taskFactories.length && activeCount === 0) {
+          resolve(results);
+          return;
+        }
+
+        while (activeCount < limit && nextIndex < taskFactories.length) {
+          const taskIndex = nextIndex;
+
+          nextIndex += 1;
+          activeCount += 1;
+
+          taskFactories[taskIndex]()
+            .then((result) => {
+              results[taskIndex] = result;
+            })
+            .catch((error) => {
+              results[taskIndex] = {
+                error: error,
+              };
+            })
+            .finally(() => {
+              activeCount -= 1;
+              startNext();
+            });
+        }
+      }
+
+      startNext();
+    });
+  }
+
+  function lookupPlatformPyPiVersions() {
+    var rows = Array.from(
+      document.querySelectorAll(
+        "#platform-packages-body tr[data-package-name]",
+      ),
+    );
+    var packageLookupMap = new Map();
+    var packageNames;
+    var taskFactories;
+
+    if (!rows.length) {
+      return Promise.resolve();
+    }
+
+    rows.forEach((row) => {
+      var packageName = row.dataset.packageName || "";
+
+      if (!packageName || packageLookupMap.has(packageName)) {
+        return;
+      }
+
+      packageLookupMap.set(packageName, null);
+    });
+
+    packageNames = Array.from(packageLookupMap.keys());
+    packageNames.forEach((packageName) => {
+      setPypiLookupRows(packageName, {
+        markerText: "",
+        versionText: "Loading\u2026",
+      });
+    });
+
+    setPlatformPypiButtonState({
+      isLoading: true,
+      label: "Fetching PyPI Versions\u2026",
+    });
+
+    taskFactories = packageNames.map((packageName) => {
+      return function taskFactory() {
+        return fetchLatestPyPiVersion(packageName)
+          .then((result) => {
+            packageLookupMap.set(packageName, result);
+            return result;
+          })
+          .catch(() => {
+            var failureResult = {
+              marker: "",
+              status: "failed",
+              version: "Lookup failed",
+            };
+
+            packageLookupMap.set(packageName, failureResult);
+            return failureResult;
+          });
+      };
+    });
+
+    return runWithConcurrency(taskFactories, PYPI_LOOKUP_CONCURRENCY).finally(
+      () => {
+        rows.forEach((row) => {
+          var packageName = row.dataset.packageName || "";
+          var result = packageLookupMap.get(packageName);
+          var marker;
+
+          if (!result) {
+            setPypiLookupCell(row, {
+              markerText: "",
+              versionText: "Lookup failed",
+            });
+            return;
+          }
+
+          if (result.status === "ok") {
+            marker = classifyPypiVersion(
+              row.dataset.installedVersion || "",
+              result.version,
+            );
+            setPypiLookupCell(row, {
+              markerText: marker,
+              versionText: result.version,
+            });
+            return;
+          }
+
+          if (result.status === "not_found") {
+            setPypiLookupCell(row, {
+              markerText: "",
+              versionText: result.version,
+            });
+            return;
+          }
+
+          setPypiLookupCell(row, {
+            markerText: "",
+            versionText: result.version,
+          });
+        });
+
+        setPlatformPypiButtonState({
+          isLoading: false,
+        });
+      },
+    );
+  }
+
+  function bindPlatformPyPiLookup() {
+    var button = document.getElementById("platform-pypi-lookup-button");
+
+    if (!button || button.dataset.unveilPypiBound === "true") {
+      return;
+    }
+
+    button.dataset.unveilPypiBound = "true";
+    button.addEventListener("click", () => {
+      lookupPlatformPyPiVersions();
     });
   }
 
@@ -338,6 +608,10 @@
     renderPlatformWarnings(warnings);
     renderPlatformPackages(packages);
     renderPlatformMetadata(metadata);
+    bindPlatformPyPiLookup();
+    setPlatformPypiButtonState({
+      isLoading: false,
+    });
   }
 
   function validateResponsePayload(data, reportKind) {
@@ -416,6 +690,8 @@
   }
 
   report.data = {
+    bindPlatformPyPiLookup: bindPlatformPyPiLookup,
     loadReportData: loadReportData,
+    lookupPlatformPyPiVersions: lookupPlatformPyPiVersions,
   };
 })();

@@ -38,6 +38,7 @@ function setFixtureBody(options = {}) {
         <p>Warnings: <span id="report-warning-count"></span></p>
         <p id="report-loading-message"></p>
         <p id="report-error-message"></p>
+        <button type="button" id="platform-pypi-lookup-button">Fetch Latest PyPI Versions</button>
         <table><tbody id="platform-runtime-body"></tbody></table>
         <table><tbody id="platform-source-body"></tbody></table>
         <table><tbody id="platform-warnings-body"></tbody></table>
