@@ -235,6 +235,34 @@ ruff = "^0.9"
         self.assertEqual(snapshot.python_dependencies[0].installed_version, "")
         self.assertFalse(snapshot.python_dependencies[0].is_installed)
 
+    def test_requirements_vcs_dependency_preserves_egg_fragment_name(self):
+        with TemporaryDirectory() as tempdir:
+            manifest_path = Path(tempdir) / "requirements.txt"
+            manifest_path.write_text(
+                "git+https://github.com/example/pkg.git@main#egg=example-pkg\n",
+                encoding="utf-8",
+            )
+
+            with override_settings(
+                BASE_DIR=tempdir,
+                WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=str(manifest_path),
+            ):
+                with patch.dict("os.environ", {}, clear=True):
+                    with patch("wagtail_unveil.platform_data.version", return_value="1.2.3"):
+                        snapshot = get_platform_snapshot()
+
+        self.assertEqual(
+            [
+                (
+                    dependency.name,
+                    dependency.specifier,
+                )
+                for dependency in snapshot.python_dependencies
+            ],
+            [("example-pkg", "git+https://github.com/example/pkg.git@main#egg=example-pkg")],
+        )
+        self.assertEqual(snapshot.warnings, [])
+
     def test_missing_manifest_returns_warning(self):
         with TemporaryDirectory() as tempdir:
             missing_path = Path(tempdir) / "missing.txt"
@@ -332,3 +360,28 @@ shared = ["ruff>=0.9"]
         self.assertEqual(snapshot.python_dependencies[0].source_name, "dev")
         self.assertEqual(snapshot.python_dependencies[1].source_name, "shared")
         self.assertEqual(snapshot.warnings, ["Skipped duplicate dependency group reference for 'shared'."])
+
+    def test_missing_include_group_reference_adds_warning(self):
+        with TemporaryDirectory() as tempdir:
+            manifest_path = Path(tempdir) / "pyproject.toml"
+            manifest_path.write_text(
+                """
+[project]
+name = "demo"
+version = "0.1.0"
+
+[dependency-groups]
+dev = [{include-group = "docs-tool"}]
+""".strip(),
+                encoding="utf-8",
+            )
+
+            with override_settings(
+                BASE_DIR=tempdir,
+                WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=str(manifest_path),
+            ):
+                with patch.dict("os.environ", {}, clear=True):
+                    snapshot = get_platform_snapshot()
+
+        self.assertEqual(snapshot.python_dependencies, [])
+        self.assertEqual(snapshot.warnings, ["Skipped missing dependency group reference for 'docs-tool'."])

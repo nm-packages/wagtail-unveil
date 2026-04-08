@@ -251,7 +251,7 @@ def _parse_requirements_file(manifest_text: str) -> tuple[list[PlatformDependenc
     warnings: list[str] = []
 
     for line_number, raw_line in enumerate(manifest_text.splitlines(), start=1):
-        line = raw_line.split("#", 1)[0].strip()
+        line = _strip_requirements_comment(raw_line)
         if not line:
             continue
 
@@ -305,10 +305,13 @@ def _flatten_dependency_group_entries(
                 warnings.append(f"Skipped duplicate dependency group reference for {included_group_name!r}.")
                 continue
             included_groups.add(included_group_name)
+            if included_group_name not in all_groups:
+                warnings.append(f"Skipped missing dependency group reference for {included_group_name!r}.")
+                continue
             nested_entries, nested_warnings = _flatten_dependency_group_entries(
                 all_groups,
                 group_name=included_group_name,
-                entries=all_groups.get(included_group_name, []),
+                entries=all_groups[included_group_name],
                 seen=seen,
             )
             flattened_entries.extend(nested_entries)
@@ -489,6 +492,10 @@ def _get_installed_version(package_name: str) -> str | None:
 
 
 def _parse_requirement(requirement: str) -> tuple[str, str] | None:
+    legacy_vcs_requirement = _parse_legacy_vcs_requirement(requirement)
+    if legacy_vcs_requirement is not None:
+        return legacy_vcs_requirement
+
     match = re.match(r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)", requirement)
     if not match:
         return None
@@ -496,3 +503,22 @@ def _parse_requirement(requirement: str) -> tuple[str, str] | None:
     name = match.group(1)
     specifier = requirement[match.end() :].strip()
     return name, specifier
+
+
+def _strip_requirements_comment(raw_line: str) -> str:
+    stripped_line = raw_line.strip()
+    if not stripped_line or stripped_line.startswith("#"):
+        return ""
+
+    if "#egg=" in raw_line:
+        return raw_line.strip()
+
+    return raw_line.split(" #", 1)[0].strip()
+
+
+def _parse_legacy_vcs_requirement(requirement: str) -> tuple[str, str] | None:
+    egg_match = re.search(r"#egg=([A-Za-z0-9][A-Za-z0-9._-]*)", requirement)
+    if egg_match is None:
+        return None
+
+    return egg_match.group(1), requirement.strip()
