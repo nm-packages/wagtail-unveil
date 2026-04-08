@@ -137,6 +137,14 @@ class TestSettingDiagnostics(TestCase):
         self.assertEqual(diagnostic.effective_value, "")
         self.assertIn("Blank environment values are ignored.", diagnostic.notes)
 
+    def test_whitespace_only_api_key_env_value_is_ignored(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "   "}):
+            diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_API_KEY")
+
+        self.assertEqual(diagnostic.source, "env")
+        self.assertEqual(diagnostic.effective_value, "")
+        self.assertIn("Blank environment values are ignored.", diagnostic.notes)
+
     @override_settings(WAGTAIL_UNVEIL_API_KEY=True)
     def test_non_string_api_key_value_is_reported_as_invalid(self):
         with patch.dict("os.environ", {}, clear=True):

@@ -272,7 +272,7 @@ def inspect_api_key_setting():
 
     if source == "default":
         notes.append("Bearer authentication is not configured.")
-    elif source == "env" and raw_value == "":
+    elif source == "env" and _is_blank_string(raw_value):
         notes.append("Blank environment values are ignored.")
     elif not isinstance(raw_value, str):
         notes.append("Non-string values are ignored.")
