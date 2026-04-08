@@ -178,6 +178,32 @@ td {
   font-size: 0.85rem;
   vertical-align: top;
 }
+.platform-pypi-cell {
+  transition: background-color 120ms ease;
+}
+.platform-pypi-version {
+  font-weight: 600;
+}
+.platform-pypi-status {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.75rem;
+}
+.platform-pypi-neutral {
+  background: #f5f5f5;
+}
+.platform-pypi-success {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+.platform-pypi-warning {
+  background: #fff8e1;
+  color: #8d6e00;
+}
+.platform-pypi-danger {
+  background: #ffebee;
+  color: #b71c1c;
+}
 tr:last-child td {
   border-bottom: none;
 }

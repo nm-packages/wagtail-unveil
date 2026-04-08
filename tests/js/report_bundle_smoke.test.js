@@ -522,6 +522,14 @@ describe("report bundle", () => {
       document.querySelector("#platform-packages-body tr .platform-pypi-cell")
         .textContent,
     ).toContain("Different");
+    expect(
+      document.querySelector("#platform-packages-body tr .platform-pypi-cell"),
+    ).not.toBeNull();
+    expect(
+      document
+        .querySelector("#platform-packages-body tr .platform-pypi-cell")
+        .classList.contains("platform-pypi-warning"),
+    ).toBe(true);
   });
 
   test("platform report dedupes package lookups and handles mixed PyPI outcomes", async () => {
@@ -614,6 +622,11 @@ describe("report bundle", () => {
     expect(rows[0].querySelector(".platform-pypi-cell").textContent).toContain(
       "Latest",
     );
+    expect(
+      rows[0]
+        .querySelector(".platform-pypi-cell")
+        .classList.contains("platform-pypi-success"),
+    ).toBe(true);
     expect(rows[1].querySelector(".platform-pypi-cell").textContent).toContain(
       "5.2.1",
     );
@@ -623,9 +636,19 @@ describe("report bundle", () => {
     expect(rows[2].querySelector(".platform-pypi-cell").textContent).toContain(
       "Not on PyPI",
     );
+    expect(
+      rows[2]
+        .querySelector(".platform-pypi-cell")
+        .classList.contains("platform-pypi-danger"),
+    ).toBe(true);
     expect(rows[3].querySelector(".platform-pypi-cell").textContent).toContain(
       "Lookup failed",
     );
+    expect(
+      rows[3]
+        .querySelector(".platform-pypi-cell")
+        .classList.contains("platform-pypi-danger"),
+    ).toBe(true);
   });
 
   test("platform report marks rows as unknown when no installed version is available", async () => {
@@ -675,5 +698,13 @@ describe("report bundle", () => {
       document.querySelector("#platform-packages-body tr .platform-pypi-cell")
         .textContent,
     ).toContain("Unknown");
+    expect(
+      document.querySelector("#platform-packages-body tr .platform-pypi-cell"),
+    ).not.toBeNull();
+    expect(
+      document
+        .querySelector("#platform-packages-body tr .platform-pypi-cell")
+        .classList.contains("platform-pypi-warning"),
+    ).toBe(true);
   });
 });

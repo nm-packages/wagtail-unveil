@@ -802,7 +802,7 @@
       var cell = document.createElement("td");
       var value = document.createElement("span");
       var marker = document.createElement("small");
-      cell.className = "platform-pypi-cell";
+      cell.className = "platform-pypi-cell platform-pypi-neutral";
       value.className = "platform-pypi-version";
       value.textContent = "\u2014";
       marker.className = "platform-pypi-status";
@@ -971,6 +971,13 @@
       if (!value || !marker) {
         return;
       }
+      cell.classList.remove(
+        "platform-pypi-neutral",
+        "platform-pypi-success",
+        "platform-pypi-warning",
+        "platform-pypi-danger"
+      );
+      cell.classList.add(options.toneClass || "platform-pypi-neutral");
       value.textContent = options.versionText;
       marker.textContent = options.markerText || "";
     }
@@ -1073,6 +1080,7 @@
       packageNames.forEach((packageName) => {
         setPypiLookupRows(packageName, {
           markerText: "",
+          toneClass: "platform-pypi-neutral",
           versionText: "Loading\u2026"
         });
       });
@@ -1105,6 +1113,7 @@
             if (!result) {
               setPypiLookupCell(row, {
                 markerText: "",
+                toneClass: "platform-pypi-danger",
                 versionText: "Lookup failed"
               });
               return;
@@ -1116,6 +1125,7 @@
               );
               setPypiLookupCell(row, {
                 markerText: marker,
+                toneClass: marker === "Latest" ? "platform-pypi-success" : "platform-pypi-warning",
                 versionText: result.version
               });
               return;
@@ -1123,12 +1133,14 @@
             if (result.status === "not_found") {
               setPypiLookupCell(row, {
                 markerText: "",
+                toneClass: "platform-pypi-danger",
                 versionText: result.version
               });
               return;
             }
             setPypiLookupCell(row, {
               markerText: "",
+              toneClass: "platform-pypi-danger",
               versionText: result.version
             });
           });
