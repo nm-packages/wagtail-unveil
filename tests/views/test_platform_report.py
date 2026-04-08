@@ -64,6 +64,21 @@ class TestPlatformReportView(WagtailTestUtils, TestCase):
         self.assertContains(response, 'id="platform-warnings-body"')
         self.assertContains(response, 'id="platform-packages-body"')
         self.assertContains(response, 'id="platform-metadata-body"')
+        self.assertContains(
+            response,
+            '<th data-sort-col="0" data-sort-target="platform-packages-body">Name</th>',
+            html=True,
+        )
+        self.assertContains(
+            response,
+            '<th data-sort-col="4" data-sort-target="platform-packages-body">Source Kind</th>',
+            html=True,
+        )
+        self.assertContains(
+            response,
+            '<th data-sort-col="5" data-sort-target="platform-packages-body">Source Name</th>',
+            html=True,
+        )
 
     def test_report_does_not_render_dependency_rows_server_side(self):
         response = self.client.get(self.report_url)
