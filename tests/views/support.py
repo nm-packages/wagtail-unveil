@@ -13,6 +13,11 @@ class BaseAPIViewTestMixin:
     api_url: str
     api_version: str = "v1"
 
+    def assert_api_response_is_not_cacheable(self, response):
+        self.assertEqual(response["Cache-Control"], "private, no-store")
+        self.assertIn("Authorization", response["Vary"])
+        self.assertIn("Cookie", response["Vary"])
+
     def test_returns_json(self):
         response = self.client.get(
             self.api_url,
@@ -26,9 +31,7 @@ class BaseAPIViewTestMixin:
         self.assertGreater(data["count"], 0)
         self.assertEqual(len(data["urls"]), data["count"])
         self.assertEqual(data["metadata"]["total_count"], data["count"])
-        self.assertEqual(response["Cache-Control"], "private, no-store")
-        self.assertIn("Authorization", response["Vary"])
-        self.assertIn("Cookie", response["Vary"])
+        self.assert_api_response_is_not_cacheable(response)
 
     @patch("wagtail_unveil.views._get_package_version", return_value="9.9.9")
     @patch("wagtail_unveil.views.timezone.now")
@@ -66,9 +69,7 @@ class BaseAPIViewTestMixin:
     def test_requires_api_key(self):
         response = self.client.get(self.api_url)
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response["Cache-Control"], "private, no-store")
-        self.assertIn("Authorization", response["Vary"])
-        self.assertIn("Cookie", response["Vary"])
+        self.assert_api_response_is_not_cacheable(response)
 
     def test_rejects_wrong_key(self):
         response = self.client.get(
@@ -76,9 +77,7 @@ class BaseAPIViewTestMixin:
             HTTP_AUTHORIZATION="Bearer wrong-key",
         )
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response["Cache-Control"], "private, no-store")
-        self.assertIn("Authorization", response["Vary"])
-        self.assertIn("Cookie", response["Vary"])
+        self.assert_api_response_is_not_cacheable(response)
 
     def test_returns_500_when_no_env_var(self):
         with patch.dict("os.environ", {}, clear=True):
@@ -88,9 +87,7 @@ class BaseAPIViewTestMixin:
                     HTTP_AUTHORIZATION="Bearer test-secret",
                 )
                 self.assertEqual(response.status_code, 500)
-                self.assertEqual(response["Cache-Control"], "private, no-store")
-                self.assertIn("Authorization", response["Vary"])
-                self.assertIn("Cookie", response["Vary"])
+                self.assert_api_response_is_not_cacheable(response)
 
     def test_uses_settings_fallback_when_env_missing(self):
         with patch.dict("os.environ", {}, clear=True):

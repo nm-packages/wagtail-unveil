@@ -11,6 +11,11 @@ class TestSettingDiagnostics(TestCase):
         diagnostics = {item.name: item for item in get_setting_diagnostics()}
         return diagnostics[name]
 
+    def assert_api_key_display_is_masked(self, diagnostic, *, length):
+        masked_display = f"Configured ({length} chars)"
+        self.assertEqual(diagnostic.raw_display, masked_display)
+        self.assertEqual(diagnostic.effective_display, masked_display)
+
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=5)
     def test_pages_per_type_diagnostics_prefer_env_source(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "2"}):
@@ -96,8 +101,7 @@ class TestSettingDiagnostics(TestCase):
 
         self.assertEqual(diagnostic.source, "env")
         self.assertEqual(diagnostic.effective_value, "super-secret")
-        self.assertEqual(diagnostic.raw_display, "Configured (12 chars)")
-        self.assertEqual(diagnostic.effective_display, "Configured (12 chars)")
+        self.assert_api_key_display_is_masked(diagnostic, length=12)
 
     def test_blank_api_key_env_value_is_ignored(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": ""}):

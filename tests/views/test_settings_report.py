@@ -12,6 +12,11 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
+    def assert_masked_api_key_output(self, response, *, secret):
+        self.assertNotContains(response, secret)
+        self.assertContains(response, f"Configured ({len(secret)} chars)")
+        self.assertContains(response, "Environment variable")
+
     def test_report_requires_login(self):
         self.client.logout()
         response = self.client.get(self.report_url)
@@ -46,9 +51,7 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
     @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "full-secret-value"})
     def test_report_masks_api_key_value(self):
         response = self.client.get(self.report_url)
-        self.assertNotContains(response, "full-secret-value")
-        self.assertContains(response, "Configured (17 chars)")
-        self.assertContains(response, "Environment variable")
+        self.assert_masked_api_key_output(response, secret="full-secret-value")
 
     def test_settings_nav_link_is_active(self):
         response = self.client.get(self.report_url)
