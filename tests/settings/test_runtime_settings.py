@@ -208,6 +208,11 @@ class TestGetEnableProductionReports(TestCase):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": "0"}):
             self.assertFalse(get_enable_production_reports())
 
+    @override_settings(WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True)
+    def test_blank_env_var_falls_back_to_django_setting(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": "   "}):
+            self.assertTrue(get_enable_production_reports())
+
     @override_settings(WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=False)
     def test_env_var_wins_over_django_setting(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": "on"}):

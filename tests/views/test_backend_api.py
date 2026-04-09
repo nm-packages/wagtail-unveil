@@ -2,6 +2,7 @@ import json
 from dataclasses import replace
 from datetime import date
 from importlib.metadata import PackageNotFoundError
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth.models import AnonymousUser
@@ -24,6 +25,10 @@ from wagtail_unveil.views import (
 
 V1_CONTRACT = get_api_contract("v1")
 API_URL = f"/unveil/{V1_CONTRACT.backend_url_path}"
+
+
+class DummySession(dict):
+    """Minimal mapping-like session test double."""
 
 
 @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
@@ -171,10 +176,11 @@ class TestAdminAPIViewHelpers(TestCase):
 
     def test_build_report_access_token_round_trips_for_same_user_and_session(self):
         request = self.factory.get(API_URL)
-        request.user = type("User", (), {"pk": 7})()
-        request.session = type("Session", (), {"session_key": "session-123"})()
+        request.user = SimpleNamespace(pk=7)
+        request.session = DummySession()
 
         token = _build_report_access_token(request)
+        claims = signing.loads(token, salt="wagtail_unveil.report_api_access")
 
         request_with_token = self.factory.get(
             API_URL,
@@ -183,20 +189,22 @@ class TestAdminAPIViewHelpers(TestCase):
         request_with_token.user = request.user
         request_with_token.session = request.session
 
+        self.assertNotIn("session_key", claims)
+        self.assertIn("session_nonce", claims)
         self.assertTrue(_has_valid_report_access_token(request_with_token))
 
     def test_report_access_token_rejects_user_or_session_mismatch(self):
         request = self.factory.get(API_URL)
-        request.user = type("User", (), {"pk": 7})()
-        request.session = type("Session", (), {"session_key": "session-123"})()
+        request.user = SimpleNamespace(pk=7)
+        request.session = DummySession()
         token = _build_report_access_token(request)
 
         mismatched_request = self.factory.get(
             API_URL,
             HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS=token,
         )
-        mismatched_request.user = type("User", (), {"pk": 8})()
-        mismatched_request.session = type("Session", (), {"session_key": "session-456"})()
+        mismatched_request.user = SimpleNamespace(pk=8)
+        mismatched_request.session = DummySession()
 
         self.assertFalse(_has_valid_report_access_token(mismatched_request))
 
@@ -206,7 +214,7 @@ class TestAdminAPIViewHelpers(TestCase):
             HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS="invalid-token",
         )
         request.user = AnonymousUser()
-        request.session = type("Session", (), {"session_key": "session-123"})()
+        request.session = DummySession()
 
         self.assertFalse(_has_valid_report_access_token(request))
 
@@ -216,8 +224,8 @@ class TestAdminAPIViewHelpers(TestCase):
             API_URL,
             HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS="expired-token",
         )
-        request.user = type("User", (), {"pk": 7})()
-        request.session = type("Session", (), {"session_key": "session-123"})()
+        request.user = SimpleNamespace(pk=7)
+        request.session = DummySession()
 
         self.assertFalse(_has_valid_report_access_token(request))
 

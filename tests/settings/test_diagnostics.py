@@ -120,6 +120,15 @@ class TestSettingDiagnostics(TestCase):
         self.assertEqual(diagnostic.effective_value, True)
         self.assertIn("Allows superusers to open HTML reports", diagnostic.notes)
 
+    @override_settings(WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True)
+    def test_blank_production_reports_env_value_is_ignored(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": " "}):
+            diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
+
+        self.assertEqual(diagnostic.source, "env")
+        self.assertEqual(diagnostic.effective_value, True)
+        self.assertIn("Blank environment values are ignored.", diagnostic.notes)
+
     def test_blank_api_key_env_value_is_ignored(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": ""}):
             diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_API_KEY")

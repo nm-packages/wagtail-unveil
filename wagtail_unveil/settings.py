@@ -173,6 +173,9 @@ def get_enable_production_reports():
     """Return whether production report access is explicitly enabled."""
     env_value = os.environ.get("WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
     if env_value is not None:
+        if _is_blank_string(env_value):
+            raw = getattr(settings, "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS", False)
+            return _coerce_bool(raw, default=False)
         return _coerce_bool(env_value, default=False)
 
     raw = getattr(settings, "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS", False)

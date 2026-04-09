@@ -1,6 +1,6 @@
 # Settings Reference
 
-All `WAGTAIL_UNVEIL_*` settings can be set as environment variables or in Django settings. Environment variables take precedence when both are set.
+All `WAGTAIL_UNVEIL_*` settings can be set as environment variables or in Django settings. Environment variables generally take precedence when both are set, subject to each setting's normalization rules.
 
 ## `WAGTAIL_UNVEIL_API_KEY`
 
@@ -39,7 +39,8 @@ WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS = True
 **Notes:**
 
 - Defaults to `False`
-- Environment variables take precedence over Django settings
+- Non-blank environment variables take precedence over Django settings
+- Blank environment values are ignored and fall back to the Django setting or default
 - Intended as an explicit production opt-in for HTML report access
 - Does not make the JSON API broadly session-authenticated in production
 - The report UI uses a short-lived signed token for its own JSON requests; the API key is still never exposed to the browser

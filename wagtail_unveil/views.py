@@ -3,7 +3,7 @@ from datetime import datetime, time
 from datetime import timezone as datetime_timezone
 from email.utils import format_datetime
 from importlib.metadata import PackageNotFoundError, version
-from secrets import compare_digest
+from secrets import compare_digest, token_urlsafe
 
 import wagtail
 from django import get_version as get_django_version
@@ -36,6 +36,7 @@ from wagtail_unveil.settings import (
 REPORT_ACCESS_HEADER = "X-Wagtail-Unveil-Report-Access"
 REPORT_ACCESS_SALT = "wagtail_unveil.report_api_access"
 REPORT_ACCESS_MAX_AGE = 300
+REPORT_ACCESS_SESSION_NONCE_KEY = "_wagtail_unveil_report_access_nonce"
 
 
 def _apply_api_cache_headers(response):
@@ -51,14 +52,35 @@ def _json_error(message, *, status):
     return _apply_api_cache_headers(response)
 
 
+def _get_report_access_session_nonce(request, *, create=False):
+    """Return the session-bound nonce used to validate report access tokens."""
+    session = getattr(request, "session", None)
+    if session is None:
+        return ""
+
+    if hasattr(session, "get"):
+        nonce = session.get(REPORT_ACCESS_SESSION_NONCE_KEY, "")
+    else:
+        nonce = getattr(session, REPORT_ACCESS_SESSION_NONCE_KEY, "")
+
+    if nonce or not create:
+        return nonce or ""
+
+    nonce = token_urlsafe(32)
+    if hasattr(session, "__setitem__"):
+        session[REPORT_ACCESS_SESSION_NONCE_KEY] = nonce
+    else:
+        setattr(session, REPORT_ACCESS_SESSION_NONCE_KEY, nonce)
+    return nonce
+
+
 def _build_report_access_token(request):
     """Build a short-lived signed token for report-triggered API access."""
-    session_key = getattr(getattr(request, "session", None), "session_key", None) or ""
     return signing.dumps(
         {
             "purpose": "report-api-access",
             "user_id": getattr(request.user, "pk", None),
-            "session_key": session_key,
+            "session_nonce": _get_report_access_session_nonce(request, create=True),
         },
         salt=REPORT_ACCESS_SALT,
     )
@@ -81,13 +103,15 @@ def _has_valid_report_access_token(request):
         return False
 
     user = getattr(request, "user", None)
-    session_key = getattr(getattr(request, "session", None), "session_key", None) or ""
+    session_nonce = _get_report_access_session_nonce(request, create=False)
 
     if claims.get("purpose") != "report-api-access":
         return False
     if claims.get("user_id") != getattr(user, "pk", None):
         return False
-    return claims.get("session_key") == session_key
+    if not session_nonce:
+        return False
+    return compare_digest(claims.get("session_nonce", ""), session_nonce)
 
 
 def _authenticate_api_request(request):
