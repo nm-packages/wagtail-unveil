@@ -15,9 +15,9 @@ from wagtail_unveil.discovery.frontend import (
     get_frontend_urls,
 )
 from wagtail_unveil.discovery.frontend_resolution import (
-    _get_first_public_live_page_id,
     _get_descendant_date_years,
     _get_descendant_page_candidates,
+    _get_first_public_live_page_id,
     _get_routable_parameter_candidates,
     _iter_routable_parameters,
     _unique_values,

@@ -4,8 +4,8 @@ from datetime import date
 from importlib.metadata import PackageNotFoundError
 from unittest.mock import patch
 
-from django.core import signing
 from django.contrib.auth.models import AnonymousUser
+from django.core import signing
 from django.test import RequestFactory, TestCase, override_settings
 from wagtail.models import Page
 
@@ -14,11 +14,11 @@ from wagtail_unveil.api_contract import get_api_contract
 from wagtail_unveil.discovery.backend import BackendURL
 from wagtail_unveil.views import (
     _authenticate_api_request,
-    _build_report_access_token,
     _build_lifecycle_detail,
+    _build_report_access_token,
     _get_display_package_version,
-    _has_valid_report_access_token,
     _get_package_version,
+    _has_valid_report_access_token,
     _serialize_backend_url,
 )
 

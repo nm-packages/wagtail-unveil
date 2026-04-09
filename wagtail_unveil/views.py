@@ -1,19 +1,19 @@
 import platform
-from secrets import compare_digest
 from datetime import datetime, time
 from datetime import timezone as datetime_timezone
 from email.utils import format_datetime
 from importlib.metadata import PackageNotFoundError, version
+from secrets import compare_digest
 
 import wagtail
-from django.core import signing
 from django import get_version as get_django_version
 from django.conf import settings
+from django.core import signing
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
-from django.utils.cache import patch_vary_headers
 from django.utils import timezone
+from django.utils.cache import patch_vary_headers
 from wagtail.admin.auth import user_passes_test
 
 from wagtail_unveil.api_contract import (
@@ -24,7 +24,12 @@ from wagtail_unveil.api_contract import (
 )
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.frontend import get_frontend_urls
-from wagtail_unveil.settings import get_api_key, get_enable_production_reports, get_setting_diagnostics, is_report_ui_enabled
+from wagtail_unveil.settings import (
+    get_api_key,
+    get_enable_production_reports,
+    get_setting_diagnostics,
+    is_report_ui_enabled,
+)
 
 # Shared API response and authentication helpers
 
@@ -240,12 +245,19 @@ def _build_settings_report_context():
             {
                 "label": "HTML report access",
                 "value": "Enabled" if reports_enabled else "Disabled",
-                "detail": "Report pages require a superuser and either DEBUG=True or WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True.",
+                "detail": (
+                    "Report pages require a superuser and either DEBUG=True or "
+                    "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True."
+                ),
             },
             {
                 "label": "Superuser session API access",
                 "value": "Enabled" if settings.DEBUG or production_reports_enabled else "Disabled",
-                "detail": "Session-based JSON access is allowed for superusers in DEBUG mode, or for signed report requests when production reports are enabled.",
+                "detail": (
+                    "Session-based JSON access is allowed for superusers in DEBUG "
+                    "mode, or for signed report requests when production reports "
+                    "are enabled."
+                ),
             },
             {
                 "label": "Bearer API auth",

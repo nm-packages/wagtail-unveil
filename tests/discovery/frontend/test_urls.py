@@ -2,7 +2,6 @@ from django.test import TestCase, override_settings
 from wagtail.models import Page, PageViewRestriction
 
 from sandbox.core.models import StandardPage
-
 from wagtail_unveil.discovery.frontend import FrontendURL, get_frontend_urls
 
 
