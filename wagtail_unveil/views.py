@@ -6,6 +6,7 @@ from email.utils import format_datetime
 from importlib.metadata import PackageNotFoundError, version
 
 import wagtail
+from django.core import signing
 from django import get_version as get_django_version
 from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
@@ -23,9 +24,13 @@ from wagtail_unveil.api_contract import (
 )
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.frontend import get_frontend_urls
-from wagtail_unveil.settings import get_api_key, get_setting_diagnostics
+from wagtail_unveil.settings import get_api_key, get_enable_production_reports, get_setting_diagnostics, is_report_ui_enabled
 
 # Shared API response and authentication helpers
+
+REPORT_ACCESS_HEADER = "X-Wagtail-Unveil-Report-Access"
+REPORT_ACCESS_SALT = "wagtail_unveil.report_api_access"
+REPORT_ACCESS_MAX_AGE = 300
 
 
 def _apply_api_cache_headers(response):
@@ -39,6 +44,45 @@ def _json_error(message, *, status):
     """Return a JSON error response with a consistent shape."""
     response = JsonResponse({"error": message}, status=status)
     return _apply_api_cache_headers(response)
+
+
+def _build_report_access_token(request):
+    """Build a short-lived signed token for report-triggered API access."""
+    session_key = getattr(getattr(request, "session", None), "session_key", None) or ""
+    return signing.dumps(
+        {
+            "purpose": "report-api-access",
+            "user_id": getattr(request.user, "pk", None),
+            "session_key": session_key,
+        },
+        salt=REPORT_ACCESS_SALT,
+    )
+
+
+def _has_valid_report_access_token(request):
+    """Return True when the request carries a valid signed report access token."""
+    token = request.headers.get(REPORT_ACCESS_HEADER, "")
+    if not token:
+        return False
+
+    try:
+        claims = signing.loads(token, salt=REPORT_ACCESS_SALT, max_age=REPORT_ACCESS_MAX_AGE)
+    except signing.SignatureExpired:
+        return False
+    except signing.BadSignature:
+        return False
+
+    if not isinstance(claims, dict):
+        return False
+
+    user = getattr(request, "user", None)
+    session_key = getattr(getattr(request, "session", None), "session_key", None) or ""
+
+    if claims.get("purpose") != "report-api-access":
+        return False
+    if claims.get("user_id") != getattr(user, "pk", None):
+        return False
+    return claims.get("session_key") == session_key
 
 
 def _authenticate_api_request(request):
@@ -58,8 +102,11 @@ def _authenticate_api_request(request):
         return None
 
     user = getattr(request, "user", None)
-    if settings.DEBUG and user and user.is_authenticated and user.is_superuser:
-        return None
+    if user and user.is_authenticated and user.is_superuser:
+        if settings.DEBUG:
+            return None
+        if get_enable_production_reports() and _has_valid_report_access_token(request):
+            return None
 
     return _json_error("Invalid or missing API key", status=403)
 
@@ -180,6 +227,8 @@ def _build_settings_report_context():
     """Build diagnostics content for the settings page."""
     contract = get_latest_stable_api_contract()
     api_key = get_api_key()
+    production_reports_enabled = get_enable_production_reports()
+    reports_enabled = is_report_ui_enabled()
     return {
         "package_settings": get_setting_diagnostics(),
         "runtime_entries": [
@@ -190,13 +239,13 @@ def _build_settings_report_context():
             },
             {
                 "label": "HTML report access",
-                "value": "Enabled" if settings.DEBUG else "Disabled",
-                "detail": "Report pages require a superuser and DEBUG=True.",
+                "value": "Enabled" if reports_enabled else "Disabled",
+                "detail": "Report pages require a superuser and either DEBUG=True or WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True.",
             },
             {
                 "label": "Superuser session API access",
-                "value": "Enabled" if settings.DEBUG else "Disabled",
-                "detail": "Session-based JSON access is only allowed for superusers when DEBUG=True.",
+                "value": "Enabled" if settings.DEBUG or production_reports_enabled else "Disabled",
+                "detail": "Session-based JSON access is allowed for superusers in DEBUG mode, or for signed report requests when production reports are enabled.",
             },
             {
                 "label": "Bearer API auth",
@@ -380,8 +429,8 @@ frontend_urls_json = build_frontend_urls_json_view(get_latest_stable_api_version
 
 @user_passes_test(lambda u: u.is_superuser)
 def backend_urls_report(request):
-    """Render an HTML report of all backend URLs. Only available when DEBUG=True."""
-    if not settings.DEBUG:
+    """Render an HTML report of all backend URLs for eligible superusers."""
+    if not is_report_ui_enabled():
         return HttpResponseNotFound()
 
     contract = get_latest_stable_api_contract()
@@ -389,14 +438,15 @@ def backend_urls_report(request):
         "api_url": reverse(f"wagtail_unveil:{contract.backend_url_name}"),
         "report_kind": "backend",
         "active_report": "backend",
+        "report_access_token": _build_report_access_token(request),
     }
     return render(request, "wagtail_unveil/backend_urls_report.html", context)
 
 
 @user_passes_test(lambda u: u.is_superuser)
 def frontend_urls_report(request):
-    """Render an HTML report of all frontend URLs. Only available when DEBUG=True."""
-    if not settings.DEBUG:
+    """Render an HTML report of all frontend URLs for eligible superusers."""
+    if not is_report_ui_enabled():
         return HttpResponseNotFound()
 
     contract = get_latest_stable_api_contract()
@@ -404,14 +454,15 @@ def frontend_urls_report(request):
         "api_url": reverse(f"wagtail_unveil:{contract.frontend_url_name}"),
         "report_kind": "frontend",
         "active_report": "frontend",
+        "report_access_token": _build_report_access_token(request),
     }
     return render(request, "wagtail_unveil/frontend_urls_report.html", context)
 
 
 @user_passes_test(lambda u: u.is_superuser)
 def settings_report(request):
-    """Render an HTML settings and diagnostics page. Only available when DEBUG=True."""
-    if not settings.DEBUG:
+    """Render an HTML settings and diagnostics page for eligible superusers."""
+    if not is_report_ui_enabled():
         return HttpResponseNotFound()
 
     context = {

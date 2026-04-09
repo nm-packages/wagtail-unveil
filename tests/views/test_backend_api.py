@@ -4,6 +4,8 @@ from datetime import date
 from importlib.metadata import PackageNotFoundError
 from unittest.mock import patch
 
+from django.core import signing
+from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, TestCase, override_settings
 from wagtail.models import Page
 
@@ -12,8 +14,10 @@ from wagtail_unveil.api_contract import get_api_contract
 from wagtail_unveil.discovery.backend import BackendURL
 from wagtail_unveil.views import (
     _authenticate_api_request,
+    _build_report_access_token,
     _build_lifecycle_detail,
     _get_display_package_version,
+    _has_valid_report_access_token,
     _get_package_version,
     _serialize_backend_url,
 )
@@ -26,6 +30,7 @@ API_URL = f"/unveil/{V1_CONTRACT.backend_url_path}"
 class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
     api_url = API_URL
     api_version = V1_CONTRACT.version
+    report_url = "/unveil/report/backend-urls/"
 
     def test_filter_static(self):
         response = self.client.get(
@@ -163,6 +168,58 @@ class TestAdminAPIViewHelpers(TestCase):
             json.loads(response.content),
             {"error": "Invalid or missing API key"},
         )
+
+    def test_build_report_access_token_round_trips_for_same_user_and_session(self):
+        request = self.factory.get(API_URL)
+        request.user = type("User", (), {"pk": 7})()
+        request.session = type("Session", (), {"session_key": "session-123"})()
+
+        token = _build_report_access_token(request)
+
+        request_with_token = self.factory.get(
+            API_URL,
+            HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS=token,
+        )
+        request_with_token.user = request.user
+        request_with_token.session = request.session
+
+        self.assertTrue(_has_valid_report_access_token(request_with_token))
+
+    def test_report_access_token_rejects_user_or_session_mismatch(self):
+        request = self.factory.get(API_URL)
+        request.user = type("User", (), {"pk": 7})()
+        request.session = type("Session", (), {"session_key": "session-123"})()
+        token = _build_report_access_token(request)
+
+        mismatched_request = self.factory.get(
+            API_URL,
+            HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS=token,
+        )
+        mismatched_request.user = type("User", (), {"pk": 8})()
+        mismatched_request.session = type("Session", (), {"session_key": "session-456"})()
+
+        self.assertFalse(_has_valid_report_access_token(mismatched_request))
+
+    def test_report_access_token_rejects_invalid_signature(self):
+        request = self.factory.get(
+            API_URL,
+            HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS="invalid-token",
+        )
+        request.user = AnonymousUser()
+        request.session = type("Session", (), {"session_key": "session-123"})()
+
+        self.assertFalse(_has_valid_report_access_token(request))
+
+    @patch("wagtail_unveil.views.signing.loads", side_effect=signing.SignatureExpired("expired"))
+    def test_report_access_token_rejects_expired_tokens(self, _mock_loads):
+        request = self.factory.get(
+            API_URL,
+            HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS="expired-token",
+        )
+        request.user = type("User", (), {"pk": 7})()
+        request.session = type("Session", (), {"session_key": "session-123"})()
+
+        self.assertFalse(_has_valid_report_access_token(request))
 
     def test_serialize_backend_url(self):
         url = BackendURL(

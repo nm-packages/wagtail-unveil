@@ -11,6 +11,7 @@ wagtail-unveil is configured via Django settings or environment variables.
 | Setting | Default | Purpose |
 |---|---|---|
 | `WAGTAIL_UNVEIL_API_KEY` | — | Bearer token for JSON API authentication |
+| `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS` | `False` | Explicit opt-in for superuser HTML report access when `DEBUG=False` |
 | `WAGTAIL_UNVEIL_PAGES_PER_TYPE` | `1` | Max page instances per type in frontend discovery |
 | `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES` | `[]` | URL prefixes to exclude from discovery |
 

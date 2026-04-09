@@ -22,6 +22,27 @@ WAGTAIL_UNVEIL_API_KEY = "your-secret-key"
 - Requests with an invalid key receive a `403` response
 - If no key is configured, Bearer-authenticated requests return `500`
 - When `DEBUG=True`, the HTML reports also accept superuser session auth (no Bearer token needed for report use)
+- When `DEBUG=False`, session-based JSON access remains bearer-token-only unless a request carries a valid signed report access token issued from the built-in report UI
+
+## `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS`
+
+Explicitly allows superusers to open the backend report, frontend report, settings page, and dashboard links when `DEBUG=False`.
+
+```bash
+export WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=true
+```
+
+```python
+WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS = True
+```
+
+**Notes:**
+
+- Defaults to `False`
+- Environment variables take precedence over Django settings
+- Intended as an explicit production opt-in for HTML report access
+- Does not make the JSON API broadly session-authenticated in production
+- The report UI uses a short-lived signed token for its own JSON requests; the API key is still never exposed to the browser
 
 ## `WAGTAIL_UNVEIL_PAGES_PER_TYPE`
 

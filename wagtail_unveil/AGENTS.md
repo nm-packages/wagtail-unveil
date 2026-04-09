@@ -49,9 +49,10 @@ Do not document or assume package management commands unless they are reintroduc
 - `WAGTAIL_UNVEIL_PAGES_PER_TYPE`
 - `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES`
 - `WAGTAIL_UNVEIL_API_KEY`
+- `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS`
 
 `get_api_key()` checks the environment first, then Django settings fallback.
-JSON API requests also allow superuser session auth when `DEBUG=True` and the request is not attempting Bearer-token auth.
+JSON API requests also allow superuser session auth when `DEBUG=True` and the request is not attempting Bearer-token auth. When `DEBUG=False`, signed report-originated requests may also use a superuser session if `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`.
 
 ### URL Names
 
@@ -103,7 +104,7 @@ For detailed rationale, breaking-change decision rules, lifecycle defaults, and
 worked examples, see `../docs/contributing/api-versioning.md`.
 
 The admin/frontend HTML reports are shell views that fetch this JSON on page load rather than rendering discovery results directly in the Django template. They stay hidden behind a full-screen loading state until the API data and client-side controls are ready, so JavaScript is required for report use.
-The settings page is server-rendered and is intended for local diagnostics while `DEBUG=True`.
+The settings page is server-rendered and is intended for superuser diagnostics when `DEBUG=True`, or in production only when `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`.
 Frontend URL payloads may include `resolved_url` for path-parameter resolution and `query_params` for query-driven testing while preserving the canonical `url` field shown in reports.
 
 ## Discovery Notes

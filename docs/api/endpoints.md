@@ -24,6 +24,7 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 | Invalid Bearer token | `403` |
 | No key configured | `500` |
 | Superuser session + `DEBUG=True` | `200` (session auth accepted when not attempting Bearer auth) |
+| Superuser session + production report access token | `200` when `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True` |
 
 ## Backend URLs Endpoint
 

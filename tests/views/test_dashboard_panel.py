@@ -47,3 +47,10 @@ class TestDashboardPanel(TestCase):
         with self.settings(DEBUG=False):
             html = self._render(self.superuser)
             self.assertEqual(html, "")
+
+    def test_panel_visible_when_production_reports_enabled(self):
+        with self.settings(DEBUG=False, WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True):
+            html = self._render(self.superuser)
+            self.assertIn("Backend URLs", html)
+            self.assertIn("Frontend URLs", html)
+            self.assertIn("Settings", html)

@@ -173,16 +173,22 @@
   function loadReportData() {
     var apiUrl = document.body.dataset.apiUrl || "";
     var reportKind = document.body.dataset.reportKind || "";
+    var reportAccessToken = document.body.dataset.reportAccessToken || "";
+    var headers = {
+      Accept: "application/json",
+    };
 
     if (!apiUrl || !reportKind) {
       return Promise.reject(new Error("Report configuration is missing."));
     }
 
+    if (reportAccessToken) {
+      headers["X-Wagtail-Unveil-Report-Access"] = reportAccessToken;
+    }
+
     return fetch(apiUrl, {
       credentials: "include",
-      headers: {
-        Accept: "application/json",
-      },
+      headers: headers,
     })
       .then((response) =>
         response

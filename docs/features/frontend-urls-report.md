@@ -4,7 +4,7 @@ The frontend URLs report discovers and displays all frontend URLs in your projec
 
 ## Access
 
-Visit `/unveil/report/frontend-urls/` while logged in as a superuser with `DEBUG=True`.
+Visit `/unveil/report/frontend-urls/` while logged in as a superuser with `DEBUG=True`, or enable `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS` for explicit production access.
 
 ![Frontend URLs Report](https://raw.githubusercontent.com/nm-packages/wagtail-unveil/main/docs/features/frontend_report.jpg)
 
@@ -26,7 +26,7 @@ You can also reach it from the Wagtail admin dashboard panel.
 
 ### Wagtail Page URLs
 
-Discovered from `Page.objects.live().specific()`. Includes:
+Discovered from `Page.objects.live().public().specific()`. Includes:
 
 - Base page URL for each live page
 - Form landing page URLs for pages using `FormMixin`

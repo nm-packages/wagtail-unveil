@@ -12,6 +12,20 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
+    def _production_report_settings(self):
+        return {
+            "DEBUG": False,
+            "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": True,
+            "STORAGES": {
+                "default": {
+                    "BACKEND": "django.core.files.storage.FileSystemStorage",
+                },
+                "staticfiles": {
+                    "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+                },
+            },
+        }
+
     def assert_masked_api_key_output(self, response, *, secret):
         self.assertNotContains(response, secret)
         self.assertContains(response, f"Configured ({len(secret)} chars)")
@@ -45,6 +59,7 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
         self.assertContains(response, "Versions")
         self.assertContains(response, "URL Diagnostics")
         self.assertContains(response, "WAGTAIL_UNVEIL_API_KEY")
+        self.assertContains(response, "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
         self.assertContains(response, "/unveil/api/v1/backend-urls/")
         self.assertContains(response, "/unveil/report/frontend-urls/")
 
@@ -65,3 +80,12 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
         with self.settings(DEBUG=False):
             response = self.client.get(self.report_url)
             self.assertEqual(response.status_code, 404)
+
+    def test_report_returns_html_when_production_reports_enabled(self):
+        with self.settings(**self._production_report_settings()):
+            response = self.client.get(self.report_url)
+            self.assertEqual(response.status_code, 200)
+
+    def test_settings_page_does_not_expose_report_access_token(self):
+        response = self.client.get(self.report_url)
+        self.assertNotContains(response, "data-report-access-token=")

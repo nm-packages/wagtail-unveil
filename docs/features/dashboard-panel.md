@@ -4,7 +4,7 @@ wagtail-unveil adds a panel to the Wagtail admin home page with quick links to t
 
 ## Access
 
-The panel is visible on the Wagtail admin home page to superusers when `DEBUG=True`.
+The panel is visible on the Wagtail admin home page to superusers when `DEBUG=True`, or when `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`.
 
 ![Dashboard Panel](https://raw.githubusercontent.com/nm-packages/wagtail-unveil/main/docs/features/wagtail_admin.jpg)
 

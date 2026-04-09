@@ -66,6 +66,23 @@ def _is_blank_string(value):
     return isinstance(value, str) and not value.strip()
 
 
+def _coerce_bool(value, *, default=False):
+    """Normalize common env/setting values to a boolean."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return bool(value) if value in (0, 1) else default
+    if isinstance(value, str):
+        stripped = value.strip().lower()
+        if not stripped:
+            return default
+        if stripped in {"1", "true", "yes", "on"}:
+            return True
+        if stripped in {"0", "false", "no", "off"}:
+            return False
+    return default
+
+
 def get_pages_per_type():
     """Return `WAGTAIL_UNVEIL_PAGES_PER_TYPE` as a non-negative integer.
 
@@ -152,6 +169,21 @@ def get_skip_url_prefixes():
     return result
 
 
+def get_enable_production_reports():
+    """Return whether production report access is explicitly enabled."""
+    env_value = os.environ.get("WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
+    if env_value is not None:
+        return _coerce_bool(env_value, default=False)
+
+    raw = getattr(settings, "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS", False)
+    return _coerce_bool(raw, default=False)
+
+
+def is_report_ui_enabled():
+    """Return whether HTML reports/settings should be accessible to superusers."""
+    return bool(settings.DEBUG or get_enable_production_reports())
+
+
 def inspect_skip_url_prefixes_setting():
     """Describe the configured and effective skip-prefix setting."""
     source, raw_value = _get_configured_source_and_raw_value("WAGTAIL_UNVEIL_SKIP_URL_PREFIXES")
@@ -170,6 +202,31 @@ def inspect_skip_url_prefixes_setting():
 
     return SettingDiagnostic(
         name="WAGTAIL_UNVEIL_SKIP_URL_PREFIXES",
+        source=source,
+        raw_value=raw_value,
+        effective_value=effective_value,
+        notes=" ".join(notes) or "Value used as-is.",
+    )
+
+
+def inspect_enable_production_reports_setting():
+    """Describe the configured and effective production-report setting."""
+    source, raw_value = _get_configured_source_and_raw_value("WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
+    effective_value = get_enable_production_reports()
+    notes = []
+
+    if source == "default":
+        notes.append("Defaults to False when omitted.")
+    elif source == "env" and _is_blank_string(raw_value):
+        notes.append("Blank environment values are ignored.")
+    elif raw_value != effective_value:
+        notes.append("Effective value is normalized to a boolean.")
+
+    if effective_value:
+        notes.append("Allows superusers to open HTML reports when DEBUG=False.")
+
+    return SettingDiagnostic(
+        name="WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS",
         source=source,
         raw_value=raw_value,
         effective_value=effective_value,
@@ -224,6 +281,7 @@ def get_setting_diagnostics():
     """Return diagnostics for all public wagtail-unveil settings."""
     return (
         inspect_api_key_setting(),
+        inspect_enable_production_reports_setting(),
         inspect_pages_per_type_setting(),
         inspect_skip_url_prefixes_setting(),
     )

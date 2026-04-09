@@ -103,6 +103,23 @@ class TestSettingDiagnostics(TestCase):
         self.assertEqual(diagnostic.effective_value, "super-secret")
         self.assert_api_key_display_is_masked(diagnostic, length=12)
 
+    def test_production_reports_diagnostics_default_to_false(self):
+        with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
+            with patch.dict("os.environ", {}, clear=True):
+                diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
+
+        self.assertEqual(diagnostic.source, "default")
+        self.assertEqual(diagnostic.effective_value, False)
+        self.assertIn("Defaults to False", diagnostic.notes)
+
+    def test_production_reports_diagnostics_normalize_env_value(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": "yes"}):
+            diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
+
+        self.assertEqual(diagnostic.source, "env")
+        self.assertEqual(diagnostic.effective_value, True)
+        self.assertIn("Allows superusers to open HTML reports", diagnostic.notes)
+
     def test_blank_api_key_env_value_is_ignored(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": ""}):
             diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_API_KEY")

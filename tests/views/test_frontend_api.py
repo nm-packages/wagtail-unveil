@@ -17,6 +17,7 @@ API_URL = f"/unveil/{V1_CONTRACT.frontend_url_path}"
 class TestFrontendUrlsAPIView(BaseAPIViewTestMixin, TestCase):
     api_url = API_URL
     api_version = V1_CONTRACT.version
+    report_url = "/unveil/report/frontend-urls/"
 
     def test_filter_pages(self):
         response = self.client.get(

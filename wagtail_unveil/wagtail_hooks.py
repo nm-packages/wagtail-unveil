@@ -1,9 +1,9 @@
-from django.conf import settings
 from wagtail import hooks
 from wagtail.admin.ui.components import Component
 
 from wagtail_unveil.discovery import backend_resolution
 from wagtail_unveil.discovery.extensions import AdminInstanceResolver
+from wagtail_unveil.settings import is_report_ui_enabled
 
 
 class UnveilReportPanel(Component):
@@ -12,7 +12,7 @@ class UnveilReportPanel(Component):
 
     def render_html(self, parent_context):
         request = parent_context.get("request")
-        if not request or not request.user.is_superuser or not settings.DEBUG:
+        if not request or not request.user.is_superuser or not is_report_ui_enabled():
             return ""
         return super().render_html(parent_context)
 

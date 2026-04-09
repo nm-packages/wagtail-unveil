@@ -15,7 +15,7 @@ make sample-data
 ```
 
 Optional: create a superuser for report UI access.
-Report pages also require `DEBUG=True`.
+Report pages also require `DEBUG=True`, unless you explicitly enable `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS`.
 
 ```bash
 make superuser
