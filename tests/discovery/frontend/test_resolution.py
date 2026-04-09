@@ -15,6 +15,7 @@ from wagtail_unveil.discovery.frontend import (
     get_frontend_urls,
 )
 from wagtail_unveil.discovery.frontend_resolution import (
+    _get_first_public_live_page_id,
     _get_descendant_date_years,
     _get_descendant_page_candidates,
     _get_routable_parameter_candidates,
@@ -77,7 +78,7 @@ class TestFrontendDiscoveryHelpers(TestCase):
 
     def test_get_descendant_page_candidates_skips_callables_and_duplicates(self):
         page = mock.Mock()
-        page.get_descendants.return_value.live.return_value.specific.return_value = [
+        page.get_descendants.return_value.live.return_value.public.return_value.specific.return_value = [
             SimpleNamespace(slug="alpha"),
             SimpleNamespace(slug=lambda: "ignored"),
             SimpleNamespace(slug="alpha"),
@@ -85,6 +86,31 @@ class TestFrontendDiscoveryHelpers(TestCase):
         ]
 
         self.assertEqual(_get_descendant_page_candidates(page, "slug"), ["alpha", "beta"])
+
+    def test_get_first_public_live_page_id_skips_private_pages(self):
+        from wagtail.models import Page, PageViewRestriction
+
+        from sandbox.core.models import StandardPage
+
+        root = Page.objects.first()
+        home = root.get_children().first()
+
+        private_page = StandardPage(title="Private Page", slug="private-page", body="<p>Private</p>")
+        home.add_child(instance=private_page)
+        private_page.save_revision().publish()
+        PageViewRestriction.objects.create(
+            page=private_page,
+            restriction_type=PageViewRestriction.LOGIN,
+        )
+
+        public_page = StandardPage(title="Public Page", slug="public-page", body="<p>Public</p>")
+        home.add_child(instance=public_page)
+        public_page.save_revision().publish()
+
+        page_id = _get_first_public_live_page_id()
+
+        self.assertNotEqual(page_id, str(private_page.pk))
+        self.assertTrue(Page.objects.live().public().filter(pk=page_id).exists())
 
     @mock.patch("wagtail_unveil.discovery.frontend_resolution._get_descendant_date_years", return_value=[2025])
     def test_get_routable_parameter_candidates_prefers_year_values(self, get_years):
@@ -104,13 +130,13 @@ class TestFrontendDiscoveryHelpers(TestCase):
     def test_get_routable_parameter_candidates_does_not_use_index_page_slug(self):
         page = SimpleNamespace(slug="events")
         page.get_descendants = mock.Mock()
-        page.get_descendants.return_value.live.return_value.specific.return_value = []
+        page.get_descendants.return_value.live.return_value.public.return_value.specific.return_value = []
 
         self.assertEqual(_get_routable_parameter_candidates(page, "slug", "slug"), [])
 
     def test_resolve_routable_page_url_returns_empty_when_reverse_fails(self):
         page = mock.Mock(year=2025)
-        page.get_descendants.return_value.live.return_value.specific.return_value = []
+        page.get_descendants.return_value.live.return_value.public.return_value.specific.return_value = []
         page.reverse_subpage.side_effect = RuntimeError("boom")
         pattern = SimpleNamespace(
             name="events_for_year",
@@ -124,7 +150,7 @@ class TestFrontendDiscoveryHelpers(TestCase):
 
     def test_resolve_routable_page_url_returns_empty_when_reversed_path_is_still_parameterized(self):
         page = mock.Mock(year=2025)
-        page.get_descendants.return_value.live.return_value.specific.return_value = []
+        page.get_descendants.return_value.live.return_value.public.return_value.specific.return_value = []
         page.reverse_subpage.return_value = "year/<int:year>/"
         pattern = SimpleNamespace(
             name="events_for_year",

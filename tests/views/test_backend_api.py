@@ -128,6 +128,17 @@ class TestAdminAPIViewHelpers(TestCase):
         self.assertIsNone(_authenticate_api_request(request))
 
     @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
+    @patch("wagtail_unveil.views.compare_digest", return_value=True)
+    def test_authenticate_api_request_uses_constant_time_compare(self, mock_compare_digest):
+        request = self.factory.get(
+            API_URL,
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+
+        self.assertIsNone(_authenticate_api_request(request))
+        mock_compare_digest.assert_called_once_with("test-secret", "test-secret")
+
+    @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
     def test_authenticate_api_request_rejects_wrong_bearer_token(self):
         request = self.factory.get(
             API_URL,

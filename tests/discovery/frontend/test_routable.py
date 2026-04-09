@@ -3,7 +3,7 @@ from unittest.mock import patch
 from urllib.parse import urlparse
 
 from django.test import RequestFactory, TestCase
-from wagtail.models import Page
+from wagtail.models import Page, PageViewRestriction
 
 from sandbox.events.models import EventIndexPage, EventPage
 from wagtail_unveil.discovery.frontend import get_frontend_urls
@@ -55,6 +55,23 @@ class TestRoutableSubUrls(TestCase):
         self.assertEqual(year.skip_reason, "")
         self.assertEqual(year.resolved_url, "/events/year/2025/")
         self.assertEqual(year.name, "events_for_year")
+
+    def test_parameterized_sub_route_does_not_resolve_from_private_descendants(self):
+        PageViewRestriction.objects.create(
+            page=self.event_page,
+            restriction_type=PageViewRestriction.LOGIN,
+        )
+
+        event_urls = [
+            u for u in get_frontend_urls() if u.source == "page" and u.page_type == self.page_type and "year/" in u.url
+        ]
+
+        self.assertEqual(len(event_urls), 1)
+        year = event_urls[0]
+        self.assertEqual(year.url, "/events/year/<int:year>/")
+        self.assertFalse(year.is_testable)
+        self.assertEqual(year.skip_reason, "URL requires parameters")
+        self.assertEqual(year.resolved_url, "")
 
     def test_static_regex_family_sub_route_discovered_and_testable(self):
         event_urls = self._get_event_urls()

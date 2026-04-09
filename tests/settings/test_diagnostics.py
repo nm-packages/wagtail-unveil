@@ -90,13 +90,14 @@ class TestSettingDiagnostics(TestCase):
         self.assertEqual(diagnostic.effective_value, [])
         self.assertIn("clear all exclusions", diagnostic.notes)
 
-    def test_api_key_diagnostics_include_full_value(self):
+    def test_api_key_diagnostics_mask_secret_values(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "super-secret"}):
             diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_API_KEY")
 
         self.assertEqual(diagnostic.source, "env")
         self.assertEqual(diagnostic.effective_value, "super-secret")
-        self.assertIn("super-secret", diagnostic.effective_display)
+        self.assertEqual(diagnostic.raw_display, "Configured (12 chars)")
+        self.assertEqual(diagnostic.effective_display, "Configured (12 chars)")
 
     def test_blank_api_key_env_value_is_ignored(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": ""}):

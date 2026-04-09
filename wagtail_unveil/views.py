@@ -1,4 +1,5 @@
 import platform
+from secrets import compare_digest
 from datetime import datetime, time
 from datetime import timezone as datetime_timezone
 from email.utils import format_datetime
@@ -10,6 +11,7 @@ from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.cache import patch_vary_headers
 from django.utils import timezone
 from wagtail.admin.auth import user_passes_test
 
@@ -26,9 +28,17 @@ from wagtail_unveil.settings import get_api_key, get_setting_diagnostics
 # Shared API response and authentication helpers
 
 
+def _apply_api_cache_headers(response):
+    """Mark API responses as private and non-cacheable."""
+    response["Cache-Control"] = "private, no-store"
+    patch_vary_headers(response, ("Authorization", "Cookie"))
+    return response
+
+
 def _json_error(message, *, status):
     """Return a JSON error response with a consistent shape."""
-    return JsonResponse({"error": message}, status=status)
+    response = JsonResponse({"error": message}, status=status)
+    return _apply_api_cache_headers(response)
 
 
 def _authenticate_api_request(request):
@@ -42,7 +52,7 @@ def _authenticate_api_request(request):
         if not api_key:
             return _json_error("WAGTAIL_UNVEIL_API_KEY is not set", status=500)
 
-        if parts[1] != api_key:
+        if not compare_digest(parts[1], api_key):
             return _json_error("Invalid or missing API key", status=403)
 
         return None
@@ -139,7 +149,7 @@ def _build_urls_json_response(urls, serializer, *, applied_filter=None, contract
         "count": len(urls),
         "metadata": _build_urls_metadata(urls, applied_filter=applied_filter, contract=contract),
     }
-    response = JsonResponse(data)
+    response = _apply_api_cache_headers(JsonResponse(data))
     return _apply_lifecycle_headers(response, contract)
 
 

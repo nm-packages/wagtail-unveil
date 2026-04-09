@@ -44,9 +44,11 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
         self.assertContains(response, "/unveil/report/frontend-urls/")
 
     @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "full-secret-value"})
-    def test_report_shows_full_api_key_value(self):
+    def test_report_masks_api_key_value(self):
         response = self.client.get(self.report_url)
-        self.assertContains(response, "full-secret-value")
+        self.assertNotContains(response, "full-secret-value")
+        self.assertContains(response, "Configured (17 chars)")
+        self.assertContains(response, "Environment variable")
 
     def test_settings_nav_link_is_active(self):
         response = self.client.get(self.report_url)

@@ -15,6 +15,7 @@ class SettingDiagnostic:
     raw_value: object
     effective_value: object
     notes: str
+    sensitive: bool = False
 
     @property
     def source_label(self):
@@ -27,17 +28,24 @@ class SettingDiagnostic:
 
     @property
     def raw_display(self):
-        return _format_setting_value(self.raw_value)
+        return _format_setting_value(self.raw_value, sensitive=self.sensitive)
 
     @property
     def effective_display(self):
-        return _format_setting_value(self.effective_value)
+        return _format_setting_value(self.effective_value, sensitive=self.sensitive)
 
 
-def _format_setting_value(value):
+def _format_setting_value(value, *, sensitive=False):
     """Render a setting value consistently for diagnostics templates."""
     if value is _UNSET:
         return "Not set"
+    if sensitive and isinstance(value, str):
+        if not value:
+            return "Empty string"
+        stripped = value.strip()
+        if not stripped:
+            return "Whitespace only"
+        return f"Configured ({len(stripped)} chars)"
     return repr(value)
 
 
@@ -208,6 +216,7 @@ def inspect_api_key_setting():
         raw_value=raw_value,
         effective_value=effective_value,
         notes=" ".join(notes) or "Value used as-is.",
+        sensitive=True,
     )
 
 
