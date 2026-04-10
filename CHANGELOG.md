@@ -4,7 +4,13 @@ All notable changes to `wagtail-unveil` are documented in this file.
 
 ## Unreleased
 
-Changes merged to `main` since the last release.
+No unreleased changes yet.
+
+## 0.1.0a6 - 2026-04-10
+
+Sixth public alpha release.
+
+This alpha continues to target early adopters and real-world testing. Package behavior and documentation should still be treated as provisional before the first stable release.
 
 ### Highlights
 

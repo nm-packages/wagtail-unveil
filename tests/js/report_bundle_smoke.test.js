@@ -36,7 +36,7 @@ function createPlatformPayload(packages = []) {
         status: "stable",
       },
       generated_at: "2026-04-08T20:27:18.791636+00:00",
-      package_version: "0.1.0a5",
+      package_version: "0.1.0a6",
     },
   };
 }
@@ -420,7 +420,7 @@ describe("report bundle", () => {
       document.querySelector(
         "#platform-metadata-body tr:last-child td:last-child",
       ).textContent,
-    ).toBe("0.1.0a5");
+    ).toBe("0.1.0a6");
   });
 
   test("platform report renders empty states for warnings and dependencies", async () => {
