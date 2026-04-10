@@ -24,6 +24,12 @@ def production_report_settings():
     }
 
 
+def assert_html_response_is_not_cacheable(testcase, response):
+    """Assert that an HTML response is private and not cacheable."""
+    testcase.assertEqual(response["Cache-Control"], "private, no-store")
+    testcase.assertIn("Cookie", response["Vary"])
+
+
 class BaseAPIViewTestMixin:
     """Shared API view tests. Concrete class must set api_url: str."""
 
@@ -36,22 +42,15 @@ class BaseAPIViewTestMixin:
         self.assertIn("Authorization", response["Vary"])
         self.assertIn("Cookie", response["Vary"])
 
-    def assert_html_response_is_not_cacheable(self, response):
-        self.assertEqual(response["Cache-Control"], "private, no-store")
-        self.assertIn("Cookie", response["Vary"])
-
     def _login_superuser(self, *, client=None, username="admin", password="password"):
         User.objects.create_superuser(username=username, password=password)
         client = client or self.client
         client.login(username=username, password=password)
         return client
 
-    def _production_report_settings(self):
-        return production_report_settings()
-
     def _get_report_access_token(self, *, client=None):
         client = client or self.client
-        with self.settings(**self._production_report_settings()):
+        with self.settings(**production_report_settings()):
             response = client.get(self.report_url)
         match = re.search(r'data-report-access-token="([^"]+)"', response.content.decode())
         self.assertIsNotNone(match)
@@ -173,14 +172,14 @@ class BaseAPIViewTestMixin:
         self.assertEqual(response.status_code, 403)
 
     def test_rejects_superuser_session_without_report_token_when_production_reports_enabled(self):
-        with self.settings(**self._production_report_settings()):
+        with self.settings(**production_report_settings()):
             self._login_superuser()
             response = self.client.get(self.api_url)
 
         self.assertEqual(response.status_code, 403)
 
     def test_allows_superuser_session_with_valid_report_token_when_production_reports_enabled(self):
-        with self.settings(**self._production_report_settings()):
+        with self.settings(**production_report_settings()):
             self._login_superuser()
             report_access_token = self._get_report_access_token()
             response = self.client.get(
@@ -191,7 +190,7 @@ class BaseAPIViewTestMixin:
         self.assertEqual(response.status_code, 200)
 
     def test_rejects_invalid_report_token_when_production_reports_enabled(self):
-        with self.settings(**self._production_report_settings()):
+        with self.settings(**production_report_settings()):
             self._login_superuser()
             response = self.client.get(
                 self.api_url,
@@ -201,7 +200,7 @@ class BaseAPIViewTestMixin:
         self.assertEqual(response.status_code, 403)
 
     def test_rejects_mismatched_report_token_when_production_reports_enabled(self):
-        with self.settings(**self._production_report_settings()):
+        with self.settings(**production_report_settings()):
             self._login_superuser()
             report_access_token = self._get_report_access_token()
             other_client = Client()
@@ -242,13 +241,6 @@ class BaseReportViewTestMixin:
     report_url: str
     report_title: str
 
-    def _production_report_settings(self):
-        return production_report_settings()
-
-    def assert_html_response_is_not_cacheable(self, response):
-        self.assertEqual(response["Cache-Control"], "private, no-store")
-        self.assertIn("Cookie", response["Vary"])
-
     def test_report_requires_login(self):
         self.client.logout()
         response = self.client.get(self.report_url)
@@ -264,7 +256,7 @@ class BaseReportViewTestMixin:
     def test_report_returns_html(self):
         response = self.client.get(self.report_url)
         self.assertEqual(response.status_code, 200)
-        self.assert_html_response_is_not_cacheable(response)
+        assert_html_response_is_not_cacheable(self, response)
         content = response.content.decode()
         self.assertIn(self.report_title, content)
         self.assertIn("<table", content)
@@ -365,7 +357,7 @@ class BaseReportViewTestMixin:
             self.assertEqual(response.status_code, 404)
 
     def test_report_returns_html_when_production_reports_enabled(self):
-        with self.settings(**self._production_report_settings()):
+        with self.settings(**production_report_settings()):
             response = self.client.get(self.report_url)
             self.assertEqual(response.status_code, 200)
-            self.assert_html_response_is_not_cacheable(response)
+            assert_html_response_is_not_cacheable(self, response)

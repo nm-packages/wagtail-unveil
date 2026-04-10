@@ -4,7 +4,10 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from wagtail.test.utils import WagtailTestUtils
 
-from tests.views.support import production_report_settings
+from tests.views.support import (
+    assert_html_response_is_not_cacheable,
+    production_report_settings,
+)
 
 
 @override_settings(DEBUG=True)
@@ -34,8 +37,7 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
     def test_report_returns_html(self):
         response = self.client.get(self.report_url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response["Cache-Control"], "private, no-store")
-        self.assertIn("Cookie", response["Vary"])
+        assert_html_response_is_not_cacheable(self, response)
         self.assertContains(response, "Wagtail Unveil Settings")
 
     def test_report_has_settings_page_body_class(self):
