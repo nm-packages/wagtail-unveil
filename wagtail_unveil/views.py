@@ -3,14 +3,17 @@ from datetime import datetime, time
 from datetime import timezone as datetime_timezone
 from email.utils import format_datetime
 from importlib.metadata import PackageNotFoundError, version
+from secrets import compare_digest, token_urlsafe
 
 import wagtail
 from django import get_version as get_django_version
 from django.conf import settings
+from django.core import signing
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.cache import patch_vary_headers
 from wagtail.admin.auth import user_passes_test
 
 from wagtail_unveil.api_contract import (
@@ -21,14 +24,100 @@ from wagtail_unveil.api_contract import (
 )
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.frontend import get_frontend_urls
-from wagtail_unveil.settings import get_api_key, get_setting_diagnostics
+from wagtail_unveil.settings import (
+    get_api_key,
+    get_enable_production_reports,
+    get_setting_diagnostics,
+    is_report_ui_enabled,
+)
 
 # Shared API response and authentication helpers
+
+REPORT_ACCESS_HEADER = "X-Wagtail-Unveil-Report-Access"
+REPORT_ACCESS_SALT = "wagtail_unveil.report_api_access"
+REPORT_ACCESS_MAX_AGE = 300
+REPORT_ACCESS_SESSION_NONCE_KEY = "_wagtail_unveil_report_access_nonce"
+
+
+def _apply_private_no_store_headers(response, *, vary_headers=()):
+    """Mark a response as private and non-cacheable."""
+    response["Cache-Control"] = "private, no-store"
+    if vary_headers:
+        patch_vary_headers(response, vary_headers)
+    return response
+
+
+def _apply_api_cache_headers(response):
+    """Mark API responses as private and non-cacheable."""
+    return _apply_private_no_store_headers(response, vary_headers=("Authorization", "Cookie"))
 
 
 def _json_error(message, *, status):
     """Return a JSON error response with a consistent shape."""
-    return JsonResponse({"error": message}, status=status)
+    response = JsonResponse({"error": message}, status=status)
+    return _apply_api_cache_headers(response)
+
+
+def _get_report_access_session_nonce(request, *, create=False):
+    """Return the session-bound nonce used to validate report access tokens."""
+    session = getattr(request, "session", None)
+    if session is None:
+        return ""
+
+    if hasattr(session, "get"):
+        nonce = session.get(REPORT_ACCESS_SESSION_NONCE_KEY, "")
+    else:
+        nonce = getattr(session, REPORT_ACCESS_SESSION_NONCE_KEY, "")
+
+    if nonce or not create:
+        return nonce or ""
+
+    nonce = token_urlsafe(32)
+    if hasattr(session, "__setitem__"):
+        session[REPORT_ACCESS_SESSION_NONCE_KEY] = nonce
+    else:
+        setattr(session, REPORT_ACCESS_SESSION_NONCE_KEY, nonce)
+    return nonce
+
+
+def _build_report_access_token(request):
+    """Build a short-lived signed token for report-triggered API access."""
+    return signing.dumps(
+        {
+            "purpose": "report-api-access",
+            "user_id": getattr(request.user, "pk", None),
+            "session_nonce": _get_report_access_session_nonce(request, create=True),
+        },
+        salt=REPORT_ACCESS_SALT,
+    )
+
+
+def _has_valid_report_access_token(request):
+    """Return True when the request carries a valid signed report access token."""
+    token = request.headers.get(REPORT_ACCESS_HEADER, "")
+    if not token:
+        return False
+
+    try:
+        claims = signing.loads(token, salt=REPORT_ACCESS_SALT, max_age=REPORT_ACCESS_MAX_AGE)
+    except signing.SignatureExpired:
+        return False
+    except signing.BadSignature:
+        return False
+
+    if not isinstance(claims, dict):
+        return False
+
+    user = getattr(request, "user", None)
+    session_nonce = _get_report_access_session_nonce(request, create=False)
+
+    if claims.get("purpose") != "report-api-access":
+        return False
+    if claims.get("user_id") != getattr(user, "pk", None):
+        return False
+    if not session_nonce:
+        return False
+    return compare_digest(claims.get("session_nonce", ""), session_nonce)
 
 
 def _authenticate_api_request(request):
@@ -42,14 +131,17 @@ def _authenticate_api_request(request):
         if not api_key:
             return _json_error("WAGTAIL_UNVEIL_API_KEY is not set", status=500)
 
-        if parts[1] != api_key:
+        if not compare_digest(parts[1], api_key):
             return _json_error("Invalid or missing API key", status=403)
 
         return None
 
     user = getattr(request, "user", None)
-    if settings.DEBUG and user and user.is_authenticated and user.is_superuser:
-        return None
+    if user and user.is_authenticated and user.is_superuser:
+        if settings.DEBUG:
+            return None
+        if get_enable_production_reports() and _has_valid_report_access_token(request):
+            return None
 
     return _json_error("Invalid or missing API key", status=403)
 
@@ -139,7 +231,7 @@ def _build_urls_json_response(urls, serializer, *, applied_filter=None, contract
         "count": len(urls),
         "metadata": _build_urls_metadata(urls, applied_filter=applied_filter, contract=contract),
     }
-    response = JsonResponse(data)
+    response = _apply_api_cache_headers(JsonResponse(data))
     return _apply_lifecycle_headers(response, contract)
 
 
@@ -170,6 +262,8 @@ def _build_settings_report_context():
     """Build diagnostics content for the settings page."""
     contract = get_latest_stable_api_contract()
     api_key = get_api_key()
+    production_reports_enabled = get_enable_production_reports()
+    reports_enabled = is_report_ui_enabled()
     return {
         "package_settings": get_setting_diagnostics(),
         "runtime_entries": [
@@ -180,13 +274,20 @@ def _build_settings_report_context():
             },
             {
                 "label": "HTML report access",
-                "value": "Enabled" if settings.DEBUG else "Disabled",
-                "detail": "Report pages require a superuser and DEBUG=True.",
+                "value": "Enabled" if reports_enabled else "Disabled",
+                "detail": (
+                    "Report pages require a superuser and either DEBUG=True or "
+                    "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True."
+                ),
             },
             {
                 "label": "Superuser session API access",
-                "value": "Enabled" if settings.DEBUG else "Disabled",
-                "detail": "Session-based JSON access is only allowed for superusers when DEBUG=True.",
+                "value": "Enabled" if settings.DEBUG or production_reports_enabled else "Disabled",
+                "detail": (
+                    "Session-based JSON access is allowed for superusers in DEBUG "
+                    "mode, or for signed report requests when production reports "
+                    "are enabled."
+                ),
             },
             {
                 "label": "Bearer API auth",
@@ -370,8 +471,8 @@ frontend_urls_json = build_frontend_urls_json_view(get_latest_stable_api_version
 
 @user_passes_test(lambda u: u.is_superuser)
 def backend_urls_report(request):
-    """Render an HTML report of all backend URLs. Only available when DEBUG=True."""
-    if not settings.DEBUG:
+    """Render an HTML report of all backend URLs for eligible superusers."""
+    if not is_report_ui_enabled():
         return HttpResponseNotFound()
 
     contract = get_latest_stable_api_contract()
@@ -379,14 +480,16 @@ def backend_urls_report(request):
         "api_url": reverse(f"wagtail_unveil:{contract.backend_url_name}"),
         "report_kind": "backend",
         "active_report": "backend",
+        "report_access_token": _build_report_access_token(request),
     }
-    return render(request, "wagtail_unveil/backend_urls_report.html", context)
+    response = render(request, "wagtail_unveil/backend_urls_report.html", context)
+    return _apply_private_no_store_headers(response, vary_headers=("Cookie",))
 
 
 @user_passes_test(lambda u: u.is_superuser)
 def frontend_urls_report(request):
-    """Render an HTML report of all frontend URLs. Only available when DEBUG=True."""
-    if not settings.DEBUG:
+    """Render an HTML report of all frontend URLs for eligible superusers."""
+    if not is_report_ui_enabled():
         return HttpResponseNotFound()
 
     contract = get_latest_stable_api_contract()
@@ -394,18 +497,21 @@ def frontend_urls_report(request):
         "api_url": reverse(f"wagtail_unveil:{contract.frontend_url_name}"),
         "report_kind": "frontend",
         "active_report": "frontend",
+        "report_access_token": _build_report_access_token(request),
     }
-    return render(request, "wagtail_unveil/frontend_urls_report.html", context)
+    response = render(request, "wagtail_unveil/frontend_urls_report.html", context)
+    return _apply_private_no_store_headers(response, vary_headers=("Cookie",))
 
 
 @user_passes_test(lambda u: u.is_superuser)
 def settings_report(request):
-    """Render an HTML settings and diagnostics page. Only available when DEBUG=True."""
-    if not settings.DEBUG:
+    """Render an HTML settings and diagnostics page for eligible superusers."""
+    if not is_report_ui_enabled():
         return HttpResponseNotFound()
 
     context = {
         **_build_settings_report_context(),
         "active_report": "settings",
     }
-    return render(request, "wagtail_unveil/settings_report.html", context)
+    response = render(request, "wagtail_unveil/settings_report.html", context)
+    return _apply_private_no_store_headers(response, vary_headers=("Cookie",))

@@ -4,7 +4,7 @@ The frontend URLs report discovers and displays all frontend URLs in your projec
 
 ## Access
 
-Visit `/unveil/report/frontend-urls/` while logged in as a superuser with `DEBUG=True`.
+Visit `/unveil/report/frontend-urls/` while logged in as a superuser with `DEBUG=True`, or enable `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS` for production access.
 
 ![Frontend URLs Report](https://raw.githubusercontent.com/nm-packages/wagtail-unveil/main/docs/features/frontend_report.jpg)
 
@@ -12,7 +12,7 @@ You can also reach it from the Wagtail admin dashboard panel.
 
 ## Features
 
-- **Two URL sources** — Wagtail page URLs (from `Page.objects.live().specific()`) and Django resolver URLs (non-admin routes)
+- **Two URL sources** — Wagtail page URLs (from live public pages) and Django resolver URLs (non-admin routes)
 - **RoutablePageMixin support** — automatically discovers `@path()` and regex `@route()` sub-routes on routable pages; static sub-routes are testable, supported single-parameter path sub-routes use inferred concrete URLs for testing, and regex literal patterns remain visible but non-testable
 - **Resolver detail-route testing** — supported resolver detail routes such as Wagtail API object endpoints stay visible with their canonical parameterised path while the Test/Open actions use inferred concrete URLs
 - **Configurable page limit** — control how many page instances per type are included via [`WAGTAIL_UNVEIL_PAGES_PER_TYPE`](../configuration/settings-reference.md#wagtail_unveil_pages_per_type)
@@ -26,11 +26,13 @@ You can also reach it from the Wagtail admin dashboard panel.
 
 ### Wagtail Page URLs
 
-Discovered from `Page.objects.live().specific()`. Includes:
+Discovered from `Page.objects.live().public().specific()`. Includes:
 
 - Base page URL for each live page
 - Form landing page URLs for pages using `FormMixin`
 - Sub-route URLs for pages using `RoutablePageMixin`
+
+Live private pages are intentionally excluded, and concrete URLs inferred from private descendants are not exposed through the report.
 
 ### Django Resolver URLs
 

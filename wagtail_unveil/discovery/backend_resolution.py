@@ -2,8 +2,10 @@ import logging
 from dataclasses import dataclass, field
 from functools import cached_property
 
+from django.apps import apps
 from django.urls import reverse
 from django.utils.functional import cached_property as django_cached_property
+from wagtail.models import Page, PreviewableMixin
 
 from wagtail_unveil.discovery.extensions import (
     AdminInstanceResolverContext,
@@ -139,12 +141,11 @@ def _get_model_from_callback(callback):
 
 def get_form_page_instance():
     """Find a live form page instance for wagtailforms URL resolution."""
-    try:
-        from wagtail.contrib.forms.models import FormMixin
-    except ImportError:
+    if not apps.is_installed("wagtail.contrib.forms"):
         return None
 
-    from wagtail.models import Page
+    # Optional contrib app: only import when the forms app is enabled.
+    from wagtail.contrib.forms.models import FormMixin
 
     for page in Page.objects.live().specific().iterator():
         if isinstance(page, FormMixin):
@@ -154,11 +155,6 @@ def get_form_page_instance():
 
 def get_page_instances_by_type():
     """Return one representative non-root page instance per concrete page type."""
-    try:
-        from wagtail.models import Page
-    except Exception:
-        return []
-
     instances_by_type = {}
     for page in Page.objects.exclude(depth=1).select_related("content_type").order_by("path").iterator():
         page_type = _get_page_type_label(page)
@@ -168,11 +164,6 @@ def get_page_instances_by_type():
 
 def get_add_subpage_parent_page_instances_by_type():
     """Return one compatible add-subpage parent page per concrete page type."""
-    try:
-        from wagtail.models import Page
-    except Exception:
-        return []
-
     instances_by_type = {}
     for page in Page.objects.exclude(depth=1).select_related("content_type").order_by("path").iterator():
         specific_class = getattr(page, "specific_class", None)
@@ -185,39 +176,20 @@ def get_add_subpage_parent_page_instances_by_type():
         instances_by_type.setdefault(page_type, specific_page)
     return list(instances_by_type.values())
 
-
-def get_workflow_instance():
-    """Return the first available Workflow instance."""
-    try:
-        from wagtail.models import Workflow
-
-        return Workflow.objects.first()
-    except Exception:
-        return None
-
-
-def get_workflow_task_instance():
-    """Return the first available workflow task instance."""
-    try:
-        from wagtail.models import Task
-
-        return Task.objects.first()
-    except Exception:
-        return None
-
-
 # Concrete resolution steps
 
 
 def _resolve_settings_url(name, route):
     """Resolve a wagtailsettings URL using registered setting models."""
     result = _ParameterizedURLResolution(method="settings")
-    try:
-        from wagtail.contrib.settings.registry import registry
-    except ImportError:
+    if not apps.is_installed("wagtail.contrib.settings"):
         result.add_attempt("settings", "registry-unavailable")
         result.detail = "Wagtail settings registry is unavailable"
         return result
+
+    # Optional contrib app: only import when the settings app is enabled.
+    from wagtail.contrib.settings.models import BaseSiteSetting
+    from wagtail.contrib.settings.registry import registry
 
     has_pk = "<int:pk>" in route
     eligible_model_seen = False
@@ -228,12 +200,7 @@ def _resolve_settings_url(name, route):
         kwargs = {"app_name": app_name, "model_name": model_name}
 
         if name == "preview_on_edit":
-            try:
-                from wagtail.models import PreviewableMixin
-
-                if not issubclass(model, PreviewableMixin):
-                    continue
-            except ImportError:
+            if not issubclass(model, PreviewableMixin):
                 continue
 
         eligible_model_seen = True
@@ -243,14 +210,9 @@ def _resolve_settings_url(name, route):
             if not instance:
                 continue
             found_instance = True
-            try:
-                from wagtail.contrib.settings.models import BaseSiteSetting
-
-                if issubclass(model, BaseSiteSetting):
-                    kwargs["pk"] = instance.site_id
-                else:
-                    kwargs["pk"] = instance.pk
-            except ImportError:
+            if issubclass(model, BaseSiteSetting):
+                kwargs["pk"] = instance.site_id
+            else:
                 kwargs["pk"] = instance.pk
         try:
             url = reverse(f"wagtailsettings:{name}", kwargs=kwargs)

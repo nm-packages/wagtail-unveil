@@ -4,6 +4,11 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from wagtail.test.utils import WagtailTestUtils
 
+from tests.views.support import (
+    assert_html_response_is_not_cacheable,
+    production_report_settings,
+)
+
 
 @override_settings(DEBUG=True)
 class TestSettingsReportView(WagtailTestUtils, TestCase):
@@ -11,6 +16,11 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
 
     def setUp(self):
         self.login()
+
+    def assert_masked_api_key_output(self, response, *, secret):
+        self.assertNotContains(response, secret)
+        self.assertContains(response, f"Configured ({len(secret)} chars)")
+        self.assertContains(response, "Environment variable")
 
     def test_report_requires_login(self):
         self.client.logout()
@@ -27,6 +37,7 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
     def test_report_returns_html(self):
         response = self.client.get(self.report_url)
         self.assertEqual(response.status_code, 200)
+        assert_html_response_is_not_cacheable(self, response)
         self.assertContains(response, "Wagtail Unveil Settings")
 
     def test_report_has_settings_page_body_class(self):
@@ -40,13 +51,14 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
         self.assertContains(response, "Versions")
         self.assertContains(response, "URL Diagnostics")
         self.assertContains(response, "WAGTAIL_UNVEIL_API_KEY")
+        self.assertContains(response, "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
         self.assertContains(response, "/unveil/api/v1/backend-urls/")
         self.assertContains(response, "/unveil/report/frontend-urls/")
 
     @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "full-secret-value"})
-    def test_report_shows_full_api_key_value(self):
+    def test_report_masks_api_key_value(self):
         response = self.client.get(self.report_url)
-        self.assertContains(response, "full-secret-value")
+        self.assert_masked_api_key_output(response, secret="full-secret-value")
 
     def test_settings_nav_link_is_active(self):
         response = self.client.get(self.report_url)
@@ -60,3 +72,12 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
         with self.settings(DEBUG=False):
             response = self.client.get(self.report_url)
             self.assertEqual(response.status_code, 404)
+
+    def test_report_returns_html_when_production_reports_enabled(self):
+        with self.settings(**production_report_settings()):
+            response = self.client.get(self.report_url)
+            self.assertEqual(response.status_code, 200)
+
+    def test_settings_page_does_not_expose_report_access_token(self):
+        response = self.client.get(self.report_url)
+        self.assertNotContains(response, "data-report-access-token=")

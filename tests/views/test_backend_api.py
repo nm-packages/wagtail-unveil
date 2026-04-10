@@ -2,8 +2,11 @@ import json
 from dataclasses import replace
 from datetime import date
 from importlib.metadata import PackageNotFoundError
+from types import SimpleNamespace
 from unittest.mock import patch
 
+from django.contrib.auth.models import AnonymousUser
+from django.core import signing
 from django.test import RequestFactory, TestCase, override_settings
 from wagtail.models import Page
 
@@ -13,8 +16,10 @@ from wagtail_unveil.discovery.backend import BackendURL
 from wagtail_unveil.views import (
     _authenticate_api_request,
     _build_lifecycle_detail,
+    _build_report_access_token,
     _get_display_package_version,
     _get_package_version,
+    _has_valid_report_access_token,
     _serialize_backend_url,
 )
 
@@ -22,10 +27,15 @@ V1_CONTRACT = get_api_contract("v1")
 API_URL = f"/unveil/{V1_CONTRACT.backend_url_path}"
 
 
+class DummySession(dict):
+    """Minimal mapping-like session test double."""
+
+
 @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
 class TestAdminUrlsAPIView(BaseAPIViewTestMixin, TestCase):
     api_url = API_URL
     api_version = V1_CONTRACT.version
+    report_url = "/unveil/report/backend-urls/"
 
     def test_filter_static(self):
         response = self.client.get(
@@ -128,6 +138,17 @@ class TestAdminAPIViewHelpers(TestCase):
         self.assertIsNone(_authenticate_api_request(request))
 
     @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
+    @patch("wagtail_unveil.views.compare_digest", return_value=True)
+    def test_authenticate_api_request_uses_constant_time_compare(self, mock_compare_digest):
+        request = self.factory.get(
+            API_URL,
+            HTTP_AUTHORIZATION="Bearer test-secret",
+        )
+
+        self.assertIsNone(_authenticate_api_request(request))
+        mock_compare_digest.assert_called_once_with("test-secret", "test-secret")
+
+    @patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"})
     def test_authenticate_api_request_rejects_wrong_bearer_token(self):
         request = self.factory.get(
             API_URL,
@@ -152,6 +173,61 @@ class TestAdminAPIViewHelpers(TestCase):
             json.loads(response.content),
             {"error": "Invalid or missing API key"},
         )
+
+    def test_build_report_access_token_round_trips_for_same_user_and_session(self):
+        request = self.factory.get(API_URL)
+        request.user = SimpleNamespace(pk=7)
+        request.session = DummySession()
+
+        token = _build_report_access_token(request)
+        claims = signing.loads(token, salt="wagtail_unveil.report_api_access")
+
+        request_with_token = self.factory.get(
+            API_URL,
+            HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS=token,
+        )
+        request_with_token.user = request.user
+        request_with_token.session = request.session
+
+        self.assertNotIn("session_key", claims)
+        self.assertIn("session_nonce", claims)
+        self.assertTrue(_has_valid_report_access_token(request_with_token))
+
+    def test_report_access_token_rejects_user_or_session_mismatch(self):
+        request = self.factory.get(API_URL)
+        request.user = SimpleNamespace(pk=7)
+        request.session = DummySession()
+        token = _build_report_access_token(request)
+
+        mismatched_request = self.factory.get(
+            API_URL,
+            HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS=token,
+        )
+        mismatched_request.user = SimpleNamespace(pk=8)
+        mismatched_request.session = DummySession()
+
+        self.assertFalse(_has_valid_report_access_token(mismatched_request))
+
+    def test_report_access_token_rejects_invalid_signature(self):
+        request = self.factory.get(
+            API_URL,
+            HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS="invalid-token",
+        )
+        request.user = AnonymousUser()
+        request.session = DummySession()
+
+        self.assertFalse(_has_valid_report_access_token(request))
+
+    @patch("wagtail_unveil.views.signing.loads", side_effect=signing.SignatureExpired("expired"))
+    def test_report_access_token_rejects_expired_tokens(self, _mock_loads):
+        request = self.factory.get(
+            API_URL,
+            HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS="expired-token",
+        )
+        request.user = SimpleNamespace(pk=7)
+        request.session = DummySession()
+
+        self.assertFalse(_has_valid_report_access_token(request))
 
     def test_serialize_backend_url(self):
         url = BackendURL(

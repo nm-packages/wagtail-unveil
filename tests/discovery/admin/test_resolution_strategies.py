@@ -208,7 +208,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                     return_value=register_unveil_admin_instance_resolvers(),
                 ):
                     with mock.patch(
-                        "wagtail_unveil.discovery.backend_resolution.get_workflow_instance",
+                        "wagtail_unveil.wagtail_hooks.Workflow.objects.first",
                         return_value=workflow_instance,
                     ):
                         with mock.patch(
@@ -247,7 +247,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                     return_value=register_unveil_admin_instance_resolvers(),
                 ):
                     with mock.patch(
-                        "wagtail_unveil.discovery.backend_resolution.get_workflow_instance",
+                        "wagtail_unveil.wagtail_hooks.Workflow.objects.first",
                         return_value=None,
                     ):
                         with mock.patch("wagtail_unveil.discovery.backend_resolution.reverse") as reverse_mock:
@@ -279,7 +279,7 @@ class TestParameterizedResolutionStrategies(TestCase):
                 return_value=register_unveil_admin_instance_resolvers(),
             ):
                 with mock.patch(
-                    "wagtail_unveil.discovery.backend_resolution.get_workflow_task_instance",
+                    "wagtail_unveil.wagtail_hooks.Task.objects.first",
                     return_value=instance,
                 ):
                     with mock.patch(
@@ -620,7 +620,10 @@ class TestParameterizedResolutionStrategies(TestCase):
         PlainSettings.objects.first.return_value = mock.Mock(pk=7, site_id=7)
 
         with mock.patch("wagtail.contrib.settings.registry.registry", [PlainSettings]):
-            with mock.patch("wagtail.models.PreviewableMixin", PreviewableMixin, create=True):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend_resolution.PreviewableMixin",
+                PreviewableMixin,
+            ):
                 result = _resolve_settings_url(
                     "preview_on_edit",
                     "admin/settings/core/plainsettings/<int:pk>/",
@@ -645,7 +648,10 @@ class TestParameterizedResolutionStrategies(TestCase):
         PreviewableSettings.objects.first.return_value = None
 
         with mock.patch("wagtail.contrib.settings.registry.registry", [PreviewableSettings]):
-            with mock.patch("wagtail.models.PreviewableMixin", PreviewableMixin, create=True):
+            with mock.patch(
+                "wagtail_unveil.discovery.backend_resolution.PreviewableMixin",
+                PreviewableMixin,
+            ):
                 result = _resolve_settings_url(
                     "preview_on_edit",
                     "admin/settings/core/previewablesettings/<int:pk>/",

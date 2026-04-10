@@ -86,7 +86,7 @@ Routes provided:
 
 Versioned API paths, URL names, and lifecycle metadata are derived from `wagtail_unveil.api_contract.API_VERSION_REGISTRY`. Use `docs/contributing/api-versioning.md` for versioning policy and workflow.
 
-JSON endpoints use Bearer token auth via `WAGTAIL_UNVEIL_API_KEY`. HTML report views require a superuser and `DEBUG=True`.
+JSON endpoints use Bearer token auth via `WAGTAIL_UNVEIL_API_KEY`. HTML report views require a superuser and either `DEBUG=True` or `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`.
 
 ### Sandbox
 

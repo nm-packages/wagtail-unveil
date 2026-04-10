@@ -15,7 +15,8 @@ make sample-data
 ```
 
 Optional: create a superuser for report UI access.
-Report pages also require `DEBUG=True`.
+Report pages also require `DEBUG=True`, unless you explicitly enable `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS`.
+That production setting only opens the built-in HTML report/settings UI for superusers; normal production JSON API access still uses `Authorization: Bearer <WAGTAIL_UNVEIL_API_KEY>`.
 
 ```bash
 make superuser
@@ -46,7 +47,7 @@ make superuser      # optional, needed for report UI access
 make sample-data    # optional, rerun when you want fresh representative content
 ```
 
-The sandbox defaults are tuned for local development. The `.env` file created from `.env.example` sets `WAGTAIL_UNVEIL_API_KEY=dev-secret` by default so the JSON endpoints work locally with Bearer token auth, and `sandbox.settings` keeps `DEBUG=True` so report views are available to a superuser.
+The sandbox defaults are tuned for local development. The `.env` file created from `.env.example` sets `WAGTAIL_UNVEIL_API_KEY=dev-secret` by default so the JSON endpoints work locally with Bearer token auth, and `sandbox.settings` keeps `DEBUG=True` so report views are available to a superuser without the production opt-in path.
 
 ### What Sample Data Gives You
 

@@ -75,7 +75,7 @@ def _discover_page_candidates():
     included_pages_by_type = {}
     default_site = get_default_site()
     results = []
-    pages = Page.objects.live().specific()
+    pages = Page.objects.live().public().specific()
     for page in pages:
         if type(page) is Page:
             continue

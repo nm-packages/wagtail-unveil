@@ -1,6 +1,13 @@
 import re
 
+from django.apps import apps
 from django.db import models
+from wagtail.api.v2.views import PagesAPIViewSet
+from wagtail.documents import get_document_model
+from wagtail.documents.api.v2.views import DocumentsAPIViewSet
+from wagtail.images import get_image_model
+from wagtail.images.api.v2.views import ImagesAPIViewSet
+from wagtail.models import Page, Site
 
 from wagtail_unveil.discovery.utils import route_contains_regex, route_has_parameters
 
@@ -34,11 +41,6 @@ def _unique_values(values):
 
 def get_default_site():
     """Return the default Wagtail Site instance when available."""
-    try:
-        from wagtail.models import Site
-    except ImportError:
-        return None
-
     return Site.objects.filter(is_default_site=True).first()
 
 
@@ -49,7 +51,7 @@ def _get_descendant_date_years(page):
     """Collect distinct years from concrete date fields on descendant pages."""
     years = []
     try:
-        descendants = page.get_descendants().live().specific()
+        descendants = page.get_descendants().live().public().specific()
     except Exception:
         return years
 
@@ -70,7 +72,7 @@ def _get_descendant_page_candidates(page, attribute_name):
     """Collect attribute values from descendant pages in tree order."""
     values = []
     try:
-        descendants = page.get_descendants().live().specific()
+        descendants = page.get_descendants().live().public().specific()
     except Exception:
         return values
 
@@ -142,24 +144,14 @@ def resolve_routable_page_url(page, pattern, page_path, sub_route):
 # Resolver-backed API ID helpers
 
 
-def _get_first_live_page_id():
-    """Return the first live page ID when available."""
-    try:
-        from wagtail.models import Page
-    except ImportError:
-        return ""
-
-    page_id = Page.objects.live().order_by("path").values_list("pk", flat=True).first()
+def _get_first_public_live_page_id():
+    """Return the first live public page ID when available."""
+    page_id = Page.objects.live().public().order_by("path").values_list("pk", flat=True).first()
     return str(page_id) if page_id else ""
 
 
 def _get_first_image_id():
     """Return the first Wagtail image ID when available."""
-    try:
-        from wagtail.images import get_image_model
-    except ImportError:
-        return ""
-
     image_model = get_image_model()
     image_id = image_model.objects.order_by("pk").values_list("pk", flat=True).first()
     return str(image_id) if image_id else ""
@@ -167,11 +159,6 @@ def _get_first_image_id():
 
 def _get_first_document_id():
     """Return the first Wagtail document ID when available."""
-    try:
-        from wagtail.documents import get_document_model
-    except ImportError:
-        return ""
-
     document_model = get_document_model()
     document_id = document_model.objects.order_by("pk").values_list("pk", flat=True).first()
     return str(document_id) if document_id else ""
@@ -179,10 +166,11 @@ def _get_first_document_id():
 
 def _get_first_redirect_id():
     """Return the first redirect ID when available."""
-    try:
-        from wagtail.contrib.redirects.models import Redirect
-    except ImportError:
+    if not apps.is_installed("wagtail.contrib.redirects"):
         return ""
+
+    # Optional contrib app: only import when redirects is enabled.
+    from wagtail.contrib.redirects.models import Redirect
 
     redirect_id = Redirect.objects.order_by("pk").values_list("pk", flat=True).first()
     return str(redirect_id) if redirect_id else ""
@@ -198,21 +186,14 @@ def get_wagtail_api_detail_resolved_url(callback, url):
     if callback_actions.get("get") != "detail_view":
         return ""
 
-    try:
-        from wagtail.api.v2.views import PagesAPIViewSet
-        from wagtail.contrib.redirects.api import RedirectsAPIViewSet
-        from wagtail.documents.api.v2.views import DocumentsAPIViewSet
-        from wagtail.images.api.v2.views import ImagesAPIViewSet
-    except ImportError:
-        return ""
-
     if callback_cls is PagesAPIViewSet:
         default_site = get_default_site()
-        page_id = (
-            str(default_site.root_page_id)
-            if default_site and default_site.root_page_id
-            else _get_first_live_page_id()
-        )
+        page_id = ""
+        if default_site and default_site.root_page_id:
+            if Page.objects.live().public().filter(pk=default_site.root_page_id).exists():
+                page_id = str(default_site.root_page_id)
+        if not page_id:
+            page_id = _get_first_public_live_page_id()
         return url.replace("<int:pk>", page_id, 1) if page_id else ""
 
     if callback_cls is ImagesAPIViewSet:
@@ -223,9 +204,13 @@ def get_wagtail_api_detail_resolved_url(callback, url):
         document_id = _get_first_document_id()
         return url.replace("<int:pk>", document_id, 1) if document_id else ""
 
-    if callback_cls is RedirectsAPIViewSet:
-        redirect_id = _get_first_redirect_id()
-        return url.replace("<int:pk>", redirect_id, 1) if redirect_id else ""
+    if apps.is_installed("wagtail.contrib.redirects"):
+        # Optional contrib app: only import when redirects is enabled.
+        from wagtail.contrib.redirects.api import RedirectsAPIViewSet
+
+        if callback_cls is RedirectsAPIViewSet:
+            redirect_id = _get_first_redirect_id()
+            return url.replace("<int:pk>", redirect_id, 1) if redirect_id else ""
 
     return ""
 
@@ -239,17 +224,16 @@ def is_supported_wagtail_api_find_route(name, callback):
     if callback_actions.get("get") != "find_view":
         return False
 
-    try:
-        from wagtail.api.v2.views import PagesAPIViewSet
-        from wagtail.contrib.redirects.api import RedirectsAPIViewSet
-        from wagtail.documents.api.v2.views import DocumentsAPIViewSet
-        from wagtail.images.api.v2.views import ImagesAPIViewSet
-    except ImportError:
-        return False
-
-    return getattr(callback, "cls", None) in {
+    supported_viewsets = {
         PagesAPIViewSet,
         ImagesAPIViewSet,
         DocumentsAPIViewSet,
-        RedirectsAPIViewSet,
     }
+
+    if apps.is_installed("wagtail.contrib.redirects"):
+        # Optional contrib app: only import when redirects is enabled.
+        from wagtail.contrib.redirects.api import RedirectsAPIViewSet
+
+        supported_viewsets.add(RedirectsAPIViewSet)
+
+    return getattr(callback, "cls", None) in supported_viewsets

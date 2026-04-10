@@ -1,10 +1,33 @@
+import re
 from datetime import datetime, timezone
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
-from django.test import override_settings
+from django.test import Client, override_settings
 
 from wagtail_unveil.api_contract import get_api_contract
+
+
+def production_report_settings():
+    """Return settings overrides that enable report UI in production-like tests."""
+    return {
+        "DEBUG": False,
+        "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": True,
+        "STORAGES": {
+            "default": {
+                "BACKEND": "django.core.files.storage.FileSystemStorage",
+            },
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+            },
+        },
+    }
+
+
+def assert_html_response_is_not_cacheable(testcase, response):
+    """Assert that an HTML response is private and not cacheable."""
+    testcase.assertEqual(response["Cache-Control"], "private, no-store")
+    testcase.assertIn("Cookie", response["Vary"])
 
 
 class BaseAPIViewTestMixin:
@@ -12,6 +35,26 @@ class BaseAPIViewTestMixin:
 
     api_url: str
     api_version: str = "v1"
+    report_url: str
+
+    def assert_api_response_is_not_cacheable(self, response):
+        self.assertEqual(response["Cache-Control"], "private, no-store")
+        self.assertIn("Authorization", response["Vary"])
+        self.assertIn("Cookie", response["Vary"])
+
+    def _login_superuser(self, *, client=None, username="admin", password="password"):
+        User.objects.create_superuser(username=username, password=password)
+        client = client or self.client
+        client.login(username=username, password=password)
+        return client
+
+    def _get_report_access_token(self, *, client=None):
+        client = client or self.client
+        with self.settings(**production_report_settings()):
+            response = client.get(self.report_url)
+        match = re.search(r'data-report-access-token="([^"]+)"', response.content.decode())
+        self.assertIsNotNone(match)
+        return match.group(1)
 
     def test_returns_json(self):
         response = self.client.get(
@@ -26,6 +69,7 @@ class BaseAPIViewTestMixin:
         self.assertGreater(data["count"], 0)
         self.assertEqual(len(data["urls"]), data["count"])
         self.assertEqual(data["metadata"]["total_count"], data["count"])
+        self.assert_api_response_is_not_cacheable(response)
 
     @patch("wagtail_unveil.views._get_package_version", return_value="9.9.9")
     @patch("wagtail_unveil.views.timezone.now")
@@ -63,6 +107,7 @@ class BaseAPIViewTestMixin:
     def test_requires_api_key(self):
         response = self.client.get(self.api_url)
         self.assertEqual(response.status_code, 403)
+        self.assert_api_response_is_not_cacheable(response)
 
     def test_rejects_wrong_key(self):
         response = self.client.get(
@@ -70,6 +115,7 @@ class BaseAPIViewTestMixin:
             HTTP_AUTHORIZATION="Bearer wrong-key",
         )
         self.assertEqual(response.status_code, 403)
+        self.assert_api_response_is_not_cacheable(response)
 
     def test_returns_500_when_no_env_var(self):
         with patch.dict("os.environ", {}, clear=True):
@@ -79,6 +125,7 @@ class BaseAPIViewTestMixin:
                     HTTP_AUTHORIZATION="Bearer test-secret",
                 )
                 self.assertEqual(response.status_code, 500)
+                self.assert_api_response_is_not_cacheable(response)
 
     def test_uses_settings_fallback_when_env_missing(self):
         with patch.dict("os.environ", {}, clear=True):
@@ -101,8 +148,7 @@ class BaseAPIViewTestMixin:
 
     @override_settings(DEBUG=True)
     def test_allows_superuser_session_without_authorization_header(self):
-        User.objects.create_superuser(username="admin", password="password")
-        self.client.login(username="admin", password="password")
+        self._login_superuser()
 
         response = self.client.get(self.api_url)
 
@@ -119,17 +165,56 @@ class BaseAPIViewTestMixin:
 
     @override_settings(DEBUG=False)
     def test_rejects_superuser_session_without_authorization_header_when_not_debug(self):
-        User.objects.create_superuser(username="admin", password="password")
-        self.client.login(username="admin", password="password")
+        self._login_superuser()
 
         response = self.client.get(self.api_url)
 
         self.assertEqual(response.status_code, 403)
 
+    def test_rejects_superuser_session_without_report_token_when_production_reports_enabled(self):
+        with self.settings(**production_report_settings()):
+            self._login_superuser()
+            response = self.client.get(self.api_url)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_allows_superuser_session_with_valid_report_token_when_production_reports_enabled(self):
+        with self.settings(**production_report_settings()):
+            self._login_superuser()
+            report_access_token = self._get_report_access_token()
+            response = self.client.get(
+                self.api_url,
+                HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS=report_access_token,
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_rejects_invalid_report_token_when_production_reports_enabled(self):
+        with self.settings(**production_report_settings()):
+            self._login_superuser()
+            response = self.client.get(
+                self.api_url,
+                HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS="invalid-token",
+            )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_rejects_mismatched_report_token_when_production_reports_enabled(self):
+        with self.settings(**production_report_settings()):
+            self._login_superuser()
+            report_access_token = self._get_report_access_token()
+            other_client = Client()
+            self._login_superuser(client=other_client, username="second-admin")
+            response = other_client.get(
+                self.api_url,
+                HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS=report_access_token,
+            )
+
+        self.assertEqual(response.status_code, 403)
+
     @override_settings(DEBUG=True)
     def test_rejects_wrong_authorization_header_even_for_superuser_session(self):
-        User.objects.create_superuser(username="admin", password="password")
-        self.client.login(username="admin", password="password")
+        self._login_superuser()
 
         response = self.client.get(
             self.api_url,
@@ -140,8 +225,7 @@ class BaseAPIViewTestMixin:
 
     @override_settings(DEBUG=True)
     def test_allows_superuser_session_with_non_bearer_authorization_header(self):
-        User.objects.create_superuser(username="admin", password="password")
-        self.client.login(username="admin", password="password")
+        self._login_superuser()
 
         response = self.client.get(
             self.api_url,
@@ -172,6 +256,7 @@ class BaseReportViewTestMixin:
     def test_report_returns_html(self):
         response = self.client.get(self.report_url)
         self.assertEqual(response.status_code, 200)
+        assert_html_response_is_not_cacheable(self, response)
         content = response.content.decode()
         self.assertIn(self.report_title, content)
         self.assertIn("<table", content)
@@ -192,6 +277,7 @@ class BaseReportViewTestMixin:
         content = response.content.decode()
         self.assertIn('data-api-url="', content)
         self.assertIn('data-report-kind="', content)
+        self.assertIn('data-report-access-token="', content)
         self.assertIn('data-report-state="loading"', content)
         self.assertIn('data-loading-feedback="hidden"', content)
 
@@ -269,3 +355,9 @@ class BaseReportViewTestMixin:
         with self.settings(DEBUG=False):
             response = self.client.get(self.report_url)
             self.assertEqual(response.status_code, 404)
+
+    def test_report_returns_html_when_production_reports_enabled(self):
+        with self.settings(**production_report_settings()):
+            response = self.client.get(self.report_url)
+            self.assertEqual(response.status_code, 200)
+            assert_html_response_is_not_cacheable(self, response)

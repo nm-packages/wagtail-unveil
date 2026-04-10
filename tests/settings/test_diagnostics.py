@@ -11,6 +11,11 @@ class TestSettingDiagnostics(TestCase):
         diagnostics = {item.name: item for item in get_setting_diagnostics()}
         return diagnostics[name]
 
+    def assert_api_key_display_is_masked(self, diagnostic, *, length):
+        masked_display = f"Configured ({length} chars)"
+        self.assertEqual(diagnostic.raw_display, masked_display)
+        self.assertEqual(diagnostic.effective_display, masked_display)
+
     @override_settings(WAGTAIL_UNVEIL_PAGES_PER_TYPE=5)
     def test_pages_per_type_diagnostics_prefer_env_source(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PAGES_PER_TYPE": "2"}):
@@ -90,13 +95,39 @@ class TestSettingDiagnostics(TestCase):
         self.assertEqual(diagnostic.effective_value, [])
         self.assertIn("clear all exclusions", diagnostic.notes)
 
-    def test_api_key_diagnostics_include_full_value(self):
+    def test_api_key_diagnostics_mask_secret_values(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "super-secret"}):
             diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_API_KEY")
 
         self.assertEqual(diagnostic.source, "env")
         self.assertEqual(diagnostic.effective_value, "super-secret")
-        self.assertIn("super-secret", diagnostic.effective_display)
+        self.assert_api_key_display_is_masked(diagnostic, length=12)
+
+    def test_production_reports_diagnostics_default_to_false(self):
+        with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
+            with patch.dict("os.environ", {}, clear=True):
+                diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
+
+        self.assertEqual(diagnostic.source, "default")
+        self.assertEqual(diagnostic.effective_value, False)
+        self.assertIn("Defaults to False", diagnostic.notes)
+
+    def test_production_reports_diagnostics_normalize_env_value(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": "yes"}):
+            diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
+
+        self.assertEqual(diagnostic.source, "env")
+        self.assertEqual(diagnostic.effective_value, True)
+        self.assertIn("Allows superusers to open HTML reports", diagnostic.notes)
+
+    @override_settings(WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True)
+    def test_blank_production_reports_env_value_is_ignored(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": " "}):
+            diagnostic = self._get_diagnostic("WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS")
+
+        self.assertEqual(diagnostic.source, "env")
+        self.assertEqual(diagnostic.effective_value, True)
+        self.assertIn("Blank environment values are ignored.", diagnostic.notes)
 
     def test_blank_api_key_env_value_is_ignored(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": ""}):

@@ -244,4 +244,68 @@ describe("report bundle", () => {
       "/api/v2/redirects/find/?html_path=%2Fsample-old-page-1%2F",
     );
   });
+
+  test("report data loader sends the signed report access header when present", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/backend-urls/",
+      reportKind: "backend",
+      reportAccessToken: "signed-report-token",
+    });
+
+    const fetchMock = stubFetchResponse({
+      count: 0,
+      metadata: {
+        total_count: 0,
+        testable_count: 0,
+        untestable_count: 0,
+      },
+      urls: [],
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/unveil/api/backend-urls/",
+      expect.objectContaining({
+        credentials: "include",
+        headers: expect.objectContaining({
+          Accept: "application/json",
+          "X-Wagtail-Unveil-Report-Access": "signed-report-token",
+        }),
+      }),
+    );
+  });
+
+  test("report data loader does not send the signed report access header when absent", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/backend-urls/",
+      reportKind: "backend",
+    });
+
+    const fetchMock = stubFetchResponse({
+      count: 0,
+      metadata: {
+        total_count: 0,
+        testable_count: 0,
+        untestable_count: 0,
+      },
+      urls: [],
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/unveil/api/backend-urls/",
+      expect.objectContaining({
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+        },
+      }),
+    );
+  });
 });

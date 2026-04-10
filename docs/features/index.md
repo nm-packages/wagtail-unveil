@@ -14,7 +14,7 @@ wagtail-unveil exposes URL discovery through interactive HTML reports in the Wag
 HTML reports and the dashboard panel require:
 
 - Superuser login
-- `DEBUG=True`
+- `DEBUG=True`, or `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`
 
 ## Related
 

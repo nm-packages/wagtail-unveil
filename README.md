@@ -17,8 +17,8 @@ Wagtail sites can accumulate many URLs across the admin site and frontend. Broke
 
 It exposes discovery through:
 - JSON API endpoints (Bearer token auth)
-- interactive HTML reports in Wagtail admin (superuser + `DEBUG=True`)
-- a dedicated settings and diagnostics page in Wagtail admin (superuser + `DEBUG=True`)
+- interactive HTML reports in Wagtail admin (superuser + `DEBUG=True`, or `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`)
+- a dedicated settings and diagnostics page in Wagtail admin (superuser + `DEBUG=True`, or `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`)
 - a dashboard panel linking to the admin report, frontend report, and settings page
 
 ## Quick Start

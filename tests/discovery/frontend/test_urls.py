@@ -1,5 +1,7 @@
 from django.test import TestCase, override_settings
+from wagtail.models import Page, PageViewRestriction
 
+from sandbox.core.models import StandardPage
 from wagtail_unveil.discovery.frontend import FrontendURL, get_frontend_urls
 
 
@@ -76,6 +78,22 @@ class TestGetFrontendUrls(TestCase):
     def test_urls_start_with_slash(self):
         for url in self.urls:
             self.assertTrue(url.url.startswith("/"), url.url)
+
+    def test_private_pages_are_excluded_from_page_inventory(self):
+        root = Page.objects.first()
+        home = root.get_children().first()
+        private_page = StandardPage(title="Members Area", slug="members-area", body="<p>Private</p>")
+        home.add_child(instance=private_page)
+        private_page.save_revision().publish()
+        PageViewRestriction.objects.create(
+            page=private_page,
+            restriction_type=PageViewRestriction.LOGIN,
+        )
+
+        urls = get_frontend_urls()
+
+        self.assertFalse(any(url.page_title == "Members Area" for url in urls))
+        self.assertFalse(any(url.url == "/members-area/" for url in urls))
 
 
 @override_settings(ROOT_URLCONF="tests.discovery.frontend.urls_regex_admin")

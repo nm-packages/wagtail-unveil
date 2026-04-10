@@ -57,6 +57,7 @@ function setFixtureBody(options = {}) {
 
   document.body.dataset.apiUrl = options.apiUrl || "/unveil/api/backend-urls/";
   document.body.dataset.reportKind = options.reportKind || "backend";
+  document.body.dataset.reportAccessToken = options.reportAccessToken || "";
   document.body.dataset.reportState = "loading";
   document.body.dataset.loadingFeedback = "hidden";
 }

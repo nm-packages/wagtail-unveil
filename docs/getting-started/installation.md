@@ -58,7 +58,7 @@ If both are set, the environment variable takes precedence.
 
 ## Try the Reports
 
-HTML reports require a **superuser login** and **`DEBUG=True`**:
+HTML reports require a **superuser login** and either **`DEBUG=True`** or **`WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`**:
 
 - `/unveil/report/backend-urls/` — admin URL discovery report
 - `/unveil/report/frontend-urls/` — frontend URL discovery report
