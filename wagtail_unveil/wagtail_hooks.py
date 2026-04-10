@@ -1,5 +1,6 @@
 from wagtail import hooks
 from wagtail.admin.ui.components import Component
+from wagtail.models import Task, Workflow
 
 from wagtail_unveil.discovery import backend_resolution
 from wagtail_unveil.discovery.extensions import AdminInstanceResolver
@@ -37,7 +38,7 @@ def register_unveil_admin_instance_resolvers():
                 context.namespace == "wagtailadmin_workflows"
                 and context.name in backend_resolution.WORKFLOW_USAGE_NAMES
             ),
-            resolver=lambda context: backend_resolution.get_workflow_instance(),
+            resolver=lambda context: Workflow.objects.first(),
             override=True,
         ),
         AdminInstanceResolver(
@@ -47,6 +48,6 @@ def register_unveil_admin_instance_resolvers():
                 and context.name in backend_resolution.WORKFLOW_TASK_ROUTE_NAMES
                 and context.route.count("<") == 1
             ),
-            resolver=lambda context: backend_resolution.get_workflow_task_instance(),
+            resolver=lambda context: Task.objects.first(),
         ),
     )
