@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from wagtail.test.utils import WagtailTestUtils
 
+from tests.views.support import production_report_settings
+
 
 @override_settings(DEBUG=True)
 class TestSettingsReportView(WagtailTestUtils, TestCase):
@@ -11,20 +13,6 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
 
     def setUp(self):
         self.login()
-
-    def _production_report_settings(self):
-        return {
-            "DEBUG": False,
-            "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": True,
-            "STORAGES": {
-                "default": {
-                    "BACKEND": "django.core.files.storage.FileSystemStorage",
-                },
-                "staticfiles": {
-                    "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-                },
-            },
-        }
 
     def assert_masked_api_key_output(self, response, *, secret):
         self.assertNotContains(response, secret)
@@ -46,6 +34,8 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
     def test_report_returns_html(self):
         response = self.client.get(self.report_url)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Cache-Control"], "private, no-store")
+        self.assertIn("Cookie", response["Vary"])
         self.assertContains(response, "Wagtail Unveil Settings")
 
     def test_report_has_settings_page_body_class(self):
@@ -82,7 +72,7 @@ class TestSettingsReportView(WagtailTestUtils, TestCase):
             self.assertEqual(response.status_code, 404)
 
     def test_report_returns_html_when_production_reports_enabled(self):
-        with self.settings(**self._production_report_settings()):
+        with self.settings(**production_report_settings()):
             response = self.client.get(self.report_url)
             self.assertEqual(response.status_code, 200)
 

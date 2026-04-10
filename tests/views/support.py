@@ -8,6 +8,22 @@ from django.test import Client, override_settings
 from wagtail_unveil.api_contract import get_api_contract
 
 
+def production_report_settings():
+    """Return settings overrides that enable report UI in production-like tests."""
+    return {
+        "DEBUG": False,
+        "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": True,
+        "STORAGES": {
+            "default": {
+                "BACKEND": "django.core.files.storage.FileSystemStorage",
+            },
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+            },
+        },
+    }
+
+
 class BaseAPIViewTestMixin:
     """Shared API view tests. Concrete class must set api_url: str."""
 
@@ -20,6 +36,10 @@ class BaseAPIViewTestMixin:
         self.assertIn("Authorization", response["Vary"])
         self.assertIn("Cookie", response["Vary"])
 
+    def assert_html_response_is_not_cacheable(self, response):
+        self.assertEqual(response["Cache-Control"], "private, no-store")
+        self.assertIn("Cookie", response["Vary"])
+
     def _login_superuser(self, *, client=None, username="admin", password="password"):
         User.objects.create_superuser(username=username, password=password)
         client = client or self.client
@@ -27,18 +47,7 @@ class BaseAPIViewTestMixin:
         return client
 
     def _production_report_settings(self):
-        return {
-            "DEBUG": False,
-            "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": True,
-            "STORAGES": {
-                "default": {
-                    "BACKEND": "django.core.files.storage.FileSystemStorage",
-                },
-                "staticfiles": {
-                    "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-                },
-            },
-        }
+        return production_report_settings()
 
     def _get_report_access_token(self, *, client=None):
         client = client or self.client
@@ -234,18 +243,11 @@ class BaseReportViewTestMixin:
     report_title: str
 
     def _production_report_settings(self):
-        return {
-            "DEBUG": False,
-            "WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS": True,
-            "STORAGES": {
-                "default": {
-                    "BACKEND": "django.core.files.storage.FileSystemStorage",
-                },
-                "staticfiles": {
-                    "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-                },
-            },
-        }
+        return production_report_settings()
+
+    def assert_html_response_is_not_cacheable(self, response):
+        self.assertEqual(response["Cache-Control"], "private, no-store")
+        self.assertIn("Cookie", response["Vary"])
 
     def test_report_requires_login(self):
         self.client.logout()
@@ -262,6 +264,7 @@ class BaseReportViewTestMixin:
     def test_report_returns_html(self):
         response = self.client.get(self.report_url)
         self.assertEqual(response.status_code, 200)
+        self.assert_html_response_is_not_cacheable(response)
         content = response.content.decode()
         self.assertIn(self.report_title, content)
         self.assertIn("<table", content)
@@ -365,3 +368,4 @@ class BaseReportViewTestMixin:
         with self.settings(**self._production_report_settings()):
             response = self.client.get(self.report_url)
             self.assertEqual(response.status_code, 200)
+            self.assert_html_response_is_not_cacheable(response)

@@ -39,11 +39,17 @@ REPORT_ACCESS_MAX_AGE = 300
 REPORT_ACCESS_SESSION_NONCE_KEY = "_wagtail_unveil_report_access_nonce"
 
 
+def _apply_private_no_store_headers(response, *, vary_headers=()):
+    """Mark a response as private and non-cacheable."""
+    response["Cache-Control"] = "private, no-store"
+    if vary_headers:
+        patch_vary_headers(response, vary_headers)
+    return response
+
+
 def _apply_api_cache_headers(response):
     """Mark API responses as private and non-cacheable."""
-    response["Cache-Control"] = "private, no-store"
-    patch_vary_headers(response, ("Authorization", "Cookie"))
-    return response
+    return _apply_private_no_store_headers(response, vary_headers=("Authorization", "Cookie"))
 
 
 def _json_error(message, *, status):
@@ -476,7 +482,8 @@ def backend_urls_report(request):
         "active_report": "backend",
         "report_access_token": _build_report_access_token(request),
     }
-    return render(request, "wagtail_unveil/backend_urls_report.html", context)
+    response = render(request, "wagtail_unveil/backend_urls_report.html", context)
+    return _apply_private_no_store_headers(response, vary_headers=("Cookie",))
 
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -492,7 +499,8 @@ def frontend_urls_report(request):
         "active_report": "frontend",
         "report_access_token": _build_report_access_token(request),
     }
-    return render(request, "wagtail_unveil/frontend_urls_report.html", context)
+    response = render(request, "wagtail_unveil/frontend_urls_report.html", context)
+    return _apply_private_no_store_headers(response, vary_headers=("Cookie",))
 
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -505,4 +513,5 @@ def settings_report(request):
         **_build_settings_report_context(),
         "active_report": "settings",
     }
-    return render(request, "wagtail_unveil/settings_report.html", context)
+    response = render(request, "wagtail_unveil/settings_report.html", context)
+    return _apply_private_no_store_headers(response, vary_headers=("Cookie",))
