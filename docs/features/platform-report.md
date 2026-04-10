@@ -4,7 +4,7 @@ The platform report displays runtime versions, dependency-manifest details, Pyth
 
 ## Access
 
-Visit `/unveil/report/platform/` while logged in as a superuser with `DEBUG=True`.
+Visit `/unveil/report/platform/` while logged in as a superuser when report UI access is enabled. This is available in local development with `DEBUG=True`, or in non-debug environments with `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`.
 
 You can also reach it from the Wagtail admin dashboard panel.
 
@@ -18,12 +18,13 @@ You can also reach it from the Wagtail admin dashboard panel.
 - **On-demand PyPI lookup column** — fetch the latest published PyPI version for all listed packages only when requested
 - **Comparison markers** — label dependency rows as `Latest`, `Different`, or `Unknown` based on the installed version versus the fetched PyPI version
 - **Response metadata** — shows API version, lifecycle status, generation timestamp, and package version
-- **Uses the live platform endpoint** — the page fetches the same versioned platform JSON used for API clients, using the configured Bearer token behind the report page
+- **Uses the live platform endpoint** — the page fetches the same versioned platform JSON used for API clients via the signed `X-Wagtail-Unveil-Report-Access` header and authenticated superuser report access, rather than exposing the configured Bearer token to the browser
 
 ## Notes
 
-- The underlying platform endpoint remains Bearer-token only, even in local `DEBUG=True` development.
-- The report is intended for local or trusted superuser debugging, and is only available when `DEBUG=True`.
+- The underlying platform endpoint still expects Bearer auth for normal API clients, even in local `DEBUG=True` development.
+- Plain superuser session fallback is not allowed for the platform endpoint. The built-in report uses a short-lived signed report-access token plus the superuser session for its browser fetch.
+- The report is intended for local or trusted superuser debugging, and is available whenever report UI access is enabled.
 - To include dependency inventory data, set [`WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE`](../configuration/settings-reference.md#wagtail_unveil_platform_dependency_file).
 - Latest-version lookups are browser-side requests to PyPI and only run after clicking the dependency-section lookup button.
 

@@ -81,7 +81,7 @@ To include Python dependency inventory in the platform response, also set:
 WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE = "pyproject.toml"
 ```
 
-The platform endpoint always requires Bearer auth, even in local `DEBUG=True` development.
+The platform endpoint requires Bearer auth for normal API-client requests, even in local `DEBUG=True` development. The built-in platform report uses a separate signed report-access flow and does not expose the API key to the browser.
 
 ## Related
 

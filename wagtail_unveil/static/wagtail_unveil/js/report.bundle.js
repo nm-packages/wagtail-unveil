@@ -960,6 +960,7 @@
         row.appendChild(createTextCell(item.source_kind || ""));
         row.appendChild(createTextCell(item.source_name || "\u2014"));
         row.dataset.packageName = item.name || "";
+        row.dataset.packageLookupName = normalizePypiPackageName(item.name || "");
         row.dataset.installedVersion = item.installed_version || "";
         tbody.appendChild(row);
       });
@@ -981,9 +982,12 @@
       value.textContent = options.versionText;
       marker.textContent = options.markerText || "";
     }
-    function setPypiLookupRows(packageName, options) {
-      document.querySelectorAll("#platform-packages-body tr[data-package-name]").forEach((row) => {
-        if (row.dataset.packageName === packageName) {
+    function normalizePypiPackageName(packageName) {
+      return packageName.toLowerCase().replace(/[-_.]+/g, "-").trim();
+    }
+    function setPypiLookupRows(packageLookupName, options) {
+      document.querySelectorAll("#platform-packages-body tr[data-package-lookup-name]").forEach((row) => {
+        if (row.dataset.packageLookupName === packageLookupName) {
           setPypiLookupCell(row, options);
         }
       });
@@ -997,9 +1001,9 @@
       }
       return "Different";
     }
-    function fetchLatestPyPiVersion(packageName) {
+    function fetchLatestPyPiVersion(packageLookupName) {
       return fetch(
-        "https://pypi.org/pypi/" + encodeURIComponent(packageName) + "/json",
+        "https://pypi.org/pypi/" + encodeURIComponent(packageLookupName) + "/json",
         {
           headers: {
             Accept: "application/json"
@@ -1028,10 +1032,10 @@
         });
       });
     }
-    function applyPypiLookupResult(packageName, result) {
-      document.querySelectorAll("#platform-packages-body tr[data-package-name]").forEach((row) => {
+    function applyPypiLookupResult(packageLookupName, result) {
+      document.querySelectorAll("#platform-packages-body tr[data-package-lookup-name]").forEach((row) => {
         var marker;
-        if (row.dataset.packageName !== packageName) {
+        if (row.dataset.packageLookupName !== packageLookupName) {
           return;
         }
         if (!result) {
@@ -1111,15 +1115,15 @@
         return Promise.resolve();
       }
       rows.forEach((row) => {
-        var packageName = row.dataset.packageName || "";
-        if (!packageName || packageLookupMap.has(packageName)) {
+        var packageLookupName = row.dataset.packageLookupName || "";
+        if (!packageLookupName || packageLookupMap.has(packageLookupName)) {
           return;
         }
-        packageLookupMap.set(packageName, null);
+        packageLookupMap.set(packageLookupName, null);
       });
       packageNames = Array.from(packageLookupMap.keys());
-      packageNames.forEach((packageName) => {
-        setPypiLookupRows(packageName, {
+      packageNames.forEach((packageLookupName) => {
+        setPypiLookupRows(packageLookupName, {
           markerText: "",
           toneClass: "platform-pypi-neutral",
           versionText: "Loading\u2026"
@@ -1129,11 +1133,11 @@
         isLoading: true,
         label: "Fetching PyPI Versions\u2026"
       });
-      taskFactories = packageNames.map((packageName) => {
+      taskFactories = packageNames.map((packageLookupName) => {
         return function taskFactory() {
-          return fetchLatestPyPiVersion(packageName).then((result) => {
-            packageLookupMap.set(packageName, result);
-            applyPypiLookupResult(packageName, result);
+          return fetchLatestPyPiVersion(packageLookupName).then((result) => {
+            packageLookupMap.set(packageLookupName, result);
+            applyPypiLookupResult(packageLookupName, result);
             return result;
           }).catch(() => {
             var failureResult = {
@@ -1141,8 +1145,8 @@
               status: "failed",
               version: "Lookup failed"
             };
-            packageLookupMap.set(packageName, failureResult);
-            applyPypiLookupResult(packageName, failureResult);
+            packageLookupMap.set(packageLookupName, failureResult);
+            applyPypiLookupResult(packageLookupName, failureResult);
             return failureResult;
           });
         };

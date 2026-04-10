@@ -127,7 +127,7 @@ def _authenticate_api_request(
     allow_debug_superuser_session=True,
     allow_report_access_token=True,
 ):
-    """Validate the configured API key against the request Authorization header."""
+    """Authorize API requests via Bearer auth or an allowed superuser report/session flow."""
     auth_header = request.headers.get("Authorization", "")
     parts = auth_header.split(" ", 1)
     is_bearer_auth = len(parts) == 2 and parts[0].lower() == "bearer"
