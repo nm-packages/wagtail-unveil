@@ -51,6 +51,9 @@ class TestPlatformAPIView(TestCase):
             ["Django", "wagtail"],
         )
         self.assertEqual(data["platform"]["warnings"], [])
+        self.assertEqual(response["Cache-Control"], "private, no-store")
+        self.assertIn("Authorization", response["Vary"])
+        self.assertIn("Cookie", response["Vary"])
 
     @patch("wagtail_unveil.views._get_package_version", return_value="9.9.9")
     @patch("wagtail_unveil.views.timezone.now")

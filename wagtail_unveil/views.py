@@ -24,13 +24,13 @@ from wagtail_unveil.api_contract import (
 )
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.frontend import get_frontend_urls
+from wagtail_unveil.platform_data import PlatformSnapshot, get_platform_snapshot
 from wagtail_unveil.settings import (
     get_api_key,
     get_enable_production_reports,
     get_setting_diagnostics,
     is_report_ui_enabled,
 )
-from wagtail_unveil.platform_data import PlatformSnapshot, get_platform_snapshot
 
 # Shared API response and authentication helpers
 
@@ -141,7 +141,11 @@ def _authenticate_api_request(request, *, allow_debug_superuser_session=True):
     if user and user.is_authenticated and user.is_superuser:
         if allow_debug_superuser_session and settings.DEBUG:
             return None
-        if allow_debug_superuser_session and get_enable_production_reports() and _has_valid_report_access_token(request):
+        if (
+            allow_debug_superuser_session
+            and get_enable_production_reports()
+            and _has_valid_report_access_token(request)
+        ):
             return None
 
     return _json_error("Invalid or missing API key", status=403)
@@ -284,7 +288,7 @@ def _build_platform_json_response(snapshot: PlatformSnapshot, *, contract: APIVe
         **_serialize_platform_snapshot(snapshot),
         "metadata": _build_platform_metadata(contract=contract),
     }
-    response = JsonResponse(data)
+    response = _apply_api_cache_headers(JsonResponse(data))
     return _apply_lifecycle_headers(response, contract)
 
 
