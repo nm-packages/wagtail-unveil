@@ -277,4 +277,35 @@ describe("report bundle", () => {
       }),
     );
   });
+
+  test("report data loader does not send the signed report access header when absent", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/backend-urls/",
+      reportKind: "backend",
+    });
+
+    const fetchMock = stubFetchResponse({
+      count: 0,
+      metadata: {
+        total_count: 0,
+        testable_count: 0,
+        untestable_count: 0,
+      },
+      urls: [],
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/unveil/api/backend-urls/",
+      expect.objectContaining({
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+        },
+      }),
+    );
+  });
 });
