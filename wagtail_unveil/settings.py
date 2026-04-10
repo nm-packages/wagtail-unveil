@@ -246,7 +246,12 @@ def get_api_key():
 
     Invalid, non-string, or empty values return ''.
     """
-    value = os.environ.get("WAGTAIL_UNVEIL_API_KEY") or getattr(settings, "WAGTAIL_UNVEIL_API_KEY", "")
+    env_value = os.environ.get("WAGTAIL_UNVEIL_API_KEY")
+    if env_value is not None and not _is_blank_string(env_value):
+        value = env_value
+    else:
+        value = getattr(settings, "WAGTAIL_UNVEIL_API_KEY", "")
+
     if not isinstance(value, str):
         return ""
     return value.strip()
@@ -254,11 +259,15 @@ def get_api_key():
 
 def get_platform_dependency_file():
     """Return WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE as a non-empty string, or '' if absent/invalid."""
-    value = os.environ.get("WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE") or getattr(
-        settings,
-        "WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE",
-        "",
-    )
+    env_value = os.environ.get("WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE")
+    if env_value is not None and not _is_blank_string(env_value):
+        value = env_value
+    else:
+        value = getattr(
+            settings,
+            "WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE",
+            "",
+        )
     if not isinstance(value, str):
         return ""
     return value.strip()

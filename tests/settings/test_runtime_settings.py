@@ -155,6 +155,11 @@ class TestGetApiKey(TestCase):
                 self.assertEqual(get_api_key(), "")
 
     @override_settings(WAGTAIL_UNVEIL_API_KEY="django-setting-key")
+    def test_whitespace_env_var_falls_back_to_django_setting(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "   "}):
+            self.assertEqual(get_api_key(), "django-setting-key")
+
+    @override_settings(WAGTAIL_UNVEIL_API_KEY="django-setting-key")
     def test_django_setting_fallback_when_env_var_absent(self):
         with patch.dict("os.environ", {}, clear=True):
             self.assertEqual(get_api_key(), "django-setting-key")
@@ -178,6 +183,7 @@ class TestGetApiKey(TestCase):
     def test_env_var_wins_over_django_setting(self):
         with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "env-key"}):
             self.assertEqual(get_api_key(), "env-key")
+
 
 class TestGetEnableProductionReports(TestCase):
     def test_missing_setting_defaults_to_false(self):
@@ -251,6 +257,11 @@ class TestGetPlatformDependencyFile(TestCase):
         with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
             with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE": ""}):
                 self.assertEqual(get_platform_dependency_file(), "")
+
+    @override_settings(WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE="requirements/dev.txt")
+    def test_whitespace_env_var_falls_back_to_django_setting(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE": "   "}):
+            self.assertEqual(get_platform_dependency_file(), "requirements/dev.txt")
 
     @override_settings(WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE="requirements/dev.txt")
     def test_django_setting_fallback_when_env_var_absent(self):
