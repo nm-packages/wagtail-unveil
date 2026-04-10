@@ -202,7 +202,8 @@ GET /unveil/api/v1/platform/
 
 - Set `WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE` to a supported manifest file such as `pyproject.toml` or `requirements.txt`
 - The endpoint still returns `200` when dependency metadata is unavailable, and reports the problem in `platform.warnings`
-- Unlike the URL discovery endpoints, this endpoint requires Bearer auth even when `DEBUG=True`
+- Unlike the URL discovery endpoints, this endpoint requires Bearer auth for normal API clients even when `DEBUG=True`
+- The HTML platform report at `/unveil/report/platform/` consumes this endpoint internally for superuser debugging, but the browser request authenticates with the signed `X-Wagtail-Unveil-Report-Access` header plus the superuser session, not the Bearer API key
 
 **Examples:**
 

@@ -6,6 +6,7 @@ wagtail-unveil exposes URL discovery through interactive HTML reports in the Wag
 
 - [Backend URLs Report](backend-urls-report.md) — Discover and test all Wagtail admin URLs
 - [Frontend URLs Report](frontend-urls-report.md) — Discover and test all frontend page and resolver URLs
+- [Platform Report](platform-report.md) — Inspect runtime versions and Python dependency inventory
 - [Settings Page](settings-page.md) — View effective configuration and runtime diagnostics
 - [Dashboard Panel](dashboard-panel.md) — Quick-access links on the Wagtail admin home page
 

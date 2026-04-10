@@ -70,9 +70,11 @@ Once the sandbox server is running, these are the main URLs to use while develop
 - `/admin/` - Wagtail admin
 - `/unveil/report/backend-urls/` - backend/admin discovery report
 - `/unveil/report/frontend-urls/` - frontend discovery report
+- `/unveil/report/platform/` - runtime and dependency inventory report
 - `/unveil/report/settings/` - local settings and diagnostics view
 - `/unveil/api/v1/backend-urls/` - backend URLs JSON endpoint
 - `/unveil/api/v1/frontend-urls/` - frontend URLs JSON endpoint
+- `/unveil/api/v1/platform/` - runtime metadata and dependency inventory JSON endpoint
 - `/intentional-error/` - deliberate frontend 500 route for debugging failure handling
 
 For the JSON endpoints, pass the local API key from `.env`, for example:
@@ -80,6 +82,7 @@ For the JSON endpoints, pass the local API key from `.env`, for example:
 ```bash
 curl -H "Authorization: Bearer dev-secret" http://localhost:8000/unveil/api/v1/backend-urls/
 curl -H "Authorization: Bearer dev-secret" http://localhost:8000/unveil/api/v1/frontend-urls/
+curl -H "Authorization: Bearer dev-secret" http://localhost:8000/unveil/api/v1/platform/
 ```
 
 ### Common Contributor Workflows

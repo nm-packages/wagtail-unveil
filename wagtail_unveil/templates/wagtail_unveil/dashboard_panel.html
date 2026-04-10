@@ -35,6 +35,17 @@
             <tr>
                 <td class="title">
                     <div class="title-wrapper">
+                        <a href="{% url 'wagtail_unveil:report_platform' %}" rel="noopener noreferrer">Platform</a>
+                    </div>
+                    <div><small>Inspect runtime versions, dependency inventory, and platform warnings.</small></div>
+                </td>
+                <td class="actions-container">
+                    <a href="{% url 'wagtail_unveil:report_platform' %}" rel="noopener noreferrer" class="button button-small button-secondary">Open report</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    <div class="title-wrapper">
                         <a href="{% url 'wagtail_unveil:report_settings' %}" rel="noopener noreferrer">Settings</a>
                     </div>
                     <div><small>Review active Unveil settings and runtime diagnostics.</small></div>

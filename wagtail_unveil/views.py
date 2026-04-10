@@ -121,8 +121,13 @@ def _has_valid_report_access_token(request):
     return compare_digest(claims.get("session_nonce", ""), session_nonce)
 
 
-def _authenticate_api_request(request, *, allow_debug_superuser_session=True):
-    """Validate the configured API key against the request Authorization header."""
+def _authenticate_api_request(
+    request,
+    *,
+    allow_debug_superuser_session=True,
+    allow_report_access_token=True,
+):
+    """Authorize API requests via Bearer auth or an allowed superuser report/session flow."""
     auth_header = request.headers.get("Authorization", "")
     parts = auth_header.split(" ", 1)
     is_bearer_auth = len(parts) == 2 and parts[0].lower() == "bearer"
@@ -142,8 +147,8 @@ def _authenticate_api_request(request, *, allow_debug_superuser_session=True):
         if allow_debug_superuser_session and settings.DEBUG:
             return None
         if (
-            allow_debug_superuser_session
-            and get_enable_production_reports()
+            allow_report_access_token
+            and is_report_ui_enabled()
             and _has_valid_report_access_token(request)
         ):
             return None
@@ -343,8 +348,9 @@ def _build_settings_report_context():
                 "detail": (
                     "Session-based JSON access is allowed for URL discovery endpoints "
                     "for superusers in DEBUG mode, or for signed report requests when "
-                    "production reports are enabled. The platform API still requires "
-                    "Bearer authentication."
+                    "report UI access is enabled. The platform API does not allow "
+                    "plain session fallback, but the built-in platform report uses "
+                    "the same signed report access flow."
                 ),
             },
             {
@@ -410,6 +416,11 @@ def _build_settings_report_context():
                 "label": "Frontend URLs report",
                 "value": reverse("wagtail_unveil:report_frontend_urls"),
                 "detail": "URL name: wagtail_unveil:report_frontend_urls",
+            },
+            {
+                "label": "Platform report",
+                "value": reverse("wagtail_unveil:report_platform"),
+                "detail": "URL name: wagtail_unveil:report_platform",
             },
             {
                 "label": "Settings report",
@@ -509,7 +520,11 @@ def _frontend_urls_json_for_version(request, api_version):
 def _platform_json_for_version(request, api_version):
     """Return platform runtime and dependency metadata for a specific API version."""
     contract = get_api_contract(api_version)
-    auth_error = _authenticate_api_request(request, allow_debug_superuser_session=False)
+    auth_error = _authenticate_api_request(
+        request,
+        allow_debug_superuser_session=False,
+        allow_report_access_token=True,
+    )
     if auth_error is not None:
         return auth_error
 
@@ -590,6 +605,23 @@ def frontend_urls_report(request):
         "report_access_token": _build_report_access_token(request),
     }
     response = render(request, "wagtail_unveil/frontend_urls_report.html", context)
+    return _apply_private_no_store_headers(response, vary_headers=("Cookie",))
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def platform_report(request):
+    """Render an HTML report of platform runtime and dependency metadata for eligible superusers."""
+    if not is_report_ui_enabled():
+        return HttpResponseNotFound()
+
+    contract = get_latest_stable_api_contract()
+    context = {
+        "api_url": reverse(f"wagtail_unveil:{contract.platform_url_name}"),
+        "report_kind": "platform",
+        "active_report": "platform",
+        "report_access_token": _build_report_access_token(request),
+    }
+    response = render(request, "wagtail_unveil/platform_report.html", context)
     return _apply_private_no_store_headers(response, vary_headers=("Cookie",))
 
 

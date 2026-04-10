@@ -7,6 +7,7 @@ from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 
+from tests.views.support import production_report_settings
 from wagtail_unveil.api_contract import get_api_contract
 
 V1_CONTRACT = get_api_contract("v1")
@@ -118,6 +119,29 @@ class TestPlatformAPIView(TestCase):
         self.client.login(username="admin", password="password")
 
         response = self.client.get(API_URL)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_allows_superuser_session_with_valid_report_token_when_report_ui_enabled(self):
+        with self.settings(**production_report_settings()):
+            User.objects.create_superuser(username="admin", password="password")
+            self.client.login(username="admin", password="password")
+            report_response = self.client.get("/unveil/report/platform/")
+            report_access_token = report_response.context["report_access_token"]
+
+            response = self.client.get(
+                API_URL,
+                HTTP_X_WAGTAIL_UNVEIL_REPORT_ACCESS=report_access_token,
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_rejects_superuser_session_without_report_token_when_report_ui_enabled(self):
+        with self.settings(**production_report_settings()):
+            User.objects.create_superuser(username="admin", password="password")
+            self.client.login(username="admin", password="password")
+
+            response = self.client.get(API_URL)
 
         self.assertEqual(response.status_code, 403)
 

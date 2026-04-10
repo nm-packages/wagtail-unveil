@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
   loadBundleScript,
@@ -10,6 +10,35 @@ async function waitForRender() {
   await Promise.resolve();
   await Promise.resolve();
   await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+function createPlatformPayload(packages = []) {
+  return {
+    platform: {
+      runtime: {
+        python_version: "3.12.1",
+        python_implementation: "CPython",
+        django_version: "5.2.1",
+        wagtail_version: "7.3.1",
+      },
+      python_dependencies: {
+        source: {
+          path: "pyproject.toml",
+          format: "pyproject.toml",
+        },
+        packages,
+      },
+      warnings: [],
+    },
+    metadata: {
+      api_version: "v1",
+      api_lifecycle: {
+        status: "stable",
+      },
+      generated_at: "2026-04-08T20:27:18.791636+00:00",
+      package_version: "0.1.0a5",
+    },
+  };
 }
 
 describe("report bundle", () => {
@@ -307,5 +336,586 @@ describe("report bundle", () => {
         },
       }),
     );
+  });
+
+  test("platform report sends the signed report access header and renders sectioned tables", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+      reportAccessToken: "signed-report-token",
+    });
+
+    const fetchMock = stubFetchResponse({
+      ...createPlatformPayload([
+        {
+          name: "Django",
+          specifier: ">=5.2",
+          installed_version: "5.2.1",
+          is_installed: true,
+          source_kind: "runtime",
+          source_name: null,
+        },
+        {
+          name: "mkdocs",
+          specifier: ">=1.6.0",
+          installed_version: "",
+          is_installed: false,
+          source_kind: "group",
+          source_name: "docs",
+        },
+      ]),
+      platform: {
+        ...createPlatformPayload([]).platform,
+        warnings: ["Dependency manifest is missing or inaccessible."],
+        python_dependencies: {
+          ...createPlatformPayload([]).platform.python_dependencies,
+          packages: [
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+            {
+              name: "mkdocs",
+              specifier: ">=1.6.0",
+              installed_version: "",
+              is_installed: false,
+              source_kind: "group",
+              source_name: "docs",
+            },
+          ],
+        },
+      },
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(
+      fetchMock.mock.calls[0][1].headers["X-Wagtail-Unveil-Report-Access"],
+    ).toBe("signed-report-token");
+    expect(document.body.dataset.reportState).toBe("ready");
+    expect(document.getElementById("report-total").textContent).toBe("2");
+    expect(document.getElementById("report-testable").textContent).toBe("1");
+    expect(document.getElementById("report-untestable").textContent).toBe("1");
+    expect(document.getElementById("report-warning-count").textContent).toBe(
+      "1",
+    );
+    expect(
+      document.querySelector("#platform-runtime-body tr td:last-child")
+        .textContent,
+    ).toBe("3.12.1");
+    expect(document.querySelectorAll("#platform-packages-body tr").length).toBe(
+      2,
+    );
+    expect(
+      document.querySelector("#platform-packages-body tr .platform-pypi-cell")
+        .textContent,
+    ).toContain("—");
+    expect(
+      document.querySelector(
+        "#platform-metadata-body tr:last-child td:last-child",
+      ).textContent,
+    ).toBe("0.1.0a5");
+  });
+
+  test("platform report renders empty states for warnings and dependencies", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    stubFetchResponse(createPlatformPayload([]));
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(
+      document.querySelector("#platform-warnings-body td").textContent,
+    ).toBe("No warnings.");
+    expect(
+      document.querySelector("#platform-packages-body td").textContent,
+    ).toBe("No dependencies found.");
+  });
+
+  test("platform report shows the error screen for invalid payload shape", async () => {
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    stubFetchResponse({
+      metadata: {
+        api_version: "v1",
+      },
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(document.body.dataset.reportState).toBe("error");
+    expect(document.getElementById("report-error-message").textContent).toBe(
+      "Report data response was not valid JSON.",
+    );
+  });
+
+  test("platform report only starts PyPI lookup after button click", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () =>
+          createPlatformPayload([
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+          ]),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          info: {
+            version: "5.2.2",
+          },
+        }),
+      });
+
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    document.getElementById("platform-pypi-lookup-button").click();
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      "https://pypi.org/pypi/django/json",
+    );
+    expect(
+      document.querySelector("#platform-packages-body tr .platform-pypi-cell")
+        .textContent,
+    ).toContain("5.2.2");
+    expect(
+      document.querySelector("#platform-packages-body tr .platform-pypi-cell")
+        .textContent,
+    ).toContain("Different");
+    expect(
+      document.querySelector("#platform-packages-body tr .platform-pypi-cell"),
+    ).not.toBeNull();
+    expect(
+      document
+        .querySelector("#platform-packages-body tr .platform-pypi-cell")
+        .classList.contains("platform-pypi-warning"),
+    ).toBe(true);
+  });
+
+  test("platform report dedupes package lookups and handles mixed PyPI outcomes", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () =>
+          createPlatformPayload([
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "group",
+              source_name: "dev",
+            },
+            {
+              name: "missing-project",
+              specifier: "*",
+              installed_version: "",
+              is_installed: false,
+              source_kind: "group",
+              source_name: "docs",
+            },
+            {
+              name: "broken-project",
+              specifier: "*",
+              installed_version: "",
+              is_installed: false,
+              source_kind: "group",
+              source_name: "docs",
+            },
+          ]),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          info: {
+            version: "5.2.1",
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({}),
+      })
+      .mockRejectedValueOnce(new Error("network failure"));
+
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    const button = document.getElementById("platform-pypi-lookup-button");
+
+    button.click();
+    expect(button.disabled).toBe(true);
+    await waitForRender();
+    await waitForRender();
+
+    expect(button.disabled).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+
+    const rows = Array.from(
+      document.querySelectorAll("#platform-packages-body tr"),
+    );
+
+    expect(rows[0].querySelector(".platform-pypi-cell").textContent).toContain(
+      "5.2.1",
+    );
+    expect(rows[0].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Latest",
+    );
+    expect(
+      rows[0]
+        .querySelector(".platform-pypi-cell")
+        .classList.contains("platform-pypi-success"),
+    ).toBe(true);
+    expect(rows[1].querySelector(".platform-pypi-cell").textContent).toContain(
+      "5.2.1",
+    );
+    expect(rows[1].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Latest",
+    );
+    expect(rows[2].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Not on PyPI",
+    );
+    expect(
+      rows[2]
+        .querySelector(".platform-pypi-cell")
+        .classList.contains("platform-pypi-danger"),
+    ).toBe(true);
+    expect(rows[3].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Lookup failed",
+    );
+    expect(
+      rows[3]
+        .querySelector(".platform-pypi-cell")
+        .classList.contains("platform-pypi-danger"),
+    ).toBe(true);
+  });
+
+  test("platform report normalizes equivalent package names for a single PyPI lookup", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () =>
+          createPlatformPayload([
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+            {
+              name: "django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "group",
+              source_name: "dev",
+            },
+            {
+              name: "my_pkg",
+              specifier: ">=1.0",
+              installed_version: "1.0.0",
+              is_installed: true,
+              source_kind: "group",
+              source_name: "docs",
+            },
+            {
+              name: "my-pkg",
+              specifier: ">=1.0",
+              installed_version: "1.0.0",
+              is_installed: true,
+              source_kind: "optional",
+              source_name: "extras",
+            },
+          ]),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          info: {
+            version: "5.2.1",
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          info: {
+            version: "1.1.0",
+          },
+        }),
+      });
+
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    document.getElementById("platform-pypi-lookup-button").click();
+    await waitForRender();
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      "https://pypi.org/pypi/django/json",
+    );
+    expect(fetchMock.mock.calls[2][0]).toBe(
+      "https://pypi.org/pypi/my-pkg/json",
+    );
+
+    const rows = Array.from(
+      document.querySelectorAll("#platform-packages-body tr"),
+    );
+
+    expect(rows[0].querySelector(".platform-pypi-cell").textContent).toContain(
+      "5.2.1",
+    );
+    expect(rows[1].querySelector(".platform-pypi-cell").textContent).toContain(
+      "5.2.1",
+    );
+    expect(rows[0].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Latest",
+    );
+    expect(rows[1].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Latest",
+    );
+    expect(rows[2].querySelector(".platform-pypi-cell").textContent).toContain(
+      "1.1.0",
+    );
+    expect(rows[3].querySelector(".platform-pypi-cell").textContent).toContain(
+      "1.1.0",
+    );
+    expect(rows[2].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Different",
+    );
+    expect(rows[3].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Different",
+    );
+  });
+
+  test("platform report updates completed PyPI rows before slower lookups finish", async () => {
+    let resolveDjango;
+    let resolveWagtail;
+    const djangoPromise = new Promise((resolve) => {
+      resolveDjango = resolve;
+    });
+    const wagtailPromise = new Promise((resolve) => {
+      resolveWagtail = resolve;
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () =>
+          createPlatformPayload([
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+            {
+              name: "wagtail",
+              specifier: ">=7.0",
+              installed_version: "7.0.0",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+          ]),
+      })
+      .mockImplementationOnce(() => djangoPromise)
+      .mockImplementationOnce(() => wagtailPromise);
+
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    document.getElementById("platform-pypi-lookup-button").click();
+    await waitForRender();
+
+    resolveDjango({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        info: {
+          version: "5.2.1",
+        },
+      }),
+    });
+    await waitForRender();
+
+    const rows = Array.from(
+      document.querySelectorAll("#platform-packages-body tr"),
+    );
+
+    expect(rows[0].querySelector(".platform-pypi-cell").textContent).toContain(
+      "5.2.1",
+    );
+    expect(rows[0].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Latest",
+    );
+    expect(rows[1].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Loading",
+    );
+
+    resolveWagtail({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        info: {
+          version: "7.1.0",
+        },
+      }),
+    });
+    await waitForRender();
+
+    expect(rows[1].querySelector(".platform-pypi-cell").textContent).toContain(
+      "7.1.0",
+    );
+    expect(rows[1].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Different",
+    );
+  });
+
+  test("platform report marks rows as unknown when no installed version is available", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () =>
+          createPlatformPayload([
+            {
+              name: "mkdocs",
+              specifier: ">=1.6.0",
+              installed_version: "",
+              is_installed: false,
+              source_kind: "group",
+              source_name: "docs",
+            },
+          ]),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          info: {
+            version: "1.7.0",
+          },
+        }),
+      });
+
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    document.getElementById("platform-pypi-lookup-button").click();
+    await waitForRender();
+
+    expect(
+      document.querySelector("#platform-packages-body tr .platform-pypi-cell")
+        .textContent,
+    ).toContain("Unknown");
+    expect(
+      document.querySelector("#platform-packages-body tr .platform-pypi-cell"),
+    ).not.toBeNull();
+    expect(
+      document
+        .querySelector("#platform-packages-body tr .platform-pypi-cell")
+        .classList.contains("platform-pypi-warning"),
+    ).toBe(true);
   });
 });

@@ -62,6 +62,7 @@ HTML reports require a **superuser login** and either **`DEBUG=True`** or **`WAG
 
 - `/unveil/report/backend-urls/` — admin URL discovery report
 - `/unveil/report/frontend-urls/` — frontend URL discovery report
+- `/unveil/report/platform/` — runtime versions and dependency inventory report
 - `/unveil/report/settings/` — settings diagnostic page
 
 You can also open these pages from links in the Wagtail admin dashboard panel.
@@ -80,7 +81,7 @@ To include Python dependency inventory in the platform response, also set:
 WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE = "pyproject.toml"
 ```
 
-The platform endpoint always requires Bearer auth, even in local `DEBUG=True` development.
+The platform endpoint requires Bearer auth for normal API-client requests, even in local `DEBUG=True` development. The built-in platform report uses a separate signed report-access flow and does not expose the API key to the browser.
 
 ## Related
 
