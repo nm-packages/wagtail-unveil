@@ -50,9 +50,10 @@ Do not document or assume package management commands unless they are reintroduc
 - `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES`
 - `WAGTAIL_UNVEIL_API_KEY`
 - `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS`
+- `WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE`
 
 `get_api_key()` checks the environment first, then Django settings fallback.
-JSON API requests also allow superuser session auth when `DEBUG=True` and the request is not attempting Bearer-token auth. When `DEBUG=False`, signed report-originated requests may also use a superuser session if `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`.
+The backend/frontend URL discovery JSON APIs also allow superuser session auth when `DEBUG=True` and the request is not attempting Bearer-token auth. When `DEBUG=False`, signed report-originated requests may also use a superuser session for those URL discovery APIs if `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`. The platform API always requires Bearer authentication.
 
 ### URL Names
 
@@ -60,6 +61,7 @@ The package exports one URL namespace:
 
 - `wagtail_unveil:api_v1_backend_urls`
 - `wagtail_unveil:api_v1_frontend_urls`
+- `wagtail_unveil:api_v1_platform`
 - `wagtail_unveil:report_backend_urls`
 - `wagtail_unveil:report_frontend_urls`
 - `wagtail_unveil:report_settings`

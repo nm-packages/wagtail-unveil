@@ -14,6 +14,9 @@ curl -H "Authorization: Bearer your-key" http://localhost:8000/unveil/api/v1/bac
 
 # Frontend URLs
 curl -H "Authorization: Bearer your-key" http://localhost:8000/unveil/api/v1/frontend-urls/
+
+# Platform runtime and dependency inventory
+curl -H "Authorization: Bearer your-key" http://localhost:8000/unveil/api/v1/platform/
 ```
 
 ## Related

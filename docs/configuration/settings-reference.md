@@ -45,6 +45,28 @@ WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS = True
 - Does not make the JSON API broadly session-authenticated in production
 - The report UI uses a short-lived signed token for its own JSON requests; the API key is still never exposed to the browser
 
+## `WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE`
+
+The dependency manifest used by `/unveil/api/v1/platform/` to report declared Python dependencies and their installed versions.
+
+```bash
+export WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=pyproject.toml
+export WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=requirements/base.txt
+```
+
+```python
+WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE = "pyproject.toml"
+```
+
+**Notes:**
+
+- If both are set, the environment variable is used
+- Blank or non-string values are treated as unset
+- Relative paths are resolved from Django `BASE_DIR` and must stay within that directory
+- Absolute paths are used directly
+- Supported formats in v1 are `pyproject.toml` and requirements-style text files
+- If the setting is unset, unreadable, missing, or unsupported, the platform endpoint still returns runtime data and adds a warning instead of failing the whole response
+
 ## `WAGTAIL_UNVEIL_PAGES_PER_TYPE`
 
 Controls how many page instances per page type are included in frontend URL discovery.
@@ -93,6 +115,7 @@ WAGTAIL_UNVEIL_SKIP_URL_PREFIXES = ["__debug__/", "/silk/"]
 ## Related
 
 - [Getting Started](../getting-started/installation.md) — Initial setup and API key configuration
+- [API Endpoints](../api/endpoints.md) — Platform runtime and URL discovery API payloads
 - [Frontend URLs Report](../features/frontend-urls-report.md) — How page limits affect the report
 - [Settings Page](../features/settings-page.md) — View effective values at runtime
 - [Configuration Index](index.md) — Back to section overview

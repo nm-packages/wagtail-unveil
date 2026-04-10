@@ -80,6 +80,7 @@ Routes provided:
 
 - `api/v1/backend-urls/` → `wagtail_unveil:api_v1_backend_urls`
 - `api/v1/frontend-urls/` → `wagtail_unveil:api_v1_frontend_urls`
+- `api/v1/platform/` → `wagtail_unveil:api_v1_platform`
 - `report/backend-urls/` → `wagtail_unveil:report_backend_urls`
 - `report/frontend-urls/` → `wagtail_unveil:report_frontend_urls`
 - `report/settings/` → `wagtail_unveil:report_settings`

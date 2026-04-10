@@ -16,6 +16,7 @@ You can also reach it from the Wagtail admin dashboard panel.
 
 - `WAGTAIL_UNVEIL_API_KEY` — shown in masked form so the secret is never rendered in full
 - `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS`
+- `WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE`
 - `WAGTAIL_UNVEIL_PAGES_PER_TYPE`
 - `WAGTAIL_UNVEIL_SKIP_URL_PREFIXES`
 
@@ -31,7 +32,7 @@ Each value also shows its source: environment variable, Django settings, or pack
 **Package information:**
 
 - Package version and Python/Django/Wagtail runtime versions
-- Resolved Unveil API and report URLs as registered in the URL config
+- Resolved Unveil API and report URLs as registered in the URL config, including the platform runtime API
 
 ## Related
 

@@ -8,6 +8,7 @@ from wagtail_unveil.settings import (
     get_api_key,
     get_enable_production_reports,
     get_pages_per_type,
+    get_platform_dependency_file,
     get_skip_url_prefixes,
     is_report_ui_enabled,
 )
@@ -154,6 +155,11 @@ class TestGetApiKey(TestCase):
                 self.assertEqual(get_api_key(), "")
 
     @override_settings(WAGTAIL_UNVEIL_API_KEY="django-setting-key")
+    def test_whitespace_env_var_falls_back_to_django_setting(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "   "}):
+            self.assertEqual(get_api_key(), "django-setting-key")
+
+    @override_settings(WAGTAIL_UNVEIL_API_KEY="django-setting-key")
     def test_django_setting_fallback_when_env_var_absent(self):
         with patch.dict("os.environ", {}, clear=True):
             self.assertEqual(get_api_key(), "django-setting-key")
@@ -231,3 +237,48 @@ class TestIsReportUiEnabled(TestCase):
     @override_settings(DEBUG=False, WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=False)
     def test_disabled_when_debug_and_opt_in_are_false(self):
         self.assertFalse(is_report_ui_enabled())
+
+
+class TestGetPlatformDependencyFile(TestCase):
+    def test_missing_env_and_missing_setting_returns_empty_string(self):
+        with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
+            with patch.dict("os.environ", {}, clear=True):
+                self.assertEqual(get_platform_dependency_file(), "")
+
+    def test_env_var_non_empty_string_returned(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE": "requirements/base.txt"}):
+            self.assertEqual(get_platform_dependency_file(), "requirements/base.txt")
+
+    def test_env_var_strips_whitespace(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE": "  pyproject.toml  "}):
+            self.assertEqual(get_platform_dependency_file(), "pyproject.toml")
+
+    def test_env_var_empty_string_returns_empty_string(self):
+        with patch("wagtail_unveil.settings.settings", SimpleNamespace()):
+            with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE": ""}):
+                self.assertEqual(get_platform_dependency_file(), "")
+
+    @override_settings(WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE="requirements/dev.txt")
+    def test_whitespace_env_var_falls_back_to_django_setting(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE": "   "}):
+            self.assertEqual(get_platform_dependency_file(), "requirements/dev.txt")
+
+    @override_settings(WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE="requirements/dev.txt")
+    def test_django_setting_fallback_when_env_var_absent(self):
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(get_platform_dependency_file(), "requirements/dev.txt")
+
+    @override_settings(WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=None)
+    def test_django_setting_none_returns_empty_string(self):
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(get_platform_dependency_file(), "")
+
+    @override_settings(WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=True)
+    def test_django_setting_bool_returns_empty_string(self):
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(get_platform_dependency_file(), "")
+
+    @override_settings(WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE="requirements/base.txt")
+    def test_env_var_wins_over_django_setting(self):
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE": "pyproject.toml"}):
+            self.assertEqual(get_platform_dependency_file(), "pyproject.toml")

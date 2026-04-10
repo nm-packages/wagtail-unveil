@@ -23,12 +23,14 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 | Valid Bearer token | `200` with data |
 | Invalid Bearer token | `403` |
 | No key configured | `500` |
-| Superuser session + `DEBUG=True` | `200` (session auth accepted when not attempting Bearer auth) |
+| Superuser session + `DEBUG=True` | `200` for URL discovery endpoints; `/unveil/api/v1/platform/` still requires Bearer auth |
 | Superuser session + built-in production report flow | `200` when `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True` |
 
 For normal programmatic or third-party use, authenticate with `Authorization: Bearer <key>`. The production superuser session path is reserved for the built-in HTML reports and settings page; it is not a general replacement for Bearer-token API access.
 
 Authenticated JSON responses are returned with `Cache-Control: private, no-store` and vary on `Authorization` and `Cookie`.
+
+The platform endpoint also reads `WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE` when building dependency inventory data. See [Settings Reference](../configuration/settings-reference.md#wagtail_unveil_platform_dependency_file).
 
 ## Backend URLs Endpoint
 
@@ -188,9 +190,103 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
 | `is_testable` | Whether the URL can be directly tested with a GET request |
 | `skip_reason` | Empty string for testable URLs, otherwise the reason the URL is not directly testable |
 
+## Platform Runtime Endpoint
+
+Returns runtime metadata for the current site plus a Python dependency inventory from a configured dependency manifest.
+
+```
+GET /unveil/api/v1/platform/
+```
+
+**Configuration:**
+
+- Set `WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE` to a supported manifest file such as `pyproject.toml` or `requirements.txt`
+- The endpoint still returns `200` when dependency metadata is unavailable, and reports the problem in `platform.warnings`
+- Unlike the URL discovery endpoints, this endpoint requires Bearer auth even when `DEBUG=True`
+
+**Examples:**
+
+```bash
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/platform/
+```
+
+**Response:**
+
+```json
+{
+  "platform": {
+    "runtime": {
+      "python_version": "3.11.11",
+      "python_implementation": "CPython",
+      "django_version": "5.2.1",
+      "wagtail_version": "7.0.2"
+    },
+    "python_dependencies": {
+      "source": {
+        "path": "pyproject.toml",
+        "format": "pyproject.toml"
+      },
+      "packages": [
+        {
+          "name": "Django",
+          "specifier": ">=5.2",
+          "installed_version": "5.2.1",
+          "is_installed": true,
+          "source_kind": "runtime",
+          "source_name": null
+        },
+        {
+          "name": "mkdocs-material",
+          "specifier": ">=9.6",
+          "installed_version": "",
+          "is_installed": false,
+          "source_kind": "group",
+          "source_name": "docs"
+        }
+      ]
+    },
+    "warnings": []
+  },
+  "metadata": {
+    "api_version": "v1",
+    "api_lifecycle": {
+      "status": "stable",
+      "deprecated_on": null,
+      "sunset_on": null
+    },
+    "generated_at": "2026-04-08T12:34:56+00:00",
+    "package_version": "0.1.0a5"
+  }
+}
+```
+
+**Platform fields:**
+
+| Field | Description |
+|---|---|
+| `platform.runtime.python_version` | Python version for the running process |
+| `platform.runtime.python_implementation` | Python implementation such as `CPython` |
+| `platform.runtime.django_version` | Installed Django version |
+| `platform.runtime.wagtail_version` | Installed Wagtail version |
+| `platform.python_dependencies.source.path` | Basename of the configured manifest file, such as `pyproject.toml` or `base.txt` |
+| `platform.python_dependencies.source.format` | Detected manifest type: `pyproject.toml`, `poetry-pyproject`, `requirements.txt`, `unknown`, or `null` when no manifest is configured |
+| `platform.python_dependencies.packages` | Sorted list of declared Python dependency entries |
+| `platform.warnings` | Human-readable warnings when dependency metadata is incomplete or unavailable; warnings do not include internal paths or raw exception details |
+
+**Dependency item fields:**
+
+| Field | Description |
+|---|---|
+| `name` | Declared package name |
+| `specifier` | Declared version specifier or source detail |
+| `installed_version` | Installed version from the current Python environment, or an empty string when not installed |
+| `is_installed` | Whether the package is installed in the current environment |
+| `source_kind` | Where the declaration came from: `runtime`, `optional`, or `group` |
+| `source_name` | Extra/group name for optional or grouped dependencies, otherwise `null` |
+
 ## Metadata
 
-Both endpoints include a `metadata` object alongside the top-level `urls` and `count` fields:
+The URL discovery endpoints include a `metadata` object alongside the top-level `urls` and `count` fields:
 
 | Field | Description |
 |---|---|
@@ -204,6 +300,8 @@ Both endpoints include a `metadata` object alongside the top-level `urls` and `c
 | `package_version` | Installed `wagtail-unveil` package version (not the API version) |
 
 If a `filter` query parameter is unrecognised, the response is not filtered and `metadata.applied_filter` is `null`.
+
+The platform endpoint also includes `metadata`, but it omits URL-discovery fields such as `applied_filter`, `total_count`, `testable_count`, and `untestable_count`.
 
 ## Deprecation Headers
 

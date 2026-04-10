@@ -24,6 +24,7 @@ from wagtail_unveil.api_contract import (
 )
 from wagtail_unveil.discovery.backend import get_admin_urls
 from wagtail_unveil.discovery.frontend import get_frontend_urls
+from wagtail_unveil.platform_data import PlatformSnapshot, get_platform_snapshot
 from wagtail_unveil.settings import (
     get_api_key,
     get_enable_production_reports,
@@ -120,7 +121,7 @@ def _has_valid_report_access_token(request):
     return compare_digest(claims.get("session_nonce", ""), session_nonce)
 
 
-def _authenticate_api_request(request):
+def _authenticate_api_request(request, *, allow_debug_superuser_session=True):
     """Validate the configured API key against the request Authorization header."""
     auth_header = request.headers.get("Authorization", "")
     parts = auth_header.split(" ", 1)
@@ -138,9 +139,13 @@ def _authenticate_api_request(request):
 
     user = getattr(request, "user", None)
     if user and user.is_authenticated and user.is_superuser:
-        if settings.DEBUG:
+        if allow_debug_superuser_session and settings.DEBUG:
             return None
-        if get_enable_production_reports() and _has_valid_report_access_token(request):
+        if (
+            allow_debug_superuser_session
+            and get_enable_production_reports()
+            and _has_valid_report_access_token(request)
+        ):
             return None
 
     return _json_error("Invalid or missing API key", status=403)
@@ -211,6 +216,16 @@ def _build_urls_metadata(urls, *, applied_filter, contract: APIVersionContract):
     }
 
 
+def _build_platform_metadata(*, contract: APIVersionContract):
+    """Build metadata describing how a platform payload was produced."""
+    return {
+        "api_version": contract.version,
+        "api_lifecycle": _serialize_api_lifecycle(contract),
+        "generated_at": timezone.now().isoformat(),
+        "package_version": _get_package_version(),
+    }
+
+
 def _apply_lifecycle_headers(response: JsonResponse, contract: APIVersionContract):
     """Attach deprecation headers for deprecated API versions."""
     if contract.status != "deprecated":
@@ -230,6 +245,48 @@ def _build_urls_json_response(urls, serializer, *, applied_filter=None, contract
         "urls": [serializer(url) for url in urls],
         "count": len(urls),
         "metadata": _build_urls_metadata(urls, applied_filter=applied_filter, contract=contract),
+    }
+    response = _apply_api_cache_headers(JsonResponse(data))
+    return _apply_lifecycle_headers(response, contract)
+
+
+def _serialize_platform_snapshot(snapshot: PlatformSnapshot):
+    """Serialize platform runtime and dependency inventory for JSON responses."""
+    return {
+        "platform": {
+            "runtime": {
+                "python_version": snapshot.runtime.python_version,
+                "python_implementation": snapshot.runtime.python_implementation,
+                "django_version": snapshot.runtime.django_version,
+                "wagtail_version": snapshot.runtime.wagtail_version,
+            },
+            "python_dependencies": {
+                "source": {
+                    "path": snapshot.dependency_source.path,
+                    "format": snapshot.dependency_source.format,
+                },
+                "packages": [
+                    {
+                        "name": dependency.name,
+                        "specifier": dependency.specifier,
+                        "installed_version": dependency.installed_version,
+                        "is_installed": dependency.is_installed,
+                        "source_kind": dependency.source_kind,
+                        "source_name": dependency.source_name,
+                    }
+                    for dependency in snapshot.python_dependencies
+                ],
+            },
+            "warnings": snapshot.warnings,
+        },
+    }
+
+
+def _build_platform_json_response(snapshot: PlatformSnapshot, *, contract: APIVersionContract):
+    """Serialize platform data and wrap it in the versioned JSON payload."""
+    data = {
+        **_serialize_platform_snapshot(snapshot),
+        "metadata": _build_platform_metadata(contract=contract),
     }
     response = _apply_api_cache_headers(JsonResponse(data))
     return _apply_lifecycle_headers(response, contract)
@@ -284,9 +341,10 @@ def _build_settings_report_context():
                 "label": "Superuser session API access",
                 "value": "Enabled" if settings.DEBUG or production_reports_enabled else "Disabled",
                 "detail": (
-                    "Session-based JSON access is allowed for superusers in DEBUG "
-                    "mode, or for signed report requests when production reports "
-                    "are enabled."
+                    "Session-based JSON access is allowed for URL discovery endpoints "
+                    "for superusers in DEBUG mode, or for signed report requests when "
+                    "production reports are enabled. The platform API still requires "
+                    "Bearer authentication."
                 ),
             },
             {
@@ -339,6 +397,11 @@ def _build_settings_report_context():
                 "detail": f"URL name: wagtail_unveil:{contract.frontend_url_name}",
             },
             {
+                "label": "Platform API",
+                "value": reverse(f"wagtail_unveil:{contract.platform_url_name}"),
+                "detail": f"URL name: wagtail_unveil:{contract.platform_url_name}",
+            },
+            {
                 "label": "Backend URLs report",
                 "value": reverse("wagtail_unveil:report_backend_urls"),
                 "detail": "URL name: wagtail_unveil:report_backend_urls",
@@ -382,6 +445,11 @@ def _get_frontend_serializer_for_version(_api_version):
     """Return frontend serializer function for a specific API version."""
     # Future API versions can customize response fields here.
     return _serialize_frontend_url
+
+
+def _get_platform_snapshot_for_version(_api_version):
+    """Return platform runtime and dependency metadata for a specific API version."""
+    return get_platform_snapshot()
 
 
 def _admin_urls_json_for_version(request, api_version):
@@ -438,6 +506,17 @@ def _frontend_urls_json_for_version(request, api_version):
     )
 
 
+def _platform_json_for_version(request, api_version):
+    """Return platform runtime and dependency metadata for a specific API version."""
+    contract = get_api_contract(api_version)
+    auth_error = _authenticate_api_request(request, allow_debug_superuser_session=False)
+    if auth_error is not None:
+        return auth_error
+
+    snapshot = _get_platform_snapshot_for_version(api_version)
+    return _build_platform_json_response(snapshot, contract=contract)
+
+
 # JSON view builders
 
 
@@ -461,9 +540,20 @@ def build_frontend_urls_json_view(api_version):
     return view
 
 
+def build_platform_json_view(api_version):
+    """Build a Django view callable bound to a specific platform API version."""
+
+    def view(request):
+        return _platform_json_for_version(request, api_version)
+
+    view.__name__ = f"platform_json_{api_version}"
+    return view
+
+
 # Backward-compatible callables bound to the current latest stable API version.
 admin_urls_json = build_admin_urls_json_view(get_latest_stable_api_version())
 frontend_urls_json = build_frontend_urls_json_view(get_latest_stable_api_version())
+platform_json = build_platform_json_view(get_latest_stable_api_version())
 
 
 # HTML report views

@@ -71,11 +71,20 @@ You can also open these pages from links in the Wagtail admin dashboard panel.
 ```bash
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/backend-urls/
 curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/frontend-urls/
+curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api/v1/platform/
 ```
+
+To include Python dependency inventory in the platform response, also set:
+
+```python
+WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE = "pyproject.toml"
+```
+
+The platform endpoint always requires Bearer auth, even in local `DEBUG=True` development.
 
 ## Related
 
-- [Configuration](../configuration/settings-reference.md) — Customise page limits and URL exclusions
+- [Configuration](../configuration/settings-reference.md) — Customise API, platform, and discovery settings
 - [Features](../features/index.md) — Explore what the reports can do
 - [API Reference](../api/endpoints.md) — Full API endpoint documentation
 - [Getting Started Index](index.md) — Back to section overview

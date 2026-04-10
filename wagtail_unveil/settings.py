@@ -246,7 +246,28 @@ def get_api_key():
 
     Invalid, non-string, or empty values return ''.
     """
-    value = os.environ.get("WAGTAIL_UNVEIL_API_KEY") or getattr(settings, "WAGTAIL_UNVEIL_API_KEY", "")
+    env_value = os.environ.get("WAGTAIL_UNVEIL_API_KEY")
+    if env_value is not None and not _is_blank_string(env_value):
+        value = env_value
+    else:
+        value = getattr(settings, "WAGTAIL_UNVEIL_API_KEY", "")
+
+    if not isinstance(value, str):
+        return ""
+    return value.strip()
+
+
+def get_platform_dependency_file():
+    """Return WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE as a non-empty string, or '' if absent/invalid."""
+    env_value = os.environ.get("WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE")
+    if env_value is not None and not _is_blank_string(env_value):
+        value = env_value
+    else:
+        value = getattr(
+            settings,
+            "WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE",
+            "",
+        )
     if not isinstance(value, str):
         return ""
     return value.strip()
@@ -260,7 +281,7 @@ def inspect_api_key_setting():
 
     if source == "default":
         notes.append("Bearer authentication is not configured.")
-    elif source == "env" and raw_value == "":
+    elif source == "env" and _is_blank_string(raw_value):
         notes.append("Blank environment values are ignored.")
     elif not isinstance(raw_value, str):
         notes.append("Non-string values are ignored.")
@@ -280,11 +301,39 @@ def inspect_api_key_setting():
     )
 
 
+def inspect_platform_dependency_file_setting():
+    """Describe the configured and effective dependency manifest setting."""
+    source, raw_value = _get_configured_source_and_raw_value("WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE")
+    effective_value = get_platform_dependency_file()
+    notes = []
+
+    if source == "default":
+        notes.append("Platform dependency inventory is unconfigured until a manifest path is provided.")
+    elif source == "env" and _is_blank_string(raw_value):
+        notes.append("Blank environment values are ignored.")
+    elif not isinstance(raw_value, str):
+        notes.append("Non-string values are ignored.")
+    else:
+        if raw_value != raw_value.strip():
+            notes.append("Leading and trailing whitespace is stripped from the effective value.")
+        if effective_value == "":
+            notes.append("Blank values leave platform dependency inventory unconfigured.")
+
+    return SettingDiagnostic(
+        name="WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE",
+        source=source,
+        raw_value=raw_value,
+        effective_value=effective_value,
+        notes=" ".join(notes) or "Value used as-is.",
+    )
+
+
 def get_setting_diagnostics():
     """Return diagnostics for all public wagtail-unveil settings."""
     return (
         inspect_api_key_setting(),
         inspect_enable_production_reports_setting(),
+        inspect_platform_dependency_file_setting(),
         inspect_pages_per_type_setting(),
         inspect_skip_url_prefixes_setting(),
     )
