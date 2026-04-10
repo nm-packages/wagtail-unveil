@@ -91,7 +91,7 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
     "total_count": 190,
     "testable_count": 150,
     "untestable_count": 40,
-    "package_version": "0.1.0a5"
+    "package_version": "0.1.0a6"
   }
 }
 ```
@@ -171,7 +171,7 @@ curl -H "Authorization: Bearer your-secret-key" "http://localhost:8000/unveil/ap
     "total_count": 42,
     "testable_count": 31,
     "untestable_count": 11,
-    "package_version": "0.1.0a5"
+    "package_version": "0.1.0a6"
   }
 }
 ```
@@ -256,7 +256,7 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
       "sunset_on": null
     },
     "generated_at": "2026-04-08T12:34:56+00:00",
-    "package_version": "0.1.0a5"
+    "package_version": "0.1.0a6"
   }
 }
 ```
