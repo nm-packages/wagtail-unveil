@@ -24,7 +24,11 @@ curl -H "Authorization: Bearer your-secret-key" http://localhost:8000/unveil/api
 | Invalid Bearer token | `403` |
 | No key configured | `500` |
 | Superuser session + `DEBUG=True` | `200` (session auth accepted when not attempting Bearer auth) |
-| Superuser session + production report access token | `200` when `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True` |
+| Superuser session + built-in production report flow | `200` when `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True` |
+
+For normal programmatic or third-party use, authenticate with `Authorization: Bearer <key>`. The production superuser session path is reserved for the built-in HTML reports and settings page; it is not a general replacement for Bearer-token API access.
+
+Authenticated JSON responses are returned with `Cache-Control: private, no-store` and vary on `Authorization` and `Cookie`.
 
 ## Backend URLs Endpoint
 
@@ -119,6 +123,8 @@ GET /unveil/api/v1/frontend-urls/
 | _(omitted)_ | All frontend URLs |
 | `pages` | Only Wagtail page URLs |
 | `resolver` | Only Django resolver URLs |
+
+Page-derived discovery only includes live public Wagtail pages. Live private pages and private-derived example URLs are excluded from the frontend API and report output.
 
 **Examples:**
 

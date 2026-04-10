@@ -4,7 +4,7 @@ The settings page is a server-rendered diagnostic view showing the effective wag
 
 ## Access
 
-Visit `/unveil/report/settings/` while logged in as a superuser with `DEBUG=True`, or enable `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS` for explicit production access.
+Visit `/unveil/report/settings/` while logged in as a superuser with `DEBUG=True`, or enable `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS` for production access.
 
 ![Settings Page](https://raw.githubusercontent.com/nm-packages/wagtail-unveil/main/docs/features/settings_pane.jpg)
 
@@ -24,9 +24,9 @@ Each value also shows its source: environment variable, Django settings, or pack
 **Runtime diagnostics:**
 
 - `DEBUG` status
-- HTML report access (superuser + report UI access check)
-- Session API access
-- Bearer auth configuration
+- HTML report access
+- Superuser session API access
+- Bearer API auth
 
 **Package information:**
 

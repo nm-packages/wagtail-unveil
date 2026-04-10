@@ -4,7 +4,7 @@ The backend URLs report discovers and displays all Wagtail admin URLs registered
 
 ## Access
 
-Visit `/unveil/report/backend-urls/` while logged in as a superuser with `DEBUG=True`, or enable `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS` for explicit production access.
+Visit `/unveil/report/backend-urls/` while logged in as a superuser with `DEBUG=True`, or enable `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS` for production access.
 
 ![Backend URLs Report](https://raw.githubusercontent.com/nm-packages/wagtail-unveil/main/docs/features/backend_report.jpg)
 
