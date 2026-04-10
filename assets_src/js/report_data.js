@@ -418,6 +418,58 @@
     });
   }
 
+  function applyPypiLookupResult(packageName, result) {
+    document
+      .querySelectorAll("#platform-packages-body tr[data-package-name]")
+      .forEach((row) => {
+        var marker;
+
+        if (row.dataset.packageName !== packageName) {
+          return;
+        }
+
+        if (!result) {
+          setPypiLookupCell(row, {
+            markerText: "",
+            toneClass: "platform-pypi-danger",
+            versionText: "Lookup failed",
+          });
+          return;
+        }
+
+        if (result.status === "ok") {
+          marker = classifyPypiVersion(
+            row.dataset.installedVersion || "",
+            result.version,
+          );
+          setPypiLookupCell(row, {
+            markerText: marker,
+            toneClass:
+              marker === "Latest"
+                ? "platform-pypi-success"
+                : "platform-pypi-warning",
+            versionText: result.version,
+          });
+          return;
+        }
+
+        if (result.status === "not_found") {
+          setPypiLookupCell(row, {
+            markerText: "",
+            toneClass: "platform-pypi-danger",
+            versionText: result.version,
+          });
+          return;
+        }
+
+        setPypiLookupCell(row, {
+          markerText: "",
+          toneClass: "platform-pypi-danger",
+          versionText: result.version,
+        });
+      });
+  }
+
   function runWithConcurrency(taskFactories, limit) {
     var results = new Array(taskFactories.length);
     var nextIndex = 0;
@@ -499,6 +551,7 @@
         return fetchLatestPyPiVersion(packageName)
           .then((result) => {
             packageLookupMap.set(packageName, result);
+            applyPypiLookupResult(packageName, result);
             return result;
           })
           .catch(() => {
@@ -509,6 +562,7 @@
             };
 
             packageLookupMap.set(packageName, failureResult);
+            applyPypiLookupResult(packageName, failureResult);
             return failureResult;
           });
       };
@@ -516,52 +570,6 @@
 
     return runWithConcurrency(taskFactories, PYPI_LOOKUP_CONCURRENCY).finally(
       () => {
-        rows.forEach((row) => {
-          var packageName = row.dataset.packageName || "";
-          var result = packageLookupMap.get(packageName);
-          var marker;
-
-          if (!result) {
-            setPypiLookupCell(row, {
-              markerText: "",
-              toneClass: "platform-pypi-danger",
-              versionText: "Lookup failed",
-            });
-            return;
-          }
-
-          if (result.status === "ok") {
-            marker = classifyPypiVersion(
-              row.dataset.installedVersion || "",
-              result.version,
-            );
-            setPypiLookupCell(row, {
-              markerText: marker,
-              toneClass:
-                marker === "Latest"
-                  ? "platform-pypi-success"
-                  : "platform-pypi-warning",
-              versionText: result.version,
-            });
-            return;
-          }
-
-          if (result.status === "not_found") {
-            setPypiLookupCell(row, {
-              markerText: "",
-              toneClass: "platform-pypi-danger",
-              versionText: result.version,
-            });
-            return;
-          }
-
-          setPypiLookupCell(row, {
-            markerText: "",
-            toneClass: "platform-pypi-danger",
-            versionText: result.version,
-          });
-        });
-
         setPlatformPypiButtonState({
           isLoading: false,
         });

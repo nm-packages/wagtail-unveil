@@ -651,6 +651,102 @@ describe("report bundle", () => {
     ).toBe(true);
   });
 
+  test("platform report updates completed PyPI rows before slower lookups finish", async () => {
+    let resolveDjango;
+    let resolveWagtail;
+    const djangoPromise = new Promise((resolve) => {
+      resolveDjango = resolve;
+    });
+    const wagtailPromise = new Promise((resolve) => {
+      resolveWagtail = resolve;
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () =>
+          createPlatformPayload([
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+            {
+              name: "wagtail",
+              specifier: ">=7.0",
+              installed_version: "7.0.0",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+          ]),
+      })
+      .mockImplementationOnce(() => djangoPromise)
+      .mockImplementationOnce(() => wagtailPromise);
+
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    document.getElementById("platform-pypi-lookup-button").click();
+    await waitForRender();
+
+    resolveDjango({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        info: {
+          version: "5.2.1",
+        },
+      }),
+    });
+    await waitForRender();
+
+    const rows = Array.from(
+      document.querySelectorAll("#platform-packages-body tr"),
+    );
+
+    expect(rows[0].querySelector(".platform-pypi-cell").textContent).toContain(
+      "5.2.1",
+    );
+    expect(rows[0].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Latest",
+    );
+    expect(rows[1].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Loading",
+    );
+
+    resolveWagtail({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        info: {
+          version: "7.1.0",
+        },
+      }),
+    });
+    await waitForRender();
+
+    expect(rows[1].querySelector(".platform-pypi-cell").textContent).toContain(
+      "7.1.0",
+    );
+    expect(rows[1].querySelector(".platform-pypi-cell").textContent).toContain(
+      "Different",
+    );
+  });
+
   test("platform report marks rows as unknown when no installed version is available", async () => {
     const fetchMock = vi
       .fn()
