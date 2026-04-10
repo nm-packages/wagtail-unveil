@@ -388,7 +388,9 @@
 
   function fetchLatestPyPiVersion(packageLookupName) {
     return fetch(
-      "https://pypi.org/pypi/" + encodeURIComponent(packageLookupName) + "/json",
+      "https://pypi.org/pypi/" +
+        encodeURIComponent(packageLookupName) +
+        "/json",
       {
         headers: {
           Accept: "application/json",
