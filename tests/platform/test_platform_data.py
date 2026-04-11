@@ -235,6 +235,89 @@ ruff = "^0.9"
         self.assertEqual(snapshot.python_dependencies[0].installed_version, "")
         self.assertFalse(snapshot.python_dependencies[0].is_installed)
 
+    def test_requirements_file_includes_relative_base_file(self):
+        with TemporaryDirectory() as tempdir:
+            base_dir = Path(tempdir)
+            manifest_path = base_dir / "requirements" / "production.txt"
+            manifest_path.parent.mkdir()
+            manifest_path.write_text("-r base.txt\n", encoding="utf-8")
+            (manifest_path.parent / "base.txt").write_text(
+                "Django>=5.2\nwagtail==7.0\n",
+                encoding="utf-8",
+            )
+
+            with override_settings(
+                BASE_DIR=base_dir,
+                WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE="requirements/production.txt",
+            ):
+                with patch.dict("os.environ", {}, clear=True):
+                    with patch(
+                        "wagtail_unveil.platform_data.version",
+                        side_effect=lambda name: {"Django": "5.2.1", "wagtail": "7.0.2"}[name],
+                    ):
+                        snapshot = get_platform_snapshot()
+
+        self.assertEqual(
+            [dependency.name for dependency in snapshot.python_dependencies],
+            ["Django", "wagtail"],
+        )
+        self.assertEqual(snapshot.warnings, [])
+
+    def test_requirements_file_merges_included_and_local_dependencies(self):
+        with TemporaryDirectory() as tempdir:
+            base_dir = Path(tempdir)
+            manifest_path = base_dir / "requirements" / "production.txt"
+            manifest_path.parent.mkdir()
+            manifest_path.write_text(
+                "-r base.txt\npsycopg[binary]>=3.3.3,<3.4\nwhitenoise>=6.11.0,<7\n",
+                encoding="utf-8",
+            )
+            (manifest_path.parent / "base.txt").write_text(
+                "Django>=5.2\nwagtail==7.0\n",
+                encoding="utf-8",
+            )
+
+            versions = {
+                "Django": "5.2.1",
+                "psycopg": "3.3.4",
+                "wagtail": "7.0.2",
+                "whitenoise": "6.11.1",
+            }
+            with override_settings(
+                BASE_DIR=base_dir,
+                WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE="requirements/production.txt",
+            ):
+                with patch.dict("os.environ", {}, clear=True):
+                    with patch("wagtail_unveil.platform_data.version", side_effect=lambda name: versions[name]):
+                        snapshot = get_platform_snapshot()
+
+        self.assertEqual(
+            [dependency.name for dependency in snapshot.python_dependencies],
+            ["Django", "psycopg", "wagtail", "whitenoise"],
+        )
+        self.assertEqual(snapshot.warnings, [])
+
+    def test_missing_included_requirements_file_adds_warning(self):
+        with TemporaryDirectory() as tempdir:
+            base_dir = Path(tempdir)
+            manifest_path = base_dir / "requirements" / "production.txt"
+            manifest_path.parent.mkdir()
+            manifest_path.write_text(
+                "-r base.txt\nDjango>=5.2\n",
+                encoding="utf-8",
+            )
+
+            with override_settings(
+                BASE_DIR=base_dir,
+                WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE="requirements/production.txt",
+            ):
+                with patch.dict("os.environ", {}, clear=True):
+                    with patch("wagtail_unveil.platform_data.version", return_value="5.2.1"):
+                        snapshot = get_platform_snapshot()
+
+        self.assertEqual([dependency.name for dependency in snapshot.python_dependencies], ["Django"])
+        self.assertEqual(snapshot.warnings, ["Skipped missing included requirements file on line 1."])
+
     def test_requirements_vcs_dependency_preserves_egg_fragment_name(self):
         with TemporaryDirectory() as tempdir:
             manifest_path = Path(tempdir) / "requirements.txt"

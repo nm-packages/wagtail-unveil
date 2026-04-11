@@ -122,7 +122,7 @@ def get_platform_snapshot() -> PlatformSnapshot:
         if dependency_format in {"pyproject.toml", "poetry-pyproject"}:
             dependencies, warnings = _parse_pyproject_dependencies(manifest_text)
         else:
-            dependencies, warnings = _parse_requirements_file(manifest_text)
+            dependencies, warnings = _parse_requirements_file(manifest_path)
     except (OSError, tomllib.TOMLDecodeError) as error:
         logger.warning("Failed to inspect dependency manifest %s.", manifest_path, exc_info=error)
         warning_message = (
@@ -246,13 +246,41 @@ def _parse_pyproject_dependencies(manifest_text: str) -> tuple[list[PlatformDepe
     return dependencies, warnings
 
 
-def _parse_requirements_file(manifest_text: str) -> tuple[list[PlatformDependency], list[str]]:
+def _parse_requirements_file(
+    manifest_path: Path,
+    *,
+    seen_paths: set[Path] | None = None,
+) -> tuple[list[PlatformDependency], list[str]]:
     dependencies: list[PlatformDependency] = []
     warnings: list[str] = []
+    resolved_manifest_path = manifest_path.resolve()
+
+    if seen_paths is None:
+        seen_paths = set()
+    if resolved_manifest_path in seen_paths:
+        return [], ["Skipped recursive requirements include."]
+
+    manifest_text = manifest_path.read_text(encoding="utf-8")
+    seen_paths = seen_paths | {resolved_manifest_path}
 
     for line_number, raw_line in enumerate(manifest_text.splitlines(), start=1):
         line = _strip_requirements_comment(raw_line)
         if not line:
+            continue
+
+        include_path = _parse_requirements_include(line)
+        if include_path is not None:
+            nested_manifest_path = manifest_path.parent / include_path
+            try:
+                nested_dependencies, nested_warnings = _parse_requirements_file(
+                    nested_manifest_path,
+                    seen_paths=seen_paths,
+                )
+            except OSError:
+                warnings.append(f"Skipped missing included requirements file on line {line_number}.")
+                continue
+            dependencies.extend(nested_dependencies)
+            warnings.extend(nested_warnings)
             continue
 
         if line.startswith("-"):
@@ -271,6 +299,22 @@ def _parse_requirements_file(manifest_text: str) -> tuple[list[PlatformDependenc
         dependencies.append(dependency)
 
     return dependencies, warnings
+
+
+def _parse_requirements_include(requirement_line: str) -> str | None:
+    match = re.match(r"^-r\s+(.+)$", requirement_line)
+    if match is None:
+        return None
+
+    include_path = match.group(1).strip()
+    if not include_path:
+        return None
+
+    include_candidate = Path(include_path)
+    if include_candidate.is_absolute():
+        return None
+
+    return include_path
 
 
 def _flatten_dependency_group_entries(
