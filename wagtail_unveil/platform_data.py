@@ -95,6 +95,7 @@ def get_platform_snapshot() -> PlatformSnapshot:
         )
 
     source_path = manifest_path.name
+    include_base_dir = _get_relative_dependency_base_dir(configured_path)
     if not manifest_path.exists():
         logger.warning("Dependency manifest is missing or inaccessible: %s", manifest_path)
         return PlatformSnapshot(
@@ -122,7 +123,10 @@ def get_platform_snapshot() -> PlatformSnapshot:
         if dependency_format in {"pyproject.toml", "poetry-pyproject"}:
             dependencies, warnings = _parse_pyproject_dependencies(manifest_text)
         else:
-            dependencies, warnings = _parse_requirements_file(manifest_path)
+            dependencies, warnings = _parse_requirements_file(
+                manifest_path,
+                include_base_dir=include_base_dir,
+            )
     except (OSError, tomllib.TOMLDecodeError) as error:
         logger.warning("Failed to inspect dependency manifest %s.", manifest_path, exc_info=error)
         warning_message = (
@@ -163,6 +167,13 @@ def _resolve_dependency_path(configured_path: str) -> Path:
     if not resolved_path.is_relative_to(base_dir):
         raise ValueError("Relative dependency manifest path resolves outside BASE_DIR.")
     return resolved_path
+
+
+def _get_relative_dependency_base_dir(configured_path: str) -> Path | None:
+    path = Path(configured_path)
+    if path.is_absolute():
+        return None
+    return Path(getattr(settings, "BASE_DIR", Path.cwd())).resolve()
 
 
 def _detect_dependency_format(path: Path, manifest_text: str) -> str:
@@ -249,6 +260,7 @@ def _parse_pyproject_dependencies(manifest_text: str) -> tuple[list[PlatformDepe
 def _parse_requirements_file(
     manifest_path: Path,
     *,
+    include_base_dir: Path | None = None,
     seen_paths: set[Path] | None = None,
 ) -> tuple[list[PlatformDependency], list[str]]:
     dependencies: list[PlatformDependency] = []
@@ -270,10 +282,19 @@ def _parse_requirements_file(
 
         include_path = _parse_requirements_include(line)
         if include_path is not None:
-            nested_manifest_path = manifest_path.parent / include_path
+            try:
+                nested_manifest_path = _resolve_included_requirements_path(
+                    manifest_path,
+                    include_path,
+                    include_base_dir=include_base_dir,
+                )
+            except ValueError:
+                warnings.append(f"Skipped included requirements file outside BASE_DIR on line {line_number}.")
+                continue
             try:
                 nested_dependencies, nested_warnings = _parse_requirements_file(
                     nested_manifest_path,
+                    include_base_dir=include_base_dir,
                     seen_paths=seen_paths,
                 )
             except OSError:
@@ -299,6 +320,18 @@ def _parse_requirements_file(
         dependencies.append(dependency)
 
     return dependencies, warnings
+
+
+def _resolve_included_requirements_path(
+    manifest_path: Path,
+    include_path: str,
+    *,
+    include_base_dir: Path | None,
+) -> Path:
+    resolved_path = (manifest_path.parent / include_path).resolve()
+    if include_base_dir is not None and not resolved_path.is_relative_to(include_base_dir):
+        raise ValueError("Included requirements path resolves outside BASE_DIR.")
+    return resolved_path
 
 
 def _parse_requirements_include(requirement_line: str) -> str | None:

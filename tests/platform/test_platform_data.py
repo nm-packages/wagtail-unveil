@@ -318,6 +318,28 @@ ruff = "^0.9"
         self.assertEqual([dependency.name for dependency in snapshot.python_dependencies], ["Django"])
         self.assertEqual(snapshot.warnings, ["Skipped missing included requirements file on line 1."])
 
+    def test_relative_include_outside_base_dir_adds_warning(self):
+        with TemporaryDirectory() as tempdir:
+            workspace_dir = Path(tempdir)
+            base_dir = workspace_dir / "project"
+            base_dir.mkdir()
+            secret_manifest = workspace_dir / "outside.txt"
+            secret_manifest.write_text("secret-package==1.0\n", encoding="utf-8")
+            manifest_path = base_dir / "requirements" / "production.txt"
+            manifest_path.parent.mkdir()
+            manifest_path.write_text("-r ../../outside.txt\nDjango>=5.2\n", encoding="utf-8")
+
+            with override_settings(
+                BASE_DIR=base_dir,
+                WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE="requirements/production.txt",
+            ):
+                with patch.dict("os.environ", {}, clear=True):
+                    with patch("wagtail_unveil.platform_data.version", return_value="5.2.1"):
+                        snapshot = get_platform_snapshot()
+
+        self.assertEqual([dependency.name for dependency in snapshot.python_dependencies], ["Django"])
+        self.assertEqual(snapshot.warnings, ["Skipped included requirements file outside BASE_DIR on line 1."])
+
     def test_requirements_vcs_dependency_preserves_egg_fragment_name(self):
         with TemporaryDirectory() as tempdir:
             manifest_path = Path(tempdir) / "requirements.txt"
