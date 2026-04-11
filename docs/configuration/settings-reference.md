@@ -65,6 +65,7 @@ WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE = "pyproject.toml"
 - Relative paths are resolved from Django `BASE_DIR` and must stay within that directory
 - Absolute paths are used directly
 - Supported formats in v1 are `pyproject.toml` and requirements-style text files
+- Requirements-style manifests also support relative `-r other-file.txt` includes resolved from the file that declares them
 - If the setting is unset, unreadable, missing, or unsupported, the platform endpoint still returns runtime data and adds a warning instead of failing the whole response
 
 ## `WAGTAIL_UNVEIL_PAGES_PER_TYPE`

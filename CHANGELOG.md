@@ -4,7 +4,7 @@ All notable changes to `wagtail-unveil` are documented in this file.
 
 ## Unreleased
 
-No unreleased changes yet.
+- taught the platform dependency inventory to follow relative `-r other-file.txt` includes in requirements-style manifests, so shared base requirement files are reflected in `/unveil/api/v1/platform/`
 
 ## 0.1.0a6 - 2026-04-10
 

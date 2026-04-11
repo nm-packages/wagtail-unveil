@@ -56,6 +56,34 @@ class TestPlatformAPIView(TestCase):
         self.assertIn("Authorization", response["Vary"])
         self.assertIn("Cookie", response["Vary"])
 
+    def test_returns_platform_payload_with_relative_requirements_include(self):
+        tempdir, manifest_path = self._write_manifest(
+            "-r base.txt\nwhitenoise>=6.11.0,<7\n",
+            filename="requirements/production.txt",
+        )
+        self.addCleanup(tempdir.cleanup)
+        (manifest_path.parent / "base.txt").write_text("Django>=5.2\n", encoding="utf-8")
+
+        versions = {
+            "Django": "5.2.1",
+            "whitenoise": "6.11.1",
+        }
+        with self.settings(
+            BASE_DIR=tempdir.name,
+            WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=str(manifest_path),
+        ):
+            with patch("wagtail_unveil.platform_data.version", side_effect=lambda name: versions[name]):
+                response = self.client.get(
+                    API_URL,
+                    HTTP_AUTHORIZATION="Bearer test-secret",
+                )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [package["name"] for package in response.json()["platform"]["python_dependencies"]["packages"]],
+            ["Django", "whitenoise"],
+        )
+
     @patch("wagtail_unveil.views._get_package_version", return_value="9.9.9")
     @patch("wagtail_unveil.views.timezone.now")
     def test_returns_metadata(self, mock_now, _mock_version):
