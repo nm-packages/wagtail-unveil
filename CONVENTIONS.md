@@ -11,6 +11,27 @@
 - **Models:** Use `BigAutoField` as default auto field, descriptive `class Meta` with `verbose_name`/`verbose_name_plural`
 - **URLs:** Use `path()` not `re_path()`, use `app_name` namespacing
 
+## Refactoring While Changing Code
+
+- **Refactor nearby touched code:** When a feature, bug fix, or review-driven change touches an area that has obvious local duplication, unnecessary indirection, or newly exposed complexity, simplify it in the same patch when the refactor is behavior-preserving and low risk.
+- **Prefer simpler extensions to layered helpers:** When extending existing logic, prefer the clearest implementation that fits the current need rather than adding tiny one-use helpers, parallel branches, or extra abstraction layers that make the touched flow harder to follow.
+- **Do not widen scope for speculative cleanup:** Keep opportunistic refactors local to the code already being changed. Do not turn a scoped fix into broader cleanup, module reshuffling, or unrelated architectural work unless that larger change is required for correctness, testability, or clarity of the touched behavior.
+- **Remove duplication introduced by the current change:** If the new work creates obvious repeated setup, repeated branching, or repeated parsing/resolution logic, clean that duplication up before finalizing the patch when doing so does not materially increase risk.
+- **Call out deferred refactors:** If a useful refactor is noticed but intentionally left out to preserve scope, mention that explicitly in the final handoff or PR discussion instead of silently leaving the opportunity undocumented.
+
+Good fit examples:
+
+- extracting repeated test setup into a small helper when several new tests need the same manifest or page fixture arrangement
+- combining or refactoring tests when new coverage introduces obvious duplicated setup, assertions, or scenario scaffolding without making the resulting test intent harder to read
+- collapsing a tiny one-use helper or branch added during the change when it adds indirection without improving readability
+- simplifying touched parsing, discovery, or resolution logic when the new requirement reveals duplicated or over-factored control flow
+
+Not a good fit examples:
+
+- reorganizing multiple modules during a narrow bug fix when the existing file layout is not blocking the change
+- renaming broad internal APIs or moving symbols across subsystems purely for taste while implementing a scoped behavior change
+- turning a local readability cleanup into a wider refactor that changes unrelated code paths or expands test surface without a concrete need
+
 ## Testing Conventions
 
 - **Root-level `tests/` package** split by feature area (not inside the distributable package)

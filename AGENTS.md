@@ -32,6 +32,12 @@ Required startup sequence for issue work:
 3. Fetch remote refs and switch to the linked branch locally before editing files.
 4. If no linked branch exists, create and link a branch for the issue, then switch to that branch before making changes.
 
+Required PR linkage for issue-scoped work:
+
+1. When opening a new PR for work that came from a GitHub issue, mention the issue in the PR body.
+2. Prefer a closing keyword such as `Closes #123` when the PR is intended to fully resolve the issue; otherwise include a plain issue reference so the relationship is still visible.
+3. Verify that the issue reference is present before finalizing the PR creation flow.
+
 Required startup sequence for new scoped work begun outside an existing issue branch:
 
 1. Check the current local branch before making changes.
@@ -46,9 +52,19 @@ Required PR-metadata check when working on an existing branch:
 3. Offer a short set of concrete replacement PR title suggestions for the user to choose from.
 4. Treat the PR summary/body as needing the same drift check and update discussion, not just the title.
 
+Required agent self-review before handoff:
+
+1. After completing a code change, review the patch before final handoff or PR creation.
+2. Use the existing repo guidance as the review baseline, including `CONVENTIONS.md`, relevant nested `AGENTS.md` files, contributor validation workflow, and any task-specific architecture docs.
+3. Check for maintainability, unnecessary complexity, duplicated logic, duplicated or overly fragmented tests that could be sensibly combined or refactored, missing or weak tests, documentation drift, scope creep, and obvious security or safety regressions that follow from the touched code.
+4. Run the relevant validation steps already required by repo guidance when feasible, and incorporate the results into that review.
+5. If the review finds worthwhile follow-up improvements that are not clearly required to finish the task, call them out explicitly and get approval before broadening the patch.
+6. If the review finds a required fix for correctness, safety, or repo-policy compliance, address it before considering the work complete.
+
 Safety rule: do not start implementation for issue-scoped work on `main` when the issue is expected to have its own branch. Do not start newly scoped work on `main` without first checking whether the user wants a branch created and proposing a suitable branch title. When working on a branch with an open PR, do not ignore title/summary drift if the branch scope has materially changed.
 
 For contributor commands, validation loops, and release-adjacent workflow, use `docs/contributing/development.md` as the canonical reference. For coding, testing, and documentation conventions, use `CONVENTIONS.md`.
+When changing code, treat local simplification of touched duplication or unnecessary indirection as part of completing the work, not optional polish; keep the canonical thresholds and scope limits in `CONVENTIONS.md`.
 
 ## Architecture Summary
 
