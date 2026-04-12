@@ -707,10 +707,25 @@
   (() => {
     var report = window.UnveilReport;
     var PYPI_LOOKUP_CONCURRENCY = 4;
+    var COPY_BUTTON_RESET_DELAY_MS = 1500;
+    var platformSnapshotState = null;
+    var platformPypiResults = /* @__PURE__ */ new Map();
+    var platformPypiLookupPromise = null;
+    var platformMarkdownCopyFeedbackTimer = null;
     function setPlatformPypiButtonState(options) {
       var button = document.getElementById("platform-pypi-lookup-button");
       var isLoading = options && typeof options.isLoading === "boolean" ? options.isLoading : false;
       var label = options && typeof options.label === "string" ? options.label : "Fetch Latest PyPI Versions";
+      if (!button) {
+        return;
+      }
+      button.disabled = isLoading;
+      button.textContent = label;
+    }
+    function setPlatformMarkdownButtonState(options) {
+      var button = document.getElementById("platform-markdown-report-button");
+      var isLoading = options && typeof options.isLoading === "boolean" ? options.isLoading : false;
+      var label = options && typeof options.label === "string" ? options.label : "Render Markdown Report";
       if (!button) {
         return;
       }
@@ -876,6 +891,101 @@
     function getPlatformSectionBody(id) {
       return document.getElementById(id);
     }
+    function getPlatformMarkdownPanel() {
+      return document.getElementById("platform-markdown-panel");
+    }
+    function getPlatformMarkdownOutput() {
+      return document.getElementById("platform-markdown-output");
+    }
+    function getPlatformMarkdownCopyButton() {
+      return document.getElementById("platform-markdown-copy-button");
+    }
+    function resetPlatformClientState() {
+      platformSnapshotState = null;
+      platformPypiResults = /* @__PURE__ */ new Map();
+      platformPypiLookupPromise = null;
+    }
+    function setPlatformMarkdownCopyButtonState(options) {
+      var button = getPlatformMarkdownCopyButton();
+      var isDisabled = options && typeof options.isDisabled === "boolean" ? options.isDisabled : false;
+      var label = options && typeof options.label === "string" ? options.label : "Copy Markdown";
+      if (!button) {
+        return;
+      }
+      button.disabled = isDisabled;
+      button.textContent = label;
+    }
+    function clearPlatformMarkdownCopyFeedbackTimer() {
+      if (platformMarkdownCopyFeedbackTimer) {
+        window.clearTimeout(platformMarkdownCopyFeedbackTimer);
+        platformMarkdownCopyFeedbackTimer = null;
+      }
+    }
+    function showPlatformMarkdownCopyFeedback(label) {
+      clearPlatformMarkdownCopyFeedbackTimer();
+      setPlatformMarkdownCopyButtonState({
+        isDisabled: false,
+        label
+      });
+      platformMarkdownCopyFeedbackTimer = window.setTimeout(() => {
+        setPlatformMarkdownCopyButtonState({
+          isDisabled: false
+        });
+        platformMarkdownCopyFeedbackTimer = null;
+      }, COPY_BUTTON_RESET_DELAY_MS);
+    }
+    function fallbackCopyPlatformMarkdown(textarea) {
+      var selectionStart = textarea.selectionStart;
+      var selectionEnd = textarea.selectionEnd;
+      var activeElement = document.activeElement;
+      var didCopy = false;
+      textarea.focus();
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+      try {
+        didCopy = document.execCommand("copy");
+      } catch (error) {
+        didCopy = false;
+      }
+      textarea.setSelectionRange(selectionStart, selectionEnd);
+      if (activeElement && typeof activeElement.focus === "function") {
+        activeElement.focus();
+      }
+      return didCopy;
+    }
+    function copyPlatformMarkdownToClipboard() {
+      var output = getPlatformMarkdownOutput();
+      if (!output || !output.value) {
+        return Promise.resolve(false);
+      }
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        return navigator.clipboard.writeText(output.value).then(() => true).catch(() => fallbackCopyPlatformMarkdown(output));
+      }
+      return Promise.resolve(fallbackCopyPlatformMarkdown(output));
+    }
+    function hidePlatformMarkdownReport() {
+      var panel = getPlatformMarkdownPanel();
+      var output = getPlatformMarkdownOutput();
+      clearPlatformMarkdownCopyFeedbackTimer();
+      if (panel) {
+        panel.classList.add("hidden");
+      }
+      if (output) {
+        output.value = "";
+      }
+    }
+    function showPlatformMarkdownReport(markdown) {
+      var panel = getPlatformMarkdownPanel();
+      var output = getPlatformMarkdownOutput();
+      if (!panel || !output) {
+        return;
+      }
+      output.value = markdown;
+      panel.classList.remove("hidden");
+      setPlatformMarkdownCopyButtonState({
+        isDisabled: false
+      });
+    }
     function clearPlatformSections() {
       [
         "platform-runtime-body",
@@ -889,6 +999,7 @@
           tbody.innerHTML = "";
         }
       });
+      hidePlatformMarkdownReport();
     }
     function createPlatformRow(label, value) {
       var row = document.createElement("tr");
@@ -1032,9 +1143,29 @@
         });
       });
     }
+    function getPypiResultDisplay(result, installedVersion) {
+      var marker = "";
+      if (!result) {
+        return {
+          marker: "",
+          version: "\u2014"
+        };
+      }
+      if (result.status === "ok") {
+        marker = classifyPypiVersion(installedVersion || "", result.version);
+        return {
+          marker,
+          version: result.version
+        };
+      }
+      return {
+        marker: "",
+        version: result.version
+      };
+    }
     function applyPypiLookupResult(packageLookupName, result) {
       document.querySelectorAll("#platform-packages-body tr[data-package-lookup-name]").forEach((row) => {
-        var marker;
+        var display;
         if (row.dataset.packageLookupName !== packageLookupName) {
           return;
         }
@@ -1047,14 +1178,14 @@
           return;
         }
         if (result.status === "ok") {
-          marker = classifyPypiVersion(
-            row.dataset.installedVersion || "",
-            result.version
+          display = getPypiResultDisplay(
+            result,
+            row.dataset.installedVersion || ""
           );
           setPypiLookupCell(row, {
-            markerText: marker,
-            toneClass: marker === "Latest" ? "platform-pypi-success" : "platform-pypi-warning",
-            versionText: result.version
+            markerText: display.marker,
+            toneClass: display.marker === "Latest" ? "platform-pypi-success" : "platform-pypi-warning",
+            versionText: display.version
           });
           return;
         }
@@ -1102,6 +1233,16 @@
         startNext();
       });
     }
+    function hasCachedPypiResultForAllPackages() {
+      var packages = platformSnapshotState && platformSnapshotState.packages;
+      if (!Array.isArray(packages) || !packages.length) {
+        return true;
+      }
+      return packages.every((item) => {
+        var packageLookupName = normalizePypiPackageName(item.name || "");
+        return !packageLookupName || platformPypiResults.has(packageLookupName);
+      });
+    }
     function lookupPlatformPyPiVersions() {
       var rows = Array.from(
         document.querySelectorAll(
@@ -1113,6 +1254,9 @@
       var taskFactories;
       if (!rows.length) {
         return Promise.resolve();
+      }
+      if (platformPypiLookupPromise) {
+        return platformPypiLookupPromise;
       }
       rows.forEach((row) => {
         var packageLookupName = row.dataset.packageLookupName || "";
@@ -1133,31 +1277,141 @@
         isLoading: true,
         label: "Fetching PyPI Versions\u2026"
       });
-      taskFactories = packageNames.map((packageLookupName) => {
-        return function taskFactory() {
-          return fetchLatestPyPiVersion(packageLookupName).then((result) => {
-            packageLookupMap.set(packageLookupName, result);
-            applyPypiLookupResult(packageLookupName, result);
-            return result;
-          }).catch(() => {
-            var failureResult = {
-              marker: "",
-              status: "failed",
-              version: "Lookup failed"
-            };
-            packageLookupMap.set(packageLookupName, failureResult);
-            applyPypiLookupResult(packageLookupName, failureResult);
-            return failureResult;
-          });
-        };
+      platformPypiLookupPromise = runWithConcurrency(
+        packageNames.map((packageLookupName) => {
+          return function taskFactory() {
+            return fetchLatestPyPiVersion(packageLookupName).then((result) => {
+              packageLookupMap.set(packageLookupName, result);
+              platformPypiResults.set(packageLookupName, result);
+              applyPypiLookupResult(packageLookupName, result);
+              return result;
+            }).catch(() => {
+              var failureResult = {
+                marker: "",
+                status: "failed",
+                version: "Lookup failed"
+              };
+              packageLookupMap.set(packageLookupName, failureResult);
+              platformPypiResults.set(packageLookupName, failureResult);
+              applyPypiLookupResult(packageLookupName, failureResult);
+              return failureResult;
+            });
+          };
+        }),
+        PYPI_LOOKUP_CONCURRENCY
+      ).finally(() => {
+        platformPypiLookupPromise = null;
+        setPlatformPypiButtonState({
+          isLoading: false
+        });
       });
-      return runWithConcurrency(taskFactories, PYPI_LOOKUP_CONCURRENCY).finally(
-        () => {
-          setPlatformPypiButtonState({
-            isLoading: false
-          });
-        }
-      );
+      return platformPypiLookupPromise;
+    }
+    function ensurePlatformPyPiVersionsLoaded() {
+      if (platformPypiLookupPromise) {
+        return platformPypiLookupPromise;
+      }
+      if (hasCachedPypiResultForAllPackages()) {
+        return Promise.resolve();
+      }
+      return lookupPlatformPyPiVersions();
+    }
+    function escapeMarkdownCell(value) {
+      return String(value || "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
+    }
+    function serializePlatformKeyValueRows(rows) {
+      return rows.map(([label, value]) => "- " + label + ": " + (value || "")).join("\n");
+    }
+    function serializePlatformWarnings(warnings) {
+      if (!warnings.length) {
+        return "No warnings.";
+      }
+      return warnings.map((warning) => "- " + warning).join("\n");
+    }
+    function serializePlatformPackages(packages) {
+      if (!packages.length) {
+        return "No dependencies found.";
+      }
+      return [
+        "| Name | Specifier | Installed Version | Latest on PyPI | Status | Installed | Source Kind | Source Name |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |"
+      ].concat(
+        packages.map((item) => {
+          var packageLookupName = normalizePypiPackageName(item.name || "");
+          var display = getPypiResultDisplay(
+            platformPypiResults.get(packageLookupName),
+            item.installed_version || ""
+          );
+          return "| " + [
+            item.name || "",
+            item.specifier || "",
+            item.installed_version || "\u2014",
+            display.version || "\u2014",
+            display.marker || "\u2014",
+            item.is_installed ? "Yes" : "No",
+            item.source_kind || "",
+            item.source_name || "\u2014"
+          ].map(escapeMarkdownCell).join(" | ") + " |";
+        })
+      ).join("\n");
+    }
+    function buildPlatformMarkdownReport() {
+      var runtime = platformSnapshotState && platformSnapshotState.runtime || {};
+      var source = platformSnapshotState && platformSnapshotState.source || {};
+      var warnings = platformSnapshotState && platformSnapshotState.warnings || [];
+      var packages = platformSnapshotState && platformSnapshotState.packages || [];
+      var metadata = platformSnapshotState && platformSnapshotState.metadata || {};
+      var installedCount = packages.filter((item) => item.is_installed).length;
+      var lifecycleStatus = metadata && metadata.api_lifecycle && typeof metadata.api_lifecycle.status === "string" ? metadata.api_lifecycle.status : "";
+      return [
+        "# Platform Report",
+        "",
+        "Packages: " + packages.length + " total, " + installedCount + " installed, " + (packages.length - installedCount) + " missing, " + warnings.length + " warnings.",
+        "",
+        "## Runtime",
+        serializePlatformKeyValueRows([
+          ["Python Version", runtime.python_version || ""],
+          ["Python Implementation", runtime.python_implementation || ""],
+          ["Django Version", runtime.django_version || ""],
+          ["Wagtail Version", runtime.wagtail_version || ""]
+        ]),
+        "",
+        "## Dependency Source",
+        serializePlatformKeyValueRows([
+          ["Path", source.path || ""],
+          ["Format", source.format || ""]
+        ]),
+        "",
+        "## Warnings",
+        serializePlatformWarnings(warnings),
+        "",
+        "## Python Dependencies",
+        serializePlatformPackages(packages),
+        "",
+        "## Metadata",
+        serializePlatformKeyValueRows([
+          ["API Version", metadata.api_version || ""],
+          ["Lifecycle Status", lifecycleStatus],
+          ["Generated At", metadata.generated_at || ""],
+          ["Package Version", metadata.package_version || ""]
+        ])
+      ].join("\n");
+    }
+    function renderPlatformMarkdownReport() {
+      if (!platformSnapshotState) {
+        return Promise.resolve();
+      }
+      setPlatformMarkdownButtonState({
+        isLoading: true,
+        label: "Rendering Markdown Report\u2026"
+      });
+      return ensurePlatformPyPiVersionsLoaded().then(() => {
+        showPlatformMarkdownReport(buildPlatformMarkdownReport());
+      }).finally(() => {
+        setPlatformMarkdownButtonState({
+          isLoading: false
+        });
+      });
     }
     function bindPlatformPyPiLookup() {
       var button = document.getElementById("platform-pypi-lookup-button");
@@ -1167,6 +1421,32 @@
       button.dataset.unveilPypiBound = "true";
       button.addEventListener("click", () => {
         lookupPlatformPyPiVersions();
+      });
+    }
+    function bindPlatformMarkdownReport() {
+      var button = document.getElementById("platform-markdown-report-button");
+      if (!button || button.dataset.unveilMarkdownBound === "true") {
+        return;
+      }
+      button.dataset.unveilMarkdownBound = "true";
+      button.addEventListener("click", () => {
+        renderPlatformMarkdownReport();
+      });
+    }
+    function bindPlatformMarkdownCopy() {
+      var button = getPlatformMarkdownCopyButton();
+      if (!button || button.dataset.unveilMarkdownCopyBound === "true") {
+        return;
+      }
+      button.dataset.unveilMarkdownCopyBound = "true";
+      button.addEventListener("click", () => {
+        setPlatformMarkdownCopyButtonState({
+          isDisabled: true,
+          label: "Copying\u2026"
+        });
+        copyPlatformMarkdownToClipboard().then((didCopy) => {
+          showPlatformMarkdownCopyFeedback(didCopy ? "Copied" : "Copy failed");
+        });
       });
     }
     function renderPlatformMetadata(metadata) {
@@ -1192,6 +1472,15 @@
       var packages = Array.isArray(dependencyData.packages) ? dependencyData.packages : [];
       var warnings = Array.isArray(platformData.warnings) ? platformData.warnings : [];
       var metadata = data.metadata || {};
+      resetPlatformClientState();
+      hidePlatformMarkdownReport();
+      platformSnapshotState = {
+        metadata,
+        packages,
+        runtime,
+        source,
+        warnings
+      };
       updatePlatformSummary(packages, warnings);
       renderPlatformRuntime(runtime);
       renderPlatformSource(source);
@@ -1199,8 +1488,16 @@
       renderPlatformPackages(packages);
       renderPlatformMetadata(metadata);
       bindPlatformPyPiLookup();
+      bindPlatformMarkdownReport();
+      bindPlatformMarkdownCopy();
       setPlatformPypiButtonState({
         isLoading: false
+      });
+      setPlatformMarkdownButtonState({
+        isLoading: false
+      });
+      setPlatformMarkdownCopyButtonState({
+        isDisabled: false
       });
     }
     function validateResponsePayload(data, reportKind) {
@@ -1247,6 +1544,7 @@
         return data;
       }).catch((error) => {
         if (reportKind === "platform") {
+          resetPlatformClientState();
           updatePlatformSummary([], []);
           clearPlatformSections();
         } else {
@@ -1257,9 +1555,14 @@
       });
     }
     report.data = {
+      bindPlatformMarkdownCopy,
+      bindPlatformMarkdownReport,
       bindPlatformPyPiLookup,
+      buildPlatformMarkdownReport,
+      ensurePlatformPyPiVersionsLoaded,
       loadReportData,
-      lookupPlatformPyPiVersions
+      lookupPlatformPyPiVersions,
+      renderPlatformMarkdownReport
     };
   })();
 

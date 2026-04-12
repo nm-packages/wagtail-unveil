@@ -65,6 +65,10 @@ class TestPlatformReportView(WagtailTestUtils, TestCase):
         self.assertContains(response, 'id="platform-packages-body"')
         self.assertContains(response, 'id="platform-metadata-body"')
         self.assertContains(response, 'id="platform-pypi-lookup-button"')
+        self.assertContains(response, 'id="platform-markdown-report-button"')
+        self.assertContains(response, 'id="platform-markdown-panel"')
+        self.assertContains(response, 'id="platform-markdown-output"')
+        self.assertContains(response, 'id="platform-markdown-copy-button"')
         self.assertContains(
             response,
             '<th data-sort-col="0" data-sort-target="platform-packages-body">Name</th>',

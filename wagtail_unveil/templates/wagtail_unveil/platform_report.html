@@ -64,9 +64,14 @@ Total: <span id="report-total">â€¦</span> packages (<span id="report-testable">â
             Declared dependencies and whether each package is currently installed.
             Use the lookup button to fetch the latest published PyPI version on demand.
         </p>
-        <button type="button" class="report-retry-btn" id="platform-pypi-lookup-button">
-            Fetch Latest PyPI Versions
-        </button>
+        <div class="platform-action-row">
+            <button type="button" class="report-retry-btn" id="platform-pypi-lookup-button">
+                Fetch Latest PyPI Versions
+            </button>
+            <button type="button" class="report-retry-btn" id="platform-markdown-report-button">
+                Render Markdown Report
+            </button>
+        </div>
     </div>
     <table>
         <thead>
@@ -82,6 +87,26 @@ Total: <span id="report-total">â€¦</span> packages (<span id="report-testable">â
         </thead>
         <tbody id="platform-packages-body"></tbody>
     </table>
+</div>
+
+<div class="help-panel hidden" id="platform-markdown-panel">
+    <div class="help-intro">
+        <h3>Markdown Report</h3>
+        <p>
+            Raw Markdown generated from the current platform report, including the latest PyPI
+            versions fetched in the browser.
+        </p>
+        <button type="button" class="report-retry-btn" id="platform-markdown-copy-button">
+            Copy Markdown
+        </button>
+    </div>
+    <textarea
+        id="platform-markdown-output"
+        class="platform-markdown-output"
+        rows="18"
+        readonly
+        aria-label="Platform Markdown Report"
+    ></textarea>
 </div>
 
 <div class="help-panel">

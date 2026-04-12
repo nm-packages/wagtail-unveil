@@ -380,6 +380,40 @@ unveil-reset-button {
 .report-retry-btn:hover {
   background: #005f60;
 }
+.platform-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.platform-action-row .report-retry-btn {
+  margin-top: 0;
+}
+.platform-markdown-output {
+  width: 100%;
+  min-height: 320px;
+  padding: 12px 14px;
+  border: 1px solid #cfd8dc;
+  border-radius: 6px;
+  background: #f8fbfb;
+  color: #263238;
+  font: 0.82rem / 1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+  resize: vertical;
+}
+#platform-markdown-panel .help-intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+#platform-markdown-panel .help-intro p {
+  flex: 1 1 320px;
+  margin-bottom: 0;
+}
+#platform-markdown-copy-button {
+  margin-top: 0;
+}
 .help-panel {
   background: #e3f2fd;
   border: 1px solid #90caf9;
