@@ -28,18 +28,19 @@ class TestPlatformAPIView(TestCase):
         tempdir, manifest_path = self._write_manifest("Django>=5.2\nwagtail==7.0\n")
         self.addCleanup(tempdir.cleanup)
 
-        with self.settings(
-            BASE_DIR=tempdir.name,
-            WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=str(manifest_path),
-        ):
-            with patch(
-                "wagtail_unveil.platform_data.version",
-                side_effect=lambda name: {"Django": "5.2.1", "wagtail": "7.0.2"}[name],
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"}, clear=True):
+            with self.settings(
+                BASE_DIR=tempdir.name,
+                WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=str(manifest_path),
             ):
-                response = self.client.get(
-                    API_URL,
-                    HTTP_AUTHORIZATION="Bearer test-secret",
-                )
+                with patch(
+                    "wagtail_unveil.platform_data.version",
+                    side_effect=lambda name: {"Django": "5.2.1", "wagtail": "7.0.2"}[name],
+                ):
+                    response = self.client.get(
+                        API_URL,
+                        HTTP_AUTHORIZATION="Bearer test-secret",
+                    )
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -68,15 +69,16 @@ class TestPlatformAPIView(TestCase):
             "Django": "5.2.1",
             "whitenoise": "6.11.1",
         }
-        with self.settings(
-            BASE_DIR=tempdir.name,
-            WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=str(manifest_path),
-        ):
-            with patch("wagtail_unveil.platform_data.version", side_effect=lambda name: versions[name]):
-                response = self.client.get(
-                    API_URL,
-                    HTTP_AUTHORIZATION="Bearer test-secret",
-                )
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"}, clear=True):
+            with self.settings(
+                BASE_DIR=tempdir.name,
+                WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=str(manifest_path),
+            ):
+                with patch("wagtail_unveil.platform_data.version", side_effect=lambda name: versions[name]):
+                    response = self.client.get(
+                        API_URL,
+                        HTTP_AUTHORIZATION="Bearer test-secret",
+                    )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -92,15 +94,16 @@ class TestPlatformAPIView(TestCase):
         tempdir, manifest_path = self._write_manifest("Django>=5.2\n")
         self.addCleanup(tempdir.cleanup)
 
-        with self.settings(
-            BASE_DIR=tempdir.name,
-            WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=str(manifest_path),
-        ):
-            with patch("wagtail_unveil.platform_data.version", return_value="5.2.1"):
-                response = self.client.get(
-                    API_URL,
-                    HTTP_AUTHORIZATION="Bearer test-secret",
-                )
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"}, clear=True):
+            with self.settings(
+                BASE_DIR=tempdir.name,
+                WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=str(manifest_path),
+            ):
+                with patch("wagtail_unveil.platform_data.version", return_value="5.2.1"):
+                    response = self.client.get(
+                        API_URL,
+                        HTTP_AUTHORIZATION="Bearer test-secret",
+                    )
 
         metadata = response.json()["metadata"]
         self.assertEqual(metadata["api_version"], "v1")
@@ -177,25 +180,27 @@ class TestPlatformAPIView(TestCase):
         tempdir, manifest_path = self._write_manifest("Django>=5.2\n", filename="requirements/base.txt")
         self.addCleanup(tempdir.cleanup)
 
-        with self.settings(
-            BASE_DIR=tempdir.name,
-            WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=str(manifest_path),
-        ):
-            with patch("wagtail_unveil.platform_data.version", return_value="5.2.1"):
-                response = self.client.get(
-                    API_URL,
-                    HTTP_AUTHORIZATION="Bearer test-secret",
-                )
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"}, clear=True):
+            with self.settings(
+                BASE_DIR=tempdir.name,
+                WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=str(manifest_path),
+            ):
+                with patch("wagtail_unveil.platform_data.version", return_value="5.2.1"):
+                    response = self.client.get(
+                        API_URL,
+                        HTTP_AUTHORIZATION="Bearer test-secret",
+                    )
 
         self.assertEqual(response.json()["platform"]["python_dependencies"]["source"]["path"], "base.txt")
         self.assertNotIn(str(manifest_path), response.content.decode())
 
     def test_returns_warning_when_no_manifest_is_configured(self):
-        with self.settings(WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=""):
-            response = self.client.get(
-                API_URL,
-                HTTP_AUTHORIZATION="Bearer test-secret",
-            )
+        with patch.dict("os.environ", {"WAGTAIL_UNVEIL_API_KEY": "test-secret"}, clear=True):
+            with self.settings(WAGTAIL_UNVEIL_PLATFORM_DEPENDENCY_FILE=""):
+                response = self.client.get(
+                    API_URL,
+                    HTTP_AUTHORIZATION="Bearer test-secret",
+                )
 
         data = response.json()
         self.assertEqual(data["platform"]["python_dependencies"]["source"]["path"], "")
