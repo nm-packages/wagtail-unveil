@@ -32,12 +32,15 @@ The GitHub repository and workflow identity must match exactly, or publish will 
 1. Keep `CHANGELOG.md` updated under `## Unreleased` for every merged PR landing on `main`.
 2. Update `version` in `pyproject.toml` to the intended release version.
 3. Convert the current `## Unreleased` notes in `CHANGELOG.md` into the new release entry, then leave a fresh `## Unreleased` placeholder for future work.
-4. Merge the release-prep changes to `main`.
-5. Ensure normal CI on `main` is green (`CI` workflow).
-6. Create a GitHub Release with a tag that matches the package version with `v` prefix.
-7. Use the matching `.github/release-*.md` file or the `CHANGELOG.md` entry as the GitHub Release body.
-8. Publish the GitHub Release.
-9. Confirm `.github/workflows/release.yml` succeeds and the version appears on PyPI.
+4. Review user-facing docs and examples that intentionally describe the current release, and either:
+   - update them to the new version where exact release numbers are still useful, or
+   - remove brittle hardcoded release numbers when the docs work just as well without them.
+5. Merge the release-prep changes to `main`.
+6. Ensure normal CI on `main` is green (`CI` workflow).
+7. Create a GitHub Release with a tag that matches the package version with `v` prefix.
+8. Use the matching `.github/release-*.md` file or the `CHANGELOG.md` entry as the GitHub Release body.
+9. Publish the GitHub Release.
+10. Confirm `.github/workflows/release.yml` succeeds and the version appears on PyPI.
 
 For local sandbox/test command workflows before a release, use:
 - [`development.md`](development.md) for canonical developer workflow and quickstart commands
@@ -48,6 +51,7 @@ For local sandbox/test command workflows before a release, use:
 - Add or update a `CHANGELOG.md` entry under `## Unreleased` in every PR.
 - During release prep, move or rewrite the `Unreleased` notes into the new versioned release section.
 - After release prep, keep an empty `## Unreleased` section in place for subsequent work.
+- During release prep, review any docs/examples that intentionally point at the current package release and avoid leaving stale version numbers in user-facing pages.
 
 Examples:
 
