@@ -163,7 +163,7 @@ When changing contributor commands or Make targets:
 
 `AGENTS.md` should continue to point agents at this guide for command and validation workflow, but it should not duplicate the full command catalog.
 
-When making notable user-visible, contributor-visible, or maintainer-relevant changes that are not yet released:
+For every pull request:
 
 1. Add a concise note under `CHANGELOG.md` -> `## Unreleased`.
 2. Keep that changelog update in the same PR as the change itself.
