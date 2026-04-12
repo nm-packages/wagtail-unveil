@@ -532,6 +532,195 @@ describe("report bundle", () => {
     ).toBe(true);
   });
 
+  test("platform report does not render markdown until the markdown button is clicked", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () =>
+        createPlatformPayload([
+          {
+            name: "Django",
+            specifier: ">=5.2",
+            installed_version: "5.2.1",
+            is_installed: true,
+            source_kind: "runtime",
+            source_name: null,
+          },
+        ]),
+    });
+
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(
+      document
+        .getElementById("platform-markdown-panel")
+        .classList.contains("hidden"),
+    ).toBe(true);
+    expect(document.getElementById("platform-markdown-output").value).toBe("");
+  });
+
+  test("platform report markdown button fetches PyPI data and renders markdown output", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ...createPlatformPayload([
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+          ]),
+          platform: {
+            ...createPlatformPayload([]).platform,
+            warnings: ["Dependency manifest is missing or inaccessible."],
+            python_dependencies: {
+              ...createPlatformPayload([]).platform.python_dependencies,
+              packages: [
+                {
+                  name: "Django",
+                  specifier: ">=5.2",
+                  installed_version: "5.2.1",
+                  is_installed: true,
+                  source_kind: "runtime",
+                  source_name: null,
+                },
+              ],
+            },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          info: {
+            version: "5.2.2",
+          },
+        }),
+      });
+
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    const button = document.getElementById("platform-markdown-report-button");
+
+    button.click();
+    expect(button.disabled).toBe(true);
+    await waitForRender();
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      "https://pypi.org/pypi/django/json",
+    );
+    expect(button.disabled).toBe(false);
+    expect(
+      document
+        .getElementById("platform-markdown-panel")
+        .classList.contains("hidden"),
+    ).toBe(false);
+
+    const markdown = document.getElementById("platform-markdown-output").value;
+
+    expect(markdown).toContain("# Platform Report");
+    expect(markdown).toContain("## Runtime");
+    expect(markdown).toContain("## Warnings");
+    expect(markdown).toContain(
+      "Dependency manifest is missing or inaccessible.",
+    );
+    expect(markdown).toContain("## Metadata");
+    expect(markdown).toContain(
+      "| Django | >=5.2 | 5.2.1 | 5.2.2 | Different | Yes | runtime | — |",
+    );
+  });
+
+  test("platform report copies generated markdown with the Clipboard API", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () =>
+          createPlatformPayload([
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+          ]),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          info: {
+            version: "5.2.2",
+          },
+        }),
+      });
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: writeTextMock,
+      },
+    });
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    document.getElementById("platform-markdown-report-button").click();
+    await waitForRender();
+
+    const copyButton = document.getElementById("platform-markdown-copy-button");
+    const markdown = document.getElementById("platform-markdown-output").value;
+
+    copyButton.click();
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(writeTextMock).toHaveBeenCalledWith(markdown);
+    expect(copyButton.textContent).toBe("Copied");
+  });
+
   test("platform report dedupes package lookups and handles mixed PyPI outcomes", async () => {
     const fetchMock = vi
       .fn()
@@ -649,6 +838,73 @@ describe("report bundle", () => {
         .querySelector(".platform-pypi-cell")
         .classList.contains("platform-pypi-danger"),
     ).toBe(true);
+  });
+
+  test("platform report markdown generation reuses normalized package lookups", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () =>
+          createPlatformPayload([
+            {
+              name: "my_pkg",
+              specifier: ">=1.0",
+              installed_version: "1.0.0",
+              is_installed: true,
+              source_kind: "group",
+              source_name: "docs",
+            },
+            {
+              name: "my-pkg",
+              specifier: ">=1.0",
+              installed_version: "1.0.0",
+              is_installed: true,
+              source_kind: "optional",
+              source_name: "extras",
+            },
+          ]),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          info: {
+            version: "1.1.0",
+          },
+        }),
+      });
+
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    document.getElementById("platform-markdown-report-button").click();
+    await waitForRender();
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      "https://pypi.org/pypi/my-pkg/json",
+    );
+
+    const markdown = document.getElementById("platform-markdown-output").value;
+
+    expect(markdown).toContain(
+      "| my_pkg | >=1.0 | 1.0.0 | 1.1.0 | Different | Yes | group | docs |",
+    );
+    expect(markdown).toContain(
+      "| my-pkg | >=1.0 | 1.0.0 | 1.1.0 | Different | Yes | optional | extras |",
+    );
   });
 
   test("platform report normalizes equivalent package names for a single PyPI lookup", async () => {
@@ -917,5 +1173,187 @@ describe("report bundle", () => {
         .querySelector("#platform-packages-body tr .platform-pypi-cell")
         .classList.contains("platform-pypi-warning"),
     ).toBe(true);
+  });
+
+  test("platform report markdown reflects empty states and failed PyPI lookups", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () =>
+          createPlatformPayload([
+            {
+              name: "broken-project",
+              specifier: "*",
+              installed_version: "",
+              is_installed: false,
+              source_kind: "group",
+              source_name: "docs",
+            },
+          ]),
+      })
+      .mockRejectedValueOnce(new Error("network failure"));
+
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    document.getElementById("platform-markdown-report-button").click();
+    await waitForRender();
+    await waitForRender();
+
+    let markdown = document.getElementById("platform-markdown-output").value;
+
+    expect(markdown).toContain("No warnings.");
+    expect(markdown).toContain(
+      "| broken-project | * | — | Lookup failed | — | No | group | docs |",
+    );
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    stubFetchResponse(createPlatformPayload([]));
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    document.getElementById("platform-markdown-report-button").click();
+    await waitForRender();
+
+    markdown = document.getElementById("platform-markdown-output").value;
+    expect(markdown).toContain("No warnings.");
+    expect(markdown).toContain("No dependencies found.");
+  });
+
+  test("platform report falls back to execCommand copy without refetching", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () =>
+          createPlatformPayload([
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+          ]),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          info: {
+            version: "5.2.2",
+          },
+        }),
+      });
+    const execCommandMock = vi.fn().mockReturnValue(true);
+
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: undefined,
+    });
+    document.execCommand = execCommandMock;
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    document.getElementById("platform-markdown-report-button").click();
+    await waitForRender();
+
+    const copyButton = document.getElementById("platform-markdown-copy-button");
+
+    copyButton.click();
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(execCommandMock).toHaveBeenCalledWith("copy");
+    expect(copyButton.textContent).toBe("Copied");
+  });
+
+  test("platform report shows copy failure feedback when clipboard copy fails", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () =>
+          createPlatformPayload([
+            {
+              name: "Django",
+              specifier: ">=5.2",
+              installed_version: "5.2.1",
+              is_installed: true,
+              source_kind: "runtime",
+              source_name: null,
+            },
+          ]),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          info: {
+            version: "5.2.2",
+          },
+        }),
+      });
+    const execCommandMock = vi.fn().mockReturnValue(false);
+
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: vi.fn().mockRejectedValue(new Error("denied")),
+      },
+    });
+    document.execCommand = execCommandMock;
+    globalThis.fetch = fetchMock;
+    window.fetch = fetchMock;
+
+    resetReportDom({
+      apiUrl: "/unveil/api/v1/platform/",
+      reportKind: "platform",
+    });
+
+    loadBundleScript();
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await waitForRender();
+
+    document.getElementById("platform-markdown-report-button").click();
+    await waitForRender();
+
+    const copyButton = document.getElementById("platform-markdown-copy-button");
+
+    copyButton.click();
+    await waitForRender();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(execCommandMock).toHaveBeenCalledWith("copy");
+    expect(copyButton.textContent).toBe("Copy failed");
   });
 });

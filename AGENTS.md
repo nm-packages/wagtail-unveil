@@ -58,8 +58,9 @@ Required agent self-review before handoff:
 2. Use the existing repo guidance as the review baseline, including `CONVENTIONS.md`, relevant nested `AGENTS.md` files, contributor validation workflow, and any task-specific architecture docs.
 3. Check for maintainability, unnecessary complexity, duplicated logic, duplicated or overly fragmented tests that could be sensibly combined or refactored, missing or weak tests, documentation drift, scope creep, and obvious security or safety regressions that follow from the touched code.
 4. Run the relevant validation steps already required by repo guidance when feasible, and incorporate the results into that review.
-5. If the review finds worthwhile follow-up improvements that are not clearly required to finish the task, call them out explicitly and get approval before broadening the patch.
-6. If the review finds a required fix for correctness, safety, or repo-policy compliance, address it before considering the work complete.
+5. Verify that `CHANGELOG.md` was updated under `## Unreleased` for the PR and that the changelog change remains in the same PR as the related work.
+6. If the review finds worthwhile follow-up improvements that are not clearly required to finish the task, call them out explicitly and get approval before broadening the patch.
+7. If the review finds a required fix for correctness, safety, or repo-policy compliance, address it before considering the work complete.
 
 Safety rule: do not start implementation for issue-scoped work on `main` when the issue is expected to have its own branch. Do not start newly scoped work on `main` without first checking whether the user wants a branch created and proposing a suitable branch title. When working on a branch with an open PR, do not ignore title/summary drift if the branch scope has materially changed.
 

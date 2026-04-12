@@ -29,7 +29,7 @@ The GitHub repository and workflow identity must match exactly, or publish will 
 
 ## Maintainer Release Steps
 
-1. Keep `CHANGELOG.md` updated under `## Unreleased` as notable unreleased work lands on `main`.
+1. Keep `CHANGELOG.md` updated under `## Unreleased` for every merged PR landing on `main`.
 2. Update `version` in `pyproject.toml` to the intended release version.
 3. Convert the current `## Unreleased` notes in `CHANGELOG.md` into the new release entry, then leave a fresh `## Unreleased` placeholder for future work.
 4. Merge the release-prep changes to `main`.
@@ -45,7 +45,7 @@ For local sandbox/test command workflows before a release, use:
 
 ## Changelog Maintenance
 
-- Add notable merged-but-unreleased work to `CHANGELOG.md` under `## Unreleased` in the same PR.
+- Add or update a `CHANGELOG.md` entry under `## Unreleased` in every PR.
 - During release prep, move or rewrite the `Unreleased` notes into the new versioned release section.
 - After release prep, keep an empty `## Unreleased` section in place for subsequent work.
 

@@ -39,10 +39,15 @@ function setFixtureBody(options = {}) {
         <p id="report-loading-message"></p>
         <p id="report-error-message"></p>
         <button type="button" id="platform-pypi-lookup-button">Fetch Latest PyPI Versions</button>
+        <button type="button" id="platform-markdown-report-button">Render Markdown Report</button>
         <table><tbody id="platform-runtime-body"></tbody></table>
         <table><tbody id="platform-source-body"></tbody></table>
         <table><tbody id="platform-warnings-body"></tbody></table>
         <table><tbody id="platform-packages-body"></tbody></table>
+        <div id="platform-markdown-panel" class="hidden">
+            <button type="button" id="platform-markdown-copy-button">Copy Markdown</button>
+            <textarea id="platform-markdown-output"></textarea>
+        </div>
         <table><tbody id="platform-metadata-body"></tbody></table>
     `
     : `

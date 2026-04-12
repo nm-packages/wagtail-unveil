@@ -1,9 +1,10 @@
 # Changelog
 
-All notable changes to `wagtail-unveil` are documented in this file.
+Every pull request must add or update an entry under `## Unreleased` in this file.
 
 ## Unreleased
 
+- clarified repo guidance so every pull request must update `CHANGELOG.md` under `## Unreleased`, and added that check to the agent self-review workflow
 - taught the platform dependency inventory to follow relative `-r other-file.txt` includes in requirements-style manifests, so shared base requirement files are reflected in `/unveil/api/v1/platform/`
 
 ## 0.1.0a6 - 2026-04-10

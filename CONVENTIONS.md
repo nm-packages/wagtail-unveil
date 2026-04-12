@@ -56,7 +56,7 @@ Not a good fit examples:
 - **Pre-commit hooks** are configured in `.pre-commit-config.yaml` — run `make pre-commit` to check all files, or `uv run pre-commit install` to enable automatic checks on each commit
 - **Canonical workflow docs:** use `docs/contributing/development.md` for contributor commands, validation loops, and CI-aligned day-to-day workflow; use `AGENTS.md` for agent-only repo workflow and context
 - **After code changes in `wagtail_unveil/` or `tests/`**, run `make lint` and `make coverage`, then inspect coverage for touched files and add tests for newly introduced uncovered lines
-- **Changelog:** for notable unreleased user-visible, contributor-visible, or maintainer-relevant work, add a concise note under `CHANGELOG.md` -> `## Unreleased` in the same PR
+- **Changelog:** every pull request must add or update a concise note under `CHANGELOG.md` -> `## Unreleased`, and that changelog change must ship in the same PR as the related work
 - **Docs maintenance:** update `README.md`, relevant `AGENTS.md` files, and canonical contributor docs when behavior, structure, or doc ownership changes
 - **Docs sync checklist:** if `Makefile` targets or command behavior changes, update command docs in `docs/contributing/development.md` in the same PR; keep `AGENTS.md` doc-routing references accurate if the canonical sources change
 - **README.md** is user-facing documentation — document features, usage, and configuration
