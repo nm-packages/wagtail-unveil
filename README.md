@@ -28,10 +28,10 @@ It exposes discovery through:
 Canonical documentation hub: [wagtail-unveil documentation](https://nm-packages.github.io/wagtail-unveil/)
 
 ```bash
-pip install wagtail-unveil==0.1.0a6
+pip install wagtail-unveil
 ```
 
-> `0.1.0a6` is the current public alpha release. It is intended for early adopters and real-world testing, and breaking changes may still happen before a stable release.
+> The current PyPI release is still an alpha intended for early adopters and real-world testing, and breaking changes may still happen before a stable release.
 > To track unreleased changes from GitHub instead, use:
 
 ```bash
