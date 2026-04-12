@@ -64,6 +64,8 @@ Required agent self-review before handoff:
 
 Safety rule: do not start implementation for issue-scoped work on `main` when the issue is expected to have its own branch. Do not start newly scoped work on `main` without first checking whether the user wants a branch created and proposing a suitable branch title. When working on a branch with an open PR, do not ignore title/summary drift if the branch scope has materially changed.
 
+Release safety rule for agents: agents may prepare release branches, changelog/release notes, version bumps, local validation, and release preflight artifacts, but agents must not publish or attempt to publish a new package release themselves. Stop at the point where a GitHub Release needs to be created or published, and hand that step back to the user so publication happens through GitHub's release flow and workflow.
+
 For contributor commands, validation loops, and release-adjacent workflow, use `docs/contributing/development.md` as the canonical reference. For coding, testing, and documentation conventions, use `CONVENTIONS.md`.
 When changing code, treat local simplification of touched duplication or unnecessary indirection as part of completing the work, not optional polish; keep the canonical thresholds and scope limits in `CONVENTIONS.md`.
 
