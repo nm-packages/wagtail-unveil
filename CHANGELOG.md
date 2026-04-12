@@ -5,6 +5,16 @@ Every pull request must add or update an entry under `## Unreleased` in this fil
 ## Unreleased
 
 - clarified repo guidance so every pull request must update `CHANGELOG.md` under `## Unreleased`, and added that check to the agent self-review workflow
+
+## 0.1.0a7 - 2026-04-12
+
+Seventh public alpha release.
+
+This alpha continues to target early adopters and real-world testing. Package behavior and documentation should still be treated as provisional before the first stable release.
+
+### Highlights
+
+- added a Markdown export and copy action to the platform HTML report so the current runtime and dependency inventory can be shared without leaving the admin UI
 - taught the platform dependency inventory to follow relative `-r other-file.txt` includes in requirements-style manifests, so shared base requirement files are reflected in `/unveil/api/v1/platform/`
 
 ## 0.1.0a6 - 2026-04-10
