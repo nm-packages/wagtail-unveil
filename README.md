@@ -9,7 +9,7 @@
 
 > Discover and test every URL in your Wagtail site - frontend and admin.
 
-![Frontend URLs Report](https://raw.githubusercontent.com/nm-packages/wagtail-unveil/main/docs/features/frontend_report.jpg)
+![Wagtail Unveil](https://raw.githubusercontent.com/nm-packages/wagtail-unveil/main/docs/features/wagtail-unveil-banner.jpg)
 
 ## Overview
 

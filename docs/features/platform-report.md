@@ -6,6 +6,8 @@ The platform report displays runtime versions, dependency-manifest details, Pyth
 
 Visit `/unveil/report/platform/` while logged in as a superuser when report UI access is enabled. This is available in local development with `DEBUG=True`, or in non-debug environments with `WAGTAIL_UNVEIL_ENABLE_PRODUCTION_REPORTS=True`.
 
+![Platform Report](https://raw.githubusercontent.com/nm-packages/wagtail-unveil/main/docs/features/platform-report.jpg)
+
 You can also reach it from the Wagtail admin dashboard panel.
 
 ## Features
