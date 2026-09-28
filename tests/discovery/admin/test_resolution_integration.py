@@ -202,7 +202,7 @@ class TestParameterisedURLResolution(TestCase):
                 self.assertIn(f"/{expected_pks[url.name]}/", url.resolved_route)
 
     def test_safe_wagtail_page_routes_are_testable_with_resolved_routes(self):
-        expected_names = set(WAGTAILADMIN_PAGE_FALLBACK_NAMES)
+        expected_names = set(WAGTAILADMIN_PAGE_FALLBACK_NAMES) - {"set_page_position"}
         self.assertGreater(len(self.page_types), 0)
 
         for name in expected_names:
@@ -216,6 +216,20 @@ class TestParameterisedURLResolution(TestCase):
                     self.assertEqual(url.skip_reason, "")
                     self.assertTrue(url.resolved_route, url.route)
                     self.assertTrue(url.page_type)
+
+    def test_set_page_position_is_resolved_but_not_testable_with_get(self):
+        page_urls = [
+            url
+            for url in self.urls
+            if url.namespace == "wagtailadmin_pages" and url.name == "set_page_position"
+        ]
+
+        self.assertEqual(len(page_urls), len(self.page_types))
+        for url in page_urls:
+            self.assertFalse(url.is_testable, url.route)
+            self.assertEqual(url.skip_reason, "POST-only view")
+            self.assertTrue(url.resolved_route, url.route)
+            self.assertTrue(url.page_type)
 
     def test_add_subpage_route_is_testable_with_compatible_parent_page(self):
         add_subpage_urls = [u for u in self.urls if u.namespace == "wagtailadmin_pages" and u.name == "add_subpage"]

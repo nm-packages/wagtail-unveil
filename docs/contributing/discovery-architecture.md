@@ -56,6 +56,7 @@ Current hard-coded non-testable names:
 - `process_import` -> `POST-only view`
 - `lock` -> `POST-only view`
 - `unlock` -> `POST-only view`
+- `set_page_position` -> `POST-only view`
 - `wagtailadmin_error_test` -> `Intentional error endpoint`
 - `find` -> `Requires query parameters`
 
@@ -88,8 +89,10 @@ If you are using `wagtail-unveil` in your own project and want to extend URL res
 
 The `wagtailadmin_pages` per-type behavior does not come from `get_registered_admin_instance_resolvers()`. It is handled only by a core backend discovery special-case in `wagtail_unveil/discovery/backend.py`, where `_iter_page_backed_admin_urls()` expands:
 
-- an explicit safe allowlist of single-parameter page routes such as edit, delete, copy, move, privacy, and revisions index into one backend row per concrete non-root page type, using a representative instance for each type
+- an explicit allowlist of single-parameter page routes such as edit, delete, copy, move, privacy, and revisions index into one backend row per concrete non-root page type, using a representative instance for each type
 - `wagtailadmin_pages:add_subpage` into one backend row per concrete non-root parent page type that exposes at least one creatable child model at that specific parent page
+
+The `set_page_position` route is also resolved per page type, but its Wagtail view only accepts POST. Its concrete route remains visible with `POST-only view` and is excluded from GET testing.
 
 Third-party and other non-core namespace-specific behavior should still use project-level resolver hooks rather than new package-specific branches in core discovery.
 

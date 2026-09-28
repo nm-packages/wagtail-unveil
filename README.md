@@ -4,7 +4,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/wagtail-unveil.svg)](https://pypi.org/project/wagtail-unveil/)
 [![Python versions](https://img.shields.io/pypi/pyversions/wagtail-unveil.svg)](https://pypi.org/project/wagtail-unveil/)
-[![Wagtail versions](https://img.shields.io/badge/wagtail-7.0--7.3-teal.svg)](https://pypi.org/project/wagtail-unveil/)
+[![Wagtail versions](https://img.shields.io/badge/wagtail-8.0-teal.svg)](https://pypi.org/project/wagtail-unveil/)
 [![License](https://img.shields.io/pypi/l/wagtail-unveil.svg)](https://github.com/nm-packages/wagtail-unveil/blob/main/LICENSE)
 
 > Discover and test every URL in your Wagtail site - frontend and admin.
@@ -69,7 +69,8 @@ For installation details, configuration, API usage, reports, and extension recip
 
 | Python                        | Django              | Wagtail    |
 |-------------------------------|---------------------|------------|
-| 3.10, 3.11, 3.12, 3.13, 3.14 | 4.2, 5.1, 5.2, 6.0 | 7.0 - 7.3 |
+| 3.10, 3.11 | 5.2 | 8.0 |
+| 3.12, 3.13, 3.14 | 5.2, 6.0, 6.1 | 8.0 |
 
 ## Documentation
 

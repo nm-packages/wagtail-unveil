@@ -114,6 +114,11 @@ make makemigrations
 
 ## Extended Workflows
 
+The supported baseline is Wagtail 8.0 and Django 5.2, with Python 3.10 or newer.
+The matrix covers Django 5.2 on Python 3.10–3.14 and Django 6.0/6.1 on Python
+3.12–3.14. The smoke subset uses Python 3.10/Django 5.2, Python 3.13/Django 6.0,
+and Python 3.14/Django 6.1, all on Wagtail 8.0.
+
 Python version matrix checks:
 
 ```bash

@@ -104,11 +104,11 @@ jobs:
       matrix:
         include:
           - python-version: "3.10"
-            toxenv: "py310-django42-wagtail70"
+            toxenv: "py310-django52-wagtail80"
           - python-version: "3.13"
-            toxenv: "py313-django52-wagtail73"
+            toxenv: "py313-django60-wagtail80"
           - python-version: "3.14"
-            toxenv: "py314-django60-wagtail73"
+            toxenv: "py314-django61-wagtail80"
     steps:
       - uses: actions/checkout@v4
 

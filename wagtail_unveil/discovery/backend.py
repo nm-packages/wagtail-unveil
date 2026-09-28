@@ -64,6 +64,7 @@ NON_TESTABLE_NAMES = {
     "wagtailadmin_block_preview": "POST-only view",
     "lock": "POST-only view",
     "unlock": "POST-only view",
+    "set_page_position": "POST-only view",
     "find": "Requires query parameters",
 }
 DOCS_SERVE_NAMESPACES = {
@@ -223,6 +224,7 @@ def _finalize_admin_route(normalized_route, classification):
 def _iter_page_backed_admin_urls(
     normalized_route,
     *,
+    classification,
     page_instances_by_type,
     add_subpage_parent_instances_by_type,
 ):
@@ -246,8 +248,8 @@ def _iter_page_backed_admin_urls(
         )
         if resolution.resolved:
             resolved_route = resolution.resolved_route
-            is_testable = True
-            skip_reason = ""
+            is_testable = classification.is_testable
+            skip_reason = classification.skip_reason
         else:
             resolved_route = ""
             is_testable = False
@@ -300,6 +302,7 @@ def get_admin_urls():
         )
         page_backed_urls = _iter_page_backed_admin_urls(
             normalized_route,
+            classification=classification,
             page_instances_by_type=page_instances_by_type,
             add_subpage_parent_instances_by_type=add_subpage_parent_instances_by_type,
         )
