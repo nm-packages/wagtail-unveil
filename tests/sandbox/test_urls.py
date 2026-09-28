@@ -1,6 +1,8 @@
-from django.test import TestCase
-from django.urls import resolve
+from django.test import TestCase, override_settings
+from django.urls import resolve, reverse
+from wagtail.test.utils import WagtailTestUtils
 
+from sandbox.taxonomy.models import Person
 from wagtail_unveil.discovery.frontend import get_frontend_urls
 
 
@@ -27,3 +29,19 @@ class TestSandboxWagtailAPI(TestCase):
 
         self.assertEqual(match.url_name, "find")
         self.assertEqual(match.namespace, "wagtailapi:pages")
+
+
+@override_settings(
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+)
+class TestSandboxPersonAdmin(WagtailTestUtils, TestCase):
+    def test_modeladmin_edit_page_renders(self):
+        self.login()
+        person = Person.objects.create(name="Test Person", email="test@example.com")
+
+        response = self.client.get(reverse("taxonomy_person_modeladmin_edit", args=[person.pk]))
+
+        self.assertContains(response, "Test Person")

@@ -4,6 +4,8 @@ Every pull request must add or update an entry under `## Unreleased` in this fil
 
 ## Unreleased
 
+- require `wagtail-modeladmin` 2.5.0 for sandbox development and tests so its Person edit view works with Wagtail 8.0
+
 - raised the minimum supported versions to Wagtail 8.0 and Django 5.2, and updated the compatibility matrix and CI while retaining the existing package implementation
 
 - clarified repo guidance so every pull request must update `CHANGELOG.md` under `## Unreleased`, and added that check to the agent self-review workflow
