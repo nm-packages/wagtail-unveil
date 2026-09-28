@@ -4,6 +4,8 @@ Every pull request must add or update an entry under `## Unreleased` in this fil
 
 ## Unreleased
 
+- raised the minimum supported versions to Wagtail 8.0 and Django 5.2, and updated the compatibility matrix and CI while retaining the existing package implementation
+
 - clarified repo guidance so every pull request must update `CHANGELOG.md` under `## Unreleased`, and added that check to the agent self-review workflow
 
 ## 0.1.0a7 - 2026-04-12

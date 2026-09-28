@@ -7,7 +7,7 @@
 - **Module organization:** Prefer top-to-bottom ordering that follows a module's main public entrypoint or execution flow. Keep helpers close to the phase or responsibility that uses them, keep genuinely shared primitives near the top when reused across phases, keep the main public orchestrator/entrypoint after its supporting phases, and pair related public helpers with their diagnostics/accessors when that improves findability. Treat this as a default preference rather than a rigid rule for every simple file.
 - **Class naming:** CamelCase for classes, snake_case for functions/variables/modules
 - **Views:** Use Wagtail ViewSets (`wagtail.admin.viewsets`) for admin pages — no legacy `ModelAdmin`
-- **Admin integration:** Use `register_admin_viewset` hook, Wagtail 7.0 patterns only
+- **Admin integration:** Use `register_admin_viewset` hook, Wagtail 8.0 patterns
 - **Models:** Use `BigAutoField` as default auto field, descriptive `class Meta` with `verbose_name`/`verbose_name_plural`
 - **URLs:** Use `path()` not `re_path()`, use `app_name` namespacing
 
