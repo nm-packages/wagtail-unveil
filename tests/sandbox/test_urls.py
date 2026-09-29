@@ -30,6 +30,12 @@ class TestSandboxWagtailAPI(TestCase):
         self.assertEqual(match.url_name, "find")
         self.assertEqual(match.namespace, "wagtailapi:pages")
 
+    def test_api_v3_pages_endpoint_is_mounted(self):
+        response = self.client.get("/api/v3/pages/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("items", response.json())
+
 
 @override_settings(
     STORAGES={

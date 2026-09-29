@@ -68,6 +68,9 @@ This matters when you are developing discovery changes, testing parameterized ad
 Once the sandbox server is running, these are the main URLs to use while developing:
 
 - `/admin/` - Wagtail admin
+- `/api/v2/pages/` - existing Wagtail API v2 page listing
+- `/api/v3/pages/` - Wagtail 8 API v3 page listing (preview)
+- `/api/v3/docs/` - interactive Wagtail API v3 documentation
 - `/unveil/report/backend-urls/` - backend/admin discovery report
 - `/unveil/report/frontend-urls/` - frontend discovery report
 - `/unveil/report/platform/` - runtime and dependency inventory report

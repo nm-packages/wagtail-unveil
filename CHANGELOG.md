@@ -4,6 +4,8 @@ Every pull request must add or update an entry under `## Unreleased` in this fil
 
 ## Unreleased
 
+- enabled Wagtail API v3 in the sandbox at `/api/v3/` alongside the existing v2 API
+
 - mark Wagtail's `set_page_position` page-admin route as POST-only so the backend report does not test it with GET
 
 - require `wagtail-modeladmin` 2.5.0 for sandbox development and tests so its Person edit view works with Wagtail 8.0
