@@ -5,6 +5,7 @@ from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.api.v2.views import PagesAPIViewSet
+from wagtail.api.v3.urls import api as wagtail_api_v3
 from wagtail.contrib.redirects.api import RedirectsAPIViewSet
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail.documents.api.v2.views import DocumentsAPIViewSet
@@ -24,6 +25,7 @@ urlpatterns = [
     path("django-admin/", admin.site.urls),
     path("admin/", include(wagtailadmin_urls)),
     path("api/v2/", api_router.urls),
+    path("api/v3/", wagtail_api_v3.urls),
     path("documents/", include(wagtaildocs_urls)),
     path("images/", include(wagtailimages_urls)),
     path("search/", search_views.search, name="search"),

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "sandbox.events",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
+    "wagtail.api.v3",
     "wagtail.embeds",
     "wagtail.sites",
     "wagtail.users",
