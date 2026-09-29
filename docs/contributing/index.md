@@ -12,6 +12,7 @@ Read the [Development Guide](development.md) first if you are setting up the rep
 - [API Versioning](api-versioning.md) — Read this if you are changing JSON API behavior and need the canonical lifecycle and version-bump policy.
 - [Discovery Architecture](discovery-architecture.md) — Read this if you need the canonical reference for discovery, normalization, classification, and parameter resolution behavior.
 - [Discovery Workflow Visual Reference](discovery-workflows.md) — Read this if you want a visual companion to the discovery architecture document before or while reading the authoritative rules.
+- [Wagtail API v3 Assessment](wagtail-api-v3-assessment.md) — Read this for the Wagtail 8.0 investigation and proposed changes to v3 endpoint testing.
 - [Frontend Assets](frontend-assets.md) — Read this if you are changing report JavaScript or CSS and need the canonical asset workflow and CI expectations.
 - [Releasing](releasing.md) — Read this if you are preparing or publishing a package release and need the canonical maintainer runbook.
 

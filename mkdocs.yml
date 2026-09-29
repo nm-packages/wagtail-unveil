@@ -64,5 +64,6 @@ nav:
       - API Versioning: contributing/api-versioning.md
       - Discovery Architecture: contributing/discovery-architecture.md
       - Discovery Workflow Visual Reference: contributing/discovery-workflows.md
+      - Wagtail API v3 Assessment: contributing/wagtail-api-v3-assessment.md
       - Frontend Assets: contributing/frontend-assets.md
       - Releasing: contributing/releasing.md

@@ -4,6 +4,8 @@ Every pull request must add or update an entry under `## Unreleased` in this fil
 
 ## Unreleased
 
+- assessed Wagtail API v3 and dynamic Django `TestCase` smoke coverage for installed projects, including why v3 writes cannot generally replace project-specific fixtures
+
 - enabled Wagtail API v3 in the sandbox at `/api/v3/` alongside the existing v2 API
 
 - mark Wagtail's `set_page_position` page-admin route as POST-only so the backend report does not test it with GET
